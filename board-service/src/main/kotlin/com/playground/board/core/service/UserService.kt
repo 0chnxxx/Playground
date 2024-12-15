@@ -5,6 +5,7 @@ import com.playground.board.core.dto.out.UserDto
 import com.playground.board.global.dto.ResponseDto
 import com.playground.board.global.exception.CustomException
 import com.playground.board.global.exception.ErrorCode
+import com.playground.board.global.util.CryptUtil
 import com.playground.board.persistence.entity.UserEntity
 import com.playground.board.persistence.repository.UserRepository
 import org.springframework.stereotype.Service
@@ -22,7 +23,7 @@ class UserService(
 
         val user = UserEntity(
             email = command.email,
-            password = command.password
+            password = CryptUtil.Sha512.encrypt(command.password)
         )
 
         userRepository.save(user)
