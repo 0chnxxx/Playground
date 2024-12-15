@@ -1,6 +1,6 @@
 package com.playground.board.global.exception
 
-import com.playground.board.core.dto.ErrorResponseDto
+import com.playground.board.global.dto.ErrorResponseDto
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -18,9 +18,6 @@ class GlobalExceptionHandler {
         request: HttpServletRequest
     ): ResponseEntity<ErrorResponseDto> {
         val errorResponse = ErrorResponseDto(
-            status = e.errorCode.status,
-            statusName = e.errorCode.name,
-            serverDateTime = LocalDateTime.now(),
             errorCode = e.errorCode.code,
             errorMessage = e.errorCode.message,
             path = request.requestURI
@@ -37,9 +34,6 @@ class GlobalExceptionHandler {
         val errorCode = ErrorCode.NOT_FOUND_ENDPOINT
 
         val errorResponse = ErrorResponseDto(
-            status = errorCode.status,
-            statusName = errorCode.name,
-            serverDateTime = LocalDateTime.now(),
             errorCode = errorCode.code,
             errorMessage = errorCode.message,
             path = request.requestURI
@@ -56,9 +50,6 @@ class GlobalExceptionHandler {
         val errorCode = ErrorCode.NOT_FOUND_RESOURCE
 
         val errorResponse = ErrorResponseDto(
-            status = errorCode.status,
-            statusName = errorCode.name,
-            serverDateTime = LocalDateTime.now(),
             errorCode = errorCode.code,
             errorMessage = errorCode.message,
             path = request.requestURI
@@ -75,9 +66,6 @@ class GlobalExceptionHandler {
         val errorCode = ErrorCode.INTERNAL_SERVER_ERROR
 
         val errorResponse = ErrorResponseDto(
-            status = errorCode.status,
-            statusName = errorCode.name,
-            serverDateTime = LocalDateTime.now(),
             errorCode = errorCode.code,
             errorMessage = errorCode.message,
             path = request.requestURI

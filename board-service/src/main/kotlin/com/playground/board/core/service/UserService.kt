@@ -1,38 +1,38 @@
 package com.playground.board.core.service
 
-import com.playground.board.core.domain.User
-import com.playground.board.core.dto.ResponseDto
-import com.playground.board.core.dto.UserDto
-import com.playground.board.persistence.UserJpaRepository
-import com.playground.board.web.dto.RegisterUserRequest
-import org.springframework.http.HttpStatus
+import com.playground.board.core.dto.`in`.RegisterUserCommand
+import com.playground.board.core.dto.out.UserDto
+import com.playground.board.global.dto.ResponseDto
+import com.playground.board.global.exception.CustomException
+import com.playground.board.global.exception.ErrorCode
+import com.playground.board.persistence.entity.UserEntity
+import com.playground.board.persistence.repository.UserRepository
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class UserService(
-    private val userJpaRepository: UserJpaRepository
+    private val userRepository: UserRepository
 ): UserUseCase {
-    override fun registerUser(request: RegisterUserRequest): ResponseDto<UserDto> {
-        val user = User(
-            email = request.email,
-            password = request.password
+    override fun registerUser(command: RegisterUserCommand): ResponseDto<UserDto> {
+        val isDuplicated = userRepository.findByEmail(command.email) != null
+
+        if (isDuplicated) {
+            throw CustomException(ErrorCode.DUPLICATED_EMAIL)
+        }
+
+        val user = UserEntity(
+            email = command.email,
+            password = command.password
         )
 
-        userJpaRepository.save(user)
+        userRepository.save(user)
 
         val userDto = UserDto(
             user.id!!,
             user.email
         )
 
-        return ResponseDto(
-            status = HttpStatus.CREATED.value(),
-            statusName = HttpStatus.CREATED.name,
-            serverDataTime = LocalDateTime.now(),
-            null,
-            userDto
-        )
+        return ResponseDto(userDto)
     }
 
     override fun loginUser(id: String, password: String): ResponseDto<UserDto> {

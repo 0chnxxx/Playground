@@ -1,16 +1,17 @@
-package com.playground.board.core.dto
+package com.playground.board.global.dto
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import java.time.LocalDateTime
 
 data class ResponseDto<T>(
-    val status: Int,
-    val statusName: String,
-    val serverDataTime: LocalDateTime = LocalDateTime.now(),
+    val serverDataTime: LocalDateTime,
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    val pageResult: PageResult<T>? = null,
+    val pageResult: PageResult<T>?,
     val data: T
 ) {
+    constructor(data: T): this(LocalDateTime.now(), null, data)
+    constructor(pageResult: PageResult<T>, data: T): this(LocalDateTime.now(), pageResult, data)
+
     data class PageResult<P>(
         @JsonInclude(JsonInclude.Include.NON_NULL)
         val totalElements: Long? = null,
@@ -23,10 +24,6 @@ data class ResponseDto<T>(
         @JsonInclude(JsonInclude.Include.NON_NULL)
         val isFirst: Boolean? = null,
         @JsonInclude(JsonInclude.Include.NON_NULL)
-        val isLast: Boolean? = null,
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        val prev: P? = null,
-        @JsonInclude(JsonInclude.Include.NON_NULL)
-        val next: P? = null
+        val isLast: Boolean? = null
     )
 }

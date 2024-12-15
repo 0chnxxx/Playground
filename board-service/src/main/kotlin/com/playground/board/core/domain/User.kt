@@ -1,30 +1,22 @@
 package com.playground.board.core.domain
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Table
+import com.playground.board.persistence.entity.UserEntity
 import java.time.LocalDateTime
 
-@Entity
-@Table(name = "user")
 class User(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
-
-    @Column(nullable = false)
+    val id: Long?,
     var email: String,
-
-    @Column(nullable = false)
     var password: String,
-
-    @Column(nullable = false)
-    var createdTime: LocalDateTime = LocalDateTime.now(),
-
-    var updatedTime: LocalDateTime? = null
+    var createdTime: LocalDateTime,
+    var updatedTime: LocalDateTime?
 ) {
-    constructor() : this(null, "", "", LocalDateTime.now(), null)
+    fun toEntity(): UserEntity {
+        return UserEntity(
+            id = id,
+            email = email,
+            password = password,
+            createdTime = createdTime,
+            updatedTime = updatedTime
+        )
+    }
 }
