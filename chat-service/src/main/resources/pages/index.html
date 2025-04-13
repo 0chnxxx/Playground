@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spring Boot WebSocket Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="username-page">
+    <div class="chat-container">
+        <h1 class="title">Enter Username</h1>
+        <form id="usernameForm">
+            <input type="text" id="name" placeholder="Username" class="form-control" required />
+            <button type="submit" class="accent">Enter Chat</button>
+        </form>
+    </div>
+</div>
+
+<div id="chat-page" class="hidden">
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>WebSocket Chat</h2>
+        </div>
+        <div id="connecting" class="connecting">Connecting...</div>
+        <ul id="messageArea"></ul>
+        <form id="messageForm">
+            <div class="input-group">
+                <input type="text" id="message" placeholder="Type a message..." class="form-control" autocomplete="off" required />
+                <button type="submit" class="primary">Send</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

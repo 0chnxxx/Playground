@@ -3,3 +3,4 @@
 
 ### 목록
 - [게시판 서비스](board-service/README.md)
+- [채팅 서비스](chat-service/README.md)
