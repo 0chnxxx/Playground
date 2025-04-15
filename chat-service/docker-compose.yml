@@ -48,22 +48,38 @@ services:
     environment:
       KAFKA_ADVERTISED_HOST_NAME: kafka
       KAFKA_ADVERTISED_PORT: 9092
-      KAFKA_CREATE_TOPICS: "chat-message:1:1"  #topic이름:partition개수:replica개수
+      KAFKA_CREATE_TOPICS: "chat-message:1:1"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     networks:
       - local
 
-  application:
-    container_name: chat-service
+  api-server:
+    container_name: api-server
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: api/Dockerfile
     ports:
       - "8080:8080"
     environment:
       DATABASE_URL: jdbc:mysql://host.docker.internal:3306/chat_service
       DATABASE_USERNAME: "root"
       DATABASE_PASSWORD: "root"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - mysql
+      - redis
+      - kafka
+    networks:
+      - local
+
+  channel-server:
+    container_name: channel-server
+    build:
+      context: .
+      dockerfile: channel/Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
