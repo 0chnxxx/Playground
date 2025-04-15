@@ -4,9 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.playground.chat.chat.domain.ChatMessage
 import com.playground.chat.global.util.logger
 import org.springframework.kafka.annotation.KafkaListener
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 
-@Service
+@Component
 class ChatConsumer(
     private val mapper: ObjectMapper
 ) {

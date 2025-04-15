@@ -1,7 +1,7 @@
 package com.playground.chat.user.entity
 
 import com.playground.chat.chat.entity.ChatEntity
-import com.playground.chat.chat.entity.RoomEntity
+import com.playground.chat.chat.entity.ChatRoomEntity
 import jakarta.persistence.*
 
 @Entity
@@ -26,5 +26,9 @@ class UserEntity(
         joinColumns = [JoinColumn(name = "user_id")],
         inverseJoinColumns = [JoinColumn(name = "room_id")]
     )
-    val rooms: MutableList<RoomEntity> = mutableListOf()
-)
+    val rooms: MutableList<ChatRoomEntity> = mutableListOf()
+) {
+    fun isOwner(room: ChatRoomEntity): Boolean {
+        return true
+    }
+}

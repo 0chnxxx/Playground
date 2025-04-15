@@ -5,15 +5,15 @@ import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "message")
-class MessageEntity(
+@Table(name = "chat_message")
+class ChatMessageEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long?,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
-    val room: RoomEntity,
+    val room: ChatRoomEntity,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

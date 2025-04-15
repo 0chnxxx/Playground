@@ -328,7 +328,16 @@
         const message = document.getElementById("chat-input-text").value;
         if (!message) return;
 
-        stompClient.send(`/chat/rooms/${currentRoom.id}`, {}, JSON.stringify({content: message}));
+        const json = JSON.stringify({
+            roomId: currentRoom.id,
+            sender: {
+                userId: localStorage.getItem("userId"),
+                name: localStorage.getItem("nickname")
+            },
+            content: message
+        });
+
+        stompClient.send(`/chat/rooms/${currentRoom.id}/messages/send`, {}, json);
 
         document.getElementById("chat-input-text").value = "";
     }

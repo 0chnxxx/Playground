@@ -12,15 +12,15 @@ import java.time.LocalDateTime
 class ChatEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long?,
+    val id: Long? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     @JoinColumn(name = "user_id")
     val user: UserEntity,
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     @JoinColumn(name = "room_id")
-    val room: RoomEntity,
+    val room: ChatRoomEntity,
 
     @Column(name = "joined_at")
     val joinedAt: LocalDateTime = LocalDateTime.now(),

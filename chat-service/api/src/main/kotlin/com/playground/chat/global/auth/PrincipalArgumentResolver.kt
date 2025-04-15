@@ -27,7 +27,7 @@ class PrincipalArgumentResolver(
         val request = webRequest.nativeRequest as HttpServletRequest
 
         val token = request.getHeader("Authorization")
-            .takeIf { it.startsWith("Bearer ") }
+            ?.takeIf { it.startsWith("Bearer ") }
             ?.substring(7)
 
         if (token != null) {
@@ -35,7 +35,8 @@ class PrincipalArgumentResolver(
 
             return Principal { userId.toString() }
         } else {
-            return null
+            // TODO: 인증 실패 시 처리 필요 -> 엔드포인트별 인가 처리도 필요
+            return Principal { "0" }
         }
     }
 }

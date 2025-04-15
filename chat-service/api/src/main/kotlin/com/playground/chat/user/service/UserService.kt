@@ -7,29 +7,22 @@ import com.playground.chat.global.auth.TokenType
 import com.playground.chat.user.data.LoginUserRequest
 import com.playground.chat.user.data.RegisterUserRequest
 import com.playground.chat.user.data.UserDto
-import com.playground.chat.user.entity.UserEntity
-import com.playground.chat.user.repository.UserRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.security.Principal
 
 @Service
+@Transactional
 class UserService(
-    private val userRepository: UserRepository,
-    private val tokenProvider: TokenProvider
+    private val tokenProvider: TokenProvider,
+    private val userFinder: UserFinder,
+    private val userOperator: UserOperator
 ) {
-    fun register(registerUserRequest: RegisterUserRequest): UserTokenDto {
-        val user = UserEntity(
-            email = registerUserRequest.email,
-            password = PasswordUtil.encode(registerUserRequest.password),
-            nickname = registerUserRequest.nickname
-        )
+    fun register(request: RegisterUserRequest): UserTokenDto {
+        val user = userOperator.createUser(request)
 
-        userRepository.save(user)
-
-        val userId = user.id!!
-
-        val accessToken = tokenProvider.generate(TokenType.ACESS, userId)
-        val refreshToken = tokenProvider.generate(TokenType.REFRESH, userId)
+        val accessToken = tokenProvider.generate(TokenType.ACESS, user.id!!)
+        val refreshToken = tokenProvider.generate(TokenType.REFRESH, user.id!!)
 
         return UserTokenDto(
             accessToken = accessToken,
@@ -37,18 +30,15 @@ class UserService(
         )
     }
 
-    fun login(loginUserRequest: LoginUserRequest): UserTokenDto {
-        val user = userRepository.findByEmail(loginUserRequest.email)
-            ?: throw Exception("User Not Found : ${loginUserRequest.email}")
+    fun login(request: LoginUserRequest): UserTokenDto {
+        val user = userFinder.findUser(request.email)
 
-        if (!PasswordUtil.match(loginUserRequest.password, user.password)) {
-            throw Exception("User Wrong Password : ${loginUserRequest.email}")
+        if (!PasswordUtil.match(request.password, user.password)) {
+            throw Exception("User Wrong Password")
         }
 
-        val userId = user.id!!
-
-        val accessToken = tokenProvider.generate(TokenType.ACESS, userId)
-        val refreshToken = tokenProvider.generate(TokenType.REFRESH, userId)
+        val accessToken = tokenProvider.generate(TokenType.ACESS, user.id!!)
+        val refreshToken = tokenProvider.generate(TokenType.REFRESH, user.id!!)
 
         return UserTokenDto(
             accessToken = accessToken,
@@ -57,9 +47,7 @@ class UserService(
     }
 
     fun findMe(principal: Principal): UserDto {
-        val userId = principal.name.toLong()
-        val user = userRepository.findById(userId)
-            .orElseThrow { throw Exception("User Not Found : ${userId}") }
+        val user = userFinder.findUser(principal.name.toLong())
 
         return UserDto(
             id = user.id!!,

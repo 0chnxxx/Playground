@@ -53,10 +53,11 @@ class ChatController(
         principal: Principal,
         @RequestBody
         request: CreateChatRoomRequest
-    ): ResponseEntity<Void> {
-        chatService.createChatRoom(principal, request)
+    ): ResponseEntity<ResponseDto<RoomDto>> {
+        val room = chatService.createChatRoom(principal, request)
+        val response = ResponseDto.of(room)
 
-        return ResponseEntity(HttpStatus.OK)
+        return ResponseEntity(response, HttpStatus.OK)
     }
 
     /**
