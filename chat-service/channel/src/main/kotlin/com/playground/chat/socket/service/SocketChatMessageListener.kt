@@ -9,7 +9,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 
 @Component
-class SocketListener(
+class SocketChatMessageListener(
     private val mapper: ObjectMapper,
     private val messagingTemplate: SimpMessagingTemplate
 ): MessageListener {

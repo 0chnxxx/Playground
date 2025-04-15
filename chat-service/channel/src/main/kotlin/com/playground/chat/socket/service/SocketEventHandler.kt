@@ -11,7 +11,7 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent
 import org.springframework.web.socket.messaging.SessionDisconnectEvent
 
 @Component
-class SocketEventListener(
+class SocketEventHandler(
     private val socketSubscriber: SocketSubscriber,
     private val chatApiClient: ChatApiClient
 ) {

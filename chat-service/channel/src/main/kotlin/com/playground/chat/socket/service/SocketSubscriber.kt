@@ -11,8 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @Component
 class SocketSubscriber(
-    private val listener: SocketListener,
-    private val container: RedisMessageListenerContainer
+    private val container: RedisMessageListenerContainer,
+    private val chatMessageListener: SocketChatMessageListener,
+    private val eventMessageListener: SocketEventMessageListener
 ) {
     private val log = logger()
 
@@ -20,19 +21,19 @@ class SocketSubscriber(
     private lateinit var channel: String
 
     /**
-     * session 별 room 관리를 위한 Map
+     * SessionId to Set(RoomId)
      */
     private val sessions = ConcurrentHashMap<String, MutableSet<String>>()
 
     /**
-     * room 에 대한 session 카운트를 위한 Map
+     * RoomId to Count(SessionId)
      */
     private val subscribers = ConcurrentHashMap<String, AtomicInteger>()
 
     /**
-     * room 별 listener 관리를 위한 Map
+     * RoomId to Topic
      */
-    private val listeners = ConcurrentHashMap<String, MessageListener>()
+    private val topics = ConcurrentHashMap<String, ChannelTopic>()
 
     /**
      * [동적 구독 함수]
@@ -48,10 +49,12 @@ class SocketSubscriber(
 
             subscribers.compute(roomId) { _, count ->
                 if (count == null) {
-                    listeners[roomId] = listener
-                    container.addMessageListener(listener, ChannelTopic("${channel}:${roomId}"))
+                    val topic = topics.computeIfAbsent(roomId) { ChannelTopic("${channel}:${roomId}") }
 
-                    log.info("[✅ Chat Channel Subscribed] channel : {}", "${channel}:${roomId}")
+                    container.addMessageListener(chatMessageListener, topic)
+                    container.addMessageListener(eventMessageListener, topic)
+
+                    log.info("[✅ Chat Channel Subscribed] sessionId: {}, channel : {}", sessionId, topic.topic)
 
                     AtomicInteger(1)
                 } else {
@@ -76,11 +79,12 @@ class SocketSubscriber(
                 val remaining = count.decrementAndGet()
 
                 if (remaining <= 0) {
-                    listeners.remove(roomId)?.let { listener ->
-                        container.removeMessageListener(listener, ChannelTopic("${channel}:${roomId}"))
-                    }
+                    val topic = topics.remove(roomId) ?: return@computeIfPresent null
 
-                    log.info("[❌ Chat Channel Unsubscribed] channel : {}", "${channel}:${roomId}")
+                    container.removeMessageListener(chatMessageListener, topic)
+                    container.removeMessageListener(eventMessageListener, topic)
+
+                    log.info("[❌ Chat Channel Unsubscribed] sessionId : {}, channel : {}", sessionId, topic.topic)
 
                     null
                 } else {

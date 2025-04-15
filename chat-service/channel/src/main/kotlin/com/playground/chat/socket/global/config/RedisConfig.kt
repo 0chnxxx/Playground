@@ -19,14 +19,6 @@ class RedisConfig {
     var port: Int = 6379
 
     /**
-     * Redis 연결을 위한 RedisConnectionFactory 설정
-     */
-    @Bean
-    fun redisConnectionFactory(): RedisConnectionFactory {
-        return LettuceConnectionFactory(host, port)
-    }
-
-    /**
      * Redis 명령을 위한 RedisTemplate 설정
      */
     @Bean
@@ -40,6 +32,14 @@ class RedisConfig {
         template.valueSerializer = Jackson2JsonRedisSerializer(String::class.java)
 
         return template
+    }
+
+    /**
+     * Redis 연결을 위한 RedisConnectionFactory 설정
+     */
+    @Bean
+    fun redisConnectionFactory(): RedisConnectionFactory {
+        return LettuceConnectionFactory(host, port)
     }
 
     /**
