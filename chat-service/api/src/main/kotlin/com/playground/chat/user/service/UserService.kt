@@ -46,6 +46,18 @@ class UserService(
         )
     }
 
+    fun refresh(principal: Principal): UserTokenDto {
+        val user = userFinder.findUser(principal.name)
+
+        val accessToken = tokenProvider.generate(TokenType.ACESS, user.id!!)
+        val refreshToken = tokenProvider.generate(TokenType.REFRESH, user.id!!)
+
+        return UserTokenDto(
+            accessToken = accessToken,
+            refreshToken = refreshToken
+        )
+    }
+
     fun findMe(principal: Principal): UserDto {
         val user = userFinder.findUser(principal.name.toLong())
 

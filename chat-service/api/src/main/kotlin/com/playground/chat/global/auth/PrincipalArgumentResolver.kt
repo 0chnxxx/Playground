@@ -10,9 +10,7 @@ import org.springframework.web.method.support.ModelAndViewContainer
 import java.security.Principal
 
 @Component
-class PrincipalArgumentResolver(
-    private val tokenProvider: TokenProvider
-): HandlerMethodArgumentResolver {
+class PrincipalArgumentResolver: HandlerMethodArgumentResolver {
     override fun supportsParameter(parameter: MethodParameter): Boolean {
         return parameter.getParameterAnnotation(LoginUser::class.java) != null
                 && parameter.parameterType == Principal::class.java
@@ -25,18 +23,6 @@ class PrincipalArgumentResolver(
         binderFactory: WebDataBinderFactory?
     ): Any? {
         val request = webRequest.nativeRequest as HttpServletRequest
-
-        val token = request.getHeader("Authorization")
-            ?.takeIf { it.startsWith("Bearer ") }
-            ?.substring(7)
-
-        if (token != null) {
-            val userId = tokenProvider.parse(token, "userId").toString().toLong()
-
-            return Principal { userId.toString() }
-        } else {
-            // TODO: 인증 실패 시 처리 필요 -> 엔드포인트별 인가 처리도 필요
-            return Principal { "0" }
-        }
+        return request.userPrincipal ?: throw Exception("Unauthorized")
     }
 }

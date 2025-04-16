@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 class ChatMessageEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long?,
+    val id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")

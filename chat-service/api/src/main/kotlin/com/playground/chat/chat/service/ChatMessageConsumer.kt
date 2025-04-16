@@ -2,13 +2,19 @@ package com.playground.chat.chat.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.playground.chat.chat.domain.ChatMessage
+import com.playground.chat.chat.entity.ChatMessageEntity
+import com.playground.chat.chat.entity.ChatRoomEntity
 import com.playground.chat.global.log.logger
+import com.playground.chat.user.entity.UserEntity
+import jakarta.persistence.EntityManager
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
 
 @Component
 class ChatMessageConsumer(
-    private val mapper: ObjectMapper
+    private val mapper: ObjectMapper,
+    private val entityManager: EntityManager,
+    private val chatOperator: ChatOperator
 ) {
     private val log = logger()
 
@@ -21,7 +27,16 @@ class ChatMessageConsumer(
         try {
             val chatMessage = mapper.readValue(message, ChatMessage::class.java)
 
-            // TODO: DB 저장
+            val roomProxy = entityManager.getReference(ChatRoomEntity::class.java, chatMessage.roomId.toLong())
+            val userProxy = entityManager.getReference(UserEntity::class.java, chatMessage.sender.userId.toLong())
+
+            chatOperator.saveChatMessage(
+                ChatMessageEntity(
+                    room = roomProxy,
+                    sender = userProxy,
+                    content = chatMessage.content
+                )
+            )
 
             log.info("[📥 Chat Message Consume] message : {}", chatMessage)
         } catch (e: Exception) {

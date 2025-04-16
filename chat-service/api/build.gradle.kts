@@ -10,6 +10,9 @@ dependencies {
     // Spring Web
     implementation("org.springframework.boot:spring-boot-starter-web")
 
+    // ObjectMapper
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
     // Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 

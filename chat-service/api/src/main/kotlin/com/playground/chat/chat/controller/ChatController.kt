@@ -3,7 +3,7 @@ package com.playground.chat.chat.controller
 import com.playground.chat.chat.data.request.CreateChatRoomRequest
 import com.playground.chat.chat.data.request.FindChatRoomsRequest
 import com.playground.chat.chat.data.response.RoomDto
-import com.playground.chat.chat.service.ChatRoomService
+import com.playground.chat.chat.service.ChatService
 import com.playground.chat.global.auth.LoginUser
 import com.playground.chat.global.data.Response
 import org.springframework.http.HttpStatus
@@ -13,18 +13,19 @@ import java.security.Principal
 
 @RestController
 @RequestMapping("/chat/rooms")
-class ChatRoomController(
-    private val chatRoomService: ChatRoomService
+class ChatController(
+    private val chatService: ChatService
 ) {
     /**
      * 전체 채팅방 목록 조회 API
      */
     @GetMapping
     fun findChatRooms(
-        @RequestBody
+        @LoginUser
+        principal: Principal,
         request: FindChatRoomsRequest
     ): ResponseEntity<Response<List<RoomDto>>> {
-        val rooms = chatRoomService.findChatRooms(request)
+        val rooms = chatService.findChatRooms(principal, request)
         val response = Response.of(rooms)
 
         return ResponseEntity(response, HttpStatus.OK)
@@ -36,9 +37,10 @@ class ChatRoomController(
     @GetMapping("/me")
     fun findMyChatRooms(
         @LoginUser
-        principal: Principal
+        principal: Principal,
+        request: FindChatRoomsRequest
     ): ResponseEntity<Response<List<RoomDto>>> {
-        val rooms = chatRoomService.findMyChatRooms(principal)
+        val rooms = chatService.findMyChatRooms(principal, request)
         val response = Response.of(rooms)
 
         return ResponseEntity(response, HttpStatus.OK)
@@ -54,7 +56,7 @@ class ChatRoomController(
         @RequestBody
         request: CreateChatRoomRequest
     ): ResponseEntity<Response<RoomDto>> {
-        val room = chatRoomService.createChatRoom(principal, request)
+        val room = chatService.createChatRoom(principal, request)
         val response = Response.of(room)
 
         return ResponseEntity(response, HttpStatus.OK)
@@ -70,7 +72,7 @@ class ChatRoomController(
         @PathVariable
         roomId: Long
     ): ResponseEntity<Void> {
-        chatRoomService.joinChatRoom(principal, roomId)
+        chatService.joinChatRoom(principal, roomId)
 
         return ResponseEntity(HttpStatus.OK)
     }
@@ -85,7 +87,7 @@ class ChatRoomController(
         @PathVariable
         roomId: Long
     ): ResponseEntity<Void> {
-        chatRoomService.leaveChatRoom(principal, roomId)
+        chatService.leaveChatRoom(principal, roomId)
 
         return ResponseEntity(HttpStatus.OK)
     }
@@ -100,7 +102,7 @@ class ChatRoomController(
         @PathVariable
         roomId: Long
     ): ResponseEntity<Void> {
-        chatRoomService.deleteChatRoom(principal, roomId)
+        chatService.deleteChatRoom(principal, roomId)
 
         return ResponseEntity(HttpStatus.OK)
     }

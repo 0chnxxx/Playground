@@ -4,7 +4,7 @@ import java.security.Principal
 
 class UserPrincipal(
     val id: Long,
-    val passport: String
+    val passport: String? = null
 ): Principal {
     override fun getName(): String {
         return id.toString()

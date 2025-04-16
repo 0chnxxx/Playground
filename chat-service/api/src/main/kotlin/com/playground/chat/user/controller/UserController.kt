@@ -38,6 +38,17 @@ class UserController(
         return ResponseEntity(response, HttpStatus.OK)
     }
 
+    @PostMapping("/users/refresh")
+    fun refresh(
+        @LoginUser
+        principal: Principal
+    ): ResponseEntity<Response<UserTokenDto>> {
+        val token = userService.refresh(principal)
+        val response = Response.of(token)
+
+        return ResponseEntity(response, HttpStatus.OK)
+    }
+
     @GetMapping("/users/me")
     fun findMe(
         @LoginUser

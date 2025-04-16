@@ -9,14 +9,14 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 
 @Component
-class ChatRoomFinder(
+class ChatFinder(
     private val chatRoomRepository: ChatRoomRepository
 ) {
     fun findChatRooms(request: FindChatRoomsRequest): Page<List<ChatRoomEntity>> {
         val page = (request.page - 1).coerceAtLeast(0)
         val size = request.size
         val pageable = PageRequest.of(page, size)
-        val chatRooms = chatRoomRepository.findAll(pageable)
+        val chatRooms = chatRoomRepository.findAllWithUsers(pageable)
 
         return Page(
             totalPages = chatRooms.totalPages,
@@ -30,5 +30,20 @@ class ChatRoomFinder(
     fun findChatRoom(roomId: Long): ChatRoomEntity {
         return chatRoomRepository.findById(roomId)
             .orElseThrow { Exception("Chat Room Not Found") }
+    }
+
+    fun findMyChatRooms(user: UserEntity, request: FindChatRoomsRequest): Page<List<ChatRoomEntity>> {
+        val page = (request.page - 1).coerceAtLeast(0)
+        val size = request.size
+        val pageable = PageRequest.of(page, size)
+        val chatRooms = chatRoomRepository.findAllByUser(user, pageable)
+
+        return Page(
+            totalPages = chatRooms.totalPages,
+            totalElements = chatRooms.totalElements,
+            isFirst = chatRooms.isFirst,
+            isLast = chatRooms.isLast,
+            data = chatRooms.content
+        )
     }
 }

@@ -2,16 +2,19 @@ package com.playground.chat.chat.service
 
 import com.playground.chat.chat.data.request.CreateChatRoomRequest
 import com.playground.chat.chat.entity.ChatEntity
+import com.playground.chat.chat.entity.ChatMessageEntity
 import com.playground.chat.chat.entity.ChatRoomEntity
+import com.playground.chat.chat.repository.ChatMessageRepository
 import com.playground.chat.chat.repository.ChatRepository
 import com.playground.chat.chat.repository.ChatRoomRepository
 import com.playground.chat.user.entity.UserEntity
 import org.springframework.stereotype.Component
 
 @Component
-class ChatRoomOperator(
+class ChatOperator(
     private val chatRepository: ChatRepository,
-    private val chatRoomRepository: ChatRoomRepository
+    private val chatRoomRepository: ChatRoomRepository,
+    private val chatMessageRepository: ChatMessageRepository
 ) {
     fun createChatRoom(user: UserEntity, request: CreateChatRoomRequest): ChatRoomEntity {
         val room = ChatRoomEntity(
@@ -42,5 +45,9 @@ class ChatRoomOperator(
     fun deleteChatRoom(room: ChatRoomEntity) {
         chatRepository.deleteByRoom(room)
         chatRoomRepository.delete(room)
+    }
+
+    fun saveChatMessage(message: ChatMessageEntity) {
+        chatMessageRepository.save(message)
     }
 }

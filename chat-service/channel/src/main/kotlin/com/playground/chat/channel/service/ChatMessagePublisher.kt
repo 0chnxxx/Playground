@@ -26,7 +26,7 @@ class ChatMessagePublisher(
             val json = mapper.writeValueAsString(message)
 
             // Redis로 채팅 메시지 발행
-            redisTemplate.convertAndSend("${channel}:${roomId}", json)
+            redisTemplate.convertAndSend("${channel}:${roomId}", message)
 
             // Kafka로 채팅 메시지 발행
             kafkaTemplate.send(topic, roomId, json)
