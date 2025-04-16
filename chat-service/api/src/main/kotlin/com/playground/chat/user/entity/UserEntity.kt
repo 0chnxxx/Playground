@@ -29,6 +29,6 @@ class UserEntity(
     val rooms: MutableList<ChatRoomEntity> = mutableListOf()
 ) {
     fun isOwner(room: ChatRoomEntity): Boolean {
-        return true
+        return this.rooms.any { it == room && it.owner == this }
     }
 }

@@ -16,8 +16,8 @@ class ChatMessageEntity(
     val room: ChatRoomEntity,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    val user: UserEntity,
+    @JoinColumn(name = "sender_id")
+    val sender: UserEntity,
 
     val content: String,
 
