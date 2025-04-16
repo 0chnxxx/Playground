@@ -1,4 +1,4 @@
-package com.playground.chat.channel.global.config
+package com.playground.chat.global.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -40,19 +40,5 @@ class RedisConfig {
     @Bean
     fun redisConnectionFactory(): RedisConnectionFactory {
         return LettuceConnectionFactory(host, port)
-    }
-
-    /**
-     * Redis Pub/Sub 메시지 리스닝을 위한 RedisMessageListenerContainer 설정
-     */
-    @Bean
-    fun redisMessageListenerContainer(
-        redisConnectionFactory: RedisConnectionFactory
-    ): RedisMessageListenerContainer {
-        val container = RedisMessageListenerContainer()
-
-        container.connectionFactory = redisConnectionFactory
-
-        return container
     }
 }

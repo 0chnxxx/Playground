@@ -15,20 +15,20 @@ class ChatMessagePublisher(
 ) {
     private val log = logger()
 
-    @Value("\${websocket.channel.prefix}")
+    @Value("\${spring.redis.channel.chat-message.prefix}")
     private lateinit var channel: String
 
-    @Value("\${spring.kafka.chat.topic}")
+    @Value("\${spring.kafka.channel.chat.topic}")
     private lateinit var topic: String
 
     fun publish(roomId: String, message: Any) {
         try {
             val json = mapper.writeValueAsString(message)
 
-            // Redis로 채팅 전송 메시지 발행
+            // Redis로 채팅 메시지 발행
             redisTemplate.convertAndSend("${channel}:${roomId}", json)
 
-            // Kafka로 채팅 저장 메시지 발행
+            // Kafka로 채팅 메시지 발행
             kafkaTemplate.send(topic, roomId, json)
 
             log.info("[✅ Chat Message Send] channel : {}, message : {}", roomId, json)

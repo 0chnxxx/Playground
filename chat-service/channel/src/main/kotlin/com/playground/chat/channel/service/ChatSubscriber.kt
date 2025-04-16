@@ -16,8 +16,11 @@ class ChatSubscriber(
 ) {
     private val log = logger()
 
-    @Value("\${websocket.channel.prefix}")
-    private lateinit var channel: String
+    @Value("\${spring.redis.channel.chat-event.prefix}")
+    private lateinit var eventChannel: String
+
+    @Value("\${spring.redis.channel.chat-message.prefix}")
+    private lateinit var messageChannel: String
 
     /**
      * UserId to Set(RoomId)
@@ -32,7 +35,8 @@ class ChatSubscriber(
     /**
      * RoomId to Topic
      */
-    private val topics = ConcurrentHashMap<String, ChannelTopic>()
+    private val messageTopics = ConcurrentHashMap<String, ChannelTopic>()
+    private val eventTopics = ConcurrentHashMap<String, ChannelTopic>()
 
     /**
      * [동적 구독 함수]
@@ -41,19 +45,30 @@ class ChatSubscriber(
      * count 가 0인 경우 listener 생성
      */
     fun subscribe(userId: String, roomIds: List<String>) {
-        val subscribedRooms = sessions.computeIfAbsent(userId) { mutableSetOf() }
+        val subscribedRooms = sessions.computeIfAbsent(userId) { ConcurrentHashMap.newKeySet() }
 
         for (roomId in roomIds) {
             if (!subscribedRooms.add(roomId)) continue
 
             subscribers.compute(roomId) { _, count ->
                 if (count == null) {
-                    val topic = topics.computeIfAbsent(roomId) { ChannelTopic("${channel}:${roomId}") }
+                    messageTopics
+                        .computeIfAbsent(roomId) {
+                            ChannelTopic("${messageChannel}:${roomId}")
+                        }
+                        .let { topic ->
+                            container.addMessageListener(chatMessageListener, topic)
+                        }
 
-                    container.addMessageListener(chatMessageListener, topic)
-                    container.addMessageListener(chatEventListener, topic)
+                    eventTopics
+                        .computeIfAbsent(roomId) {
+                            ChannelTopic("${eventChannel}:${roomId}")
+                        }
+                        .let { topic ->
+                            container.addMessageListener(chatEventListener, topic)
+                        }
 
-                    log.info("[✅ Chat Channel Subscribed] userId: {}, channel : {}", userId, topic.topic)
+                    log.info("[✅ Chat Channel Subscribed] userId: {}, roomId : {}", userId, roomId)
 
                     AtomicInteger(1)
                 } else {
@@ -78,12 +93,17 @@ class ChatSubscriber(
                 val remaining = count.decrementAndGet()
 
                 if (remaining <= 0) {
-                    val topic = topics.remove(roomId) ?: return@computeIfPresent null
+                    messageTopics[roomId]?.let { topic ->
+                        container.removeMessageListener(chatMessageListener, topic)
+                        messageTopics.remove(roomId)
+                    }
 
-                    container.removeMessageListener(chatMessageListener, topic)
-                    container.removeMessageListener(chatEventListener, topic)
+                    eventTopics[roomId]?.let { topic ->
+                        container.removeMessageListener(chatEventListener, topic)
+                        eventTopics.remove(roomId)
+                    }
 
-                    log.info("[❌ Chat Channel Unsubscribed] userId : {}, channel : {}", userId, topic.topic)
+                    log.info("[❌ Chat Channel Unsubscribed] userId : {}, roomId : {}", userId, roomId)
 
                     null
                 } else {

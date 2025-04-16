@@ -13,7 +13,7 @@ class ChatMessageConsumer(
     private val log = logger()
 
     @KafkaListener(
-        topics = ["\${spring.kafka.chat.topic}"],
+        topics = ["\${spring.kafka.channel.chat.topic}"],
         groupId = "chat-group",
         containerFactory = "chatKafkaListenerContainerFactory",
     )
