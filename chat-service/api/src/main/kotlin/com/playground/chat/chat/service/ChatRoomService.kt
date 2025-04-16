@@ -11,13 +11,13 @@ import java.security.Principal
 
 @Service
 @Transactional
-class ChatService(
+class ChatRoomService(
     private val userFinder: UserFinder,
-    private val chatFinder: ChatFinder,
-    private val chatOperator: ChatOperator,
+    private val chatRoomFinder: ChatRoomFinder,
+    private val chatRoomOperator: ChatRoomOperator,
 ) {
     fun findChatRooms(request: FindChatRoomsRequest): Page<List<RoomDto>> {
-        val rooms = chatFinder.findChatRooms(request)
+        val rooms = chatRoomFinder.findChatRooms(request)
 
         return Page(
             totalPages = rooms.totalPages,
@@ -35,7 +35,7 @@ class ChatService(
 
     fun findMyChatRooms(principal: Principal): List<RoomDto> {
         val user = userFinder.findUser(principal.name.toLong())
-        val rooms = chatFinder.findChatRoomsByUser(user)
+        val rooms = chatRoomFinder.findChatRoomsByUser(user)
 
         return rooms.map {
             RoomDto(
@@ -48,7 +48,7 @@ class ChatService(
     fun createChatRoom(principal: Principal, request: CreateChatRoomRequest): RoomDto {
         val user = userFinder.findUser(principal.name.toLong())
 
-        val room = chatOperator.createChatRoom(user, request)
+        val room = chatRoomOperator.createChatRoom(user, request)
 
         return RoomDto(
             id = room.id!!,
@@ -58,26 +58,26 @@ class ChatService(
 
     fun joinChatRoom(principal: Principal, roomId: Long) {
         val user = userFinder.findUser(principal.name.toLong())
-        val room = chatFinder.findChatRoom(roomId)
+        val room = chatRoomFinder.findChatRoom(roomId)
 
-        chatOperator.joinChatRoom(user, room)
+        chatRoomOperator.joinChatRoom(user, room)
     }
 
     fun leaveChatRoom(principal: Principal, roomId: Long) {
         val user = userFinder.findUser(principal.name.toLong())
-        val room = chatFinder.findChatRoom(roomId)
+        val room = chatRoomFinder.findChatRoom(roomId)
 
-        chatOperator.leaveChatRoom(user, room)
+        chatRoomOperator.leaveChatRoom(user, room)
     }
 
     fun deleteChatRoom(principal: Principal, roomId: Long) {
         val user = userFinder.findUser(principal.name.toLong())
-        val room = chatFinder.findChatRoom(roomId)
+        val room = chatRoomFinder.findChatRoom(roomId)
 
         if(!user.isOwner(room)) {
             throw Exception("This User is Not Owner")
         }
 
-        chatOperator.deleteChatRoom(room)
+        chatRoomOperator.deleteChatRoom(room)
     }
 }

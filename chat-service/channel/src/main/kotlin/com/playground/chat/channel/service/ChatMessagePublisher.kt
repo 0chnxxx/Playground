@@ -1,14 +1,14 @@
-package com.playground.chat.socket.service
+package com.playground.chat.channel.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.playground.chat.global.util.logger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.kafka.core.KafkaTemplate
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 
-@Service
-class SocketPublisher(
+@Component
+class ChatMessagePublisher(
     private val mapper: ObjectMapper,
     private val redisTemplate: RedisTemplate<String, String>,
     private val kafkaTemplate: KafkaTemplate<String, String>

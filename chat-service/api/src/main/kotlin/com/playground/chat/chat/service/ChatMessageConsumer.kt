@@ -5,10 +5,9 @@ import com.playground.chat.chat.domain.ChatMessage
 import com.playground.chat.global.util.logger
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
-import org.springframework.stereotype.Service
 
 @Component
-class ChatConsumer(
+class ChatMessageConsumer(
     private val mapper: ObjectMapper
 ) {
     private val log = logger()
@@ -24,9 +23,9 @@ class ChatConsumer(
 
             // TODO: DB 저장
 
-            log.info("[📥 Kafka Consume] message : {}", chatMessage)
+            log.info("[📥 Chat Message Consume] message : {}", chatMessage)
         } catch (e: Exception) {
-            log.error("[❌ Kafka Consume Fail] {}", e.message)
+            log.error("[❌ Chat Message Consume Fail] {}", e.message)
         }
     }
 }

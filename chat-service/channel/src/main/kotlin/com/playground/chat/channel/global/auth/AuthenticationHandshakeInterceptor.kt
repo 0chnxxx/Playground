@@ -1,4 +1,4 @@
-package com.playground.chat.socket.global.auth
+package com.playground.chat.channel.global.auth
 
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse

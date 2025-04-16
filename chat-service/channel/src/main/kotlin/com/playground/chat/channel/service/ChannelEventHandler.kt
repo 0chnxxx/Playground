@@ -1,8 +1,8 @@
-package com.playground.chat.socket.service
+package com.playground.chat.channel.service
 
 import com.playground.chat.global.util.logger
 import com.playground.chat.global.auth.UserPrincipal
-import com.playground.chat.chat.client.ChatApiClient
+import com.playground.chat.channel.client.chat.ChatApiClient
 import org.springframework.context.event.EventListener
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.stereotype.Component
@@ -11,8 +11,8 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent
 import org.springframework.web.socket.messaging.SessionDisconnectEvent
 
 @Component
-class SocketEventHandler(
-    private val socketSubscriber: SocketSubscriber,
+class ChannelEventHandler(
+    private val chatSubscriber: ChatSubscriber,
     private val chatApiClient: ChatApiClient
 ) {
     private val log = logger()
@@ -27,7 +27,7 @@ class SocketEventHandler(
         val accessor = StompHeaderAccessor.wrap(event.message)
         val principal = accessor.user!! as UserPrincipal
         val sessionId = accessor.sessionId!!
-        val userId = principal.id
+        val userId = principal.id.toString()
 
         log.info("[🌐 Chat Connect Attempt] sessionId: {}, userId: {}", sessionId, userId)
 
@@ -35,7 +35,7 @@ class SocketEventHandler(
         val rooms = response.data
         val roomIds = rooms.map { it.id.toString() }.toList()
 
-        socketSubscriber.subscribe(sessionId, roomIds)
+        chatSubscriber.subscribe(userId, roomIds)
     }
 
     @EventListener
@@ -57,9 +57,9 @@ class SocketEventHandler(
         val accessor = StompHeaderAccessor.wrap(event.message)
         val principal = accessor.user!! as UserPrincipal
         val sessionId = accessor.sessionId!!
-        val userId = principal.id
+        val userId = principal.id.toString()
 
-        socketSubscriber.unsubscribe(sessionId)
+        chatSubscriber.unsubscribe(userId)
 
         log.info("[❌ Chat Disconnected] sessionId: {}, userId: {}", sessionId, userId)
     }

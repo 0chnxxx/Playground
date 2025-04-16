@@ -7,7 +7,7 @@
 
 # Secrets
 **/application.yml
-**/secrets.yml
+**/application-*.yml
 
 # User-specific stuff
 .idea/**/workspace.xml

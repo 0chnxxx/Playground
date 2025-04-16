@@ -1,13 +1,13 @@
-package com.playground.chat.socket.controller
+package com.playground.chat.channel.controller
 
 import com.playground.chat.chat.domain.ChatMessage
-import com.playground.chat.socket.service.SocketPublisher
+import com.playground.chat.channel.service.ChatMessagePublisher
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class SocketController(
-    private val socketPublisher: SocketPublisher
+class ChannelController(
+    private val chatMessagePublisher: ChatMessagePublisher
 ) {
     /**
      * 채팅 메시지 전송
@@ -16,6 +16,6 @@ class SocketController(
     fun sendChatMessage(
         chatMessage: ChatMessage
     ) {
-        socketPublisher.publish(chatMessage.roomId, chatMessage)
+        chatMessagePublisher.publish(chatMessage.roomId, chatMessage)
     }
 }

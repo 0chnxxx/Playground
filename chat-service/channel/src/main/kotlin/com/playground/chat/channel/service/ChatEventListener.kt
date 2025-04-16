@@ -1,4 +1,4 @@
-package com.playground.chat.socket.service
+package com.playground.chat.channel.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.playground.chat.chat.domain.ChatMessage
@@ -9,7 +9,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 
 @Component
-class SocketChatMessageListener(
+class ChatEventListener(
     private val mapper: ObjectMapper,
     private val messagingTemplate: SimpMessagingTemplate
 ): MessageListener {

@@ -1,4 +1,4 @@
-package com.playground.chat.chat.client
+package com.playground.chat.channel.client.chat
 
 import com.playground.chat.chat.data.RoomDto
 import com.playground.chat.global.data.ResponseDto

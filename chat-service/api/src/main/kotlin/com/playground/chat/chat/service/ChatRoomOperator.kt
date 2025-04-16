@@ -9,12 +9,13 @@ import com.playground.chat.user.entity.UserEntity
 import org.springframework.stereotype.Component
 
 @Component
-class ChatOperator(
+class ChatRoomOperator(
     private val chatRepository: ChatRepository,
     private val chatRoomRepository: ChatRoomRepository
 ) {
     fun createChatRoom(user: UserEntity, request: CreateChatRoomRequest): ChatRoomEntity {
         val room = ChatRoomEntity(
+            owner = user,
             name = request.name
         )
 

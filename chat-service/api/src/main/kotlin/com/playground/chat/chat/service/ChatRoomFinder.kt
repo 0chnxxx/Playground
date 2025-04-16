@@ -9,7 +9,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Component
 
 @Component
-class ChatFinder(
+class ChatRoomFinder(
     private val chatRoomRepository: ChatRoomRepository
 ) {
     fun findChatRooms(request: FindChatRoomsRequest): Page<List<ChatRoomEntity>> {

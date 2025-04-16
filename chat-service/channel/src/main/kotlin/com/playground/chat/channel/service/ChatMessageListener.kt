@@ -1,4 +1,4 @@
-package com.playground.chat.socket.service
+package com.playground.chat.channel.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.playground.chat.chat.domain.ChatMessage
@@ -9,7 +9,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 
 @Component
-class SocketEventMessageListener(
+class ChatMessageListener(
     private val mapper: ObjectMapper,
     private val messagingTemplate: SimpMessagingTemplate
 ): MessageListener {
@@ -22,6 +22,7 @@ class SocketEventMessageListener(
             val destination = "/chat/rooms/${messageDto.roomId}"
 
             messagingTemplate.convertAndSend(destination, messageDto)
+
             log.info("[📨 Chat Message Receive] channel : {}, message : {}", messageDto.roomId, messageDto)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Receive Fail] {}", e.printStackTrace())
