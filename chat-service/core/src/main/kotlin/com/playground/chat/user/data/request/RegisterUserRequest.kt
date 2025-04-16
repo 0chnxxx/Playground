@@ -1,4 +1,4 @@
-package com.playground.chat.user.data
+package com.playground.chat.user.data.request
 
 data class RegisterUserRequest(
     val email: String,

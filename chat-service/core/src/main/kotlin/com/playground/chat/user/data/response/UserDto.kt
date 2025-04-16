@@ -1,4 +1,4 @@
-package com.playground.chat.user.data
+package com.playground.chat.user.data.response
 
 data class UserDto(
     val id: Long,

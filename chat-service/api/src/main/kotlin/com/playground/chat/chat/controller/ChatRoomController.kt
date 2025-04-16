@@ -1,11 +1,11 @@
 package com.playground.chat.chat.controller
 
-import com.playground.chat.chat.data.CreateChatRoomRequest
-import com.playground.chat.chat.data.FindChatRoomsRequest
-import com.playground.chat.chat.data.RoomDto
+import com.playground.chat.chat.data.request.CreateChatRoomRequest
+import com.playground.chat.chat.data.request.FindChatRoomsRequest
+import com.playground.chat.chat.data.response.RoomDto
 import com.playground.chat.chat.service.ChatRoomService
 import com.playground.chat.global.auth.LoginUser
-import com.playground.chat.global.data.ResponseDto
+import com.playground.chat.global.data.Response
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -23,9 +23,9 @@ class ChatRoomController(
     fun findChatRooms(
         @RequestBody
         request: FindChatRoomsRequest
-    ): ResponseEntity<ResponseDto<List<RoomDto>>> {
+    ): ResponseEntity<Response<List<RoomDto>>> {
         val rooms = chatRoomService.findChatRooms(request)
-        val response = ResponseDto.of(rooms)
+        val response = Response.of(rooms)
 
         return ResponseEntity(response, HttpStatus.OK)
     }
@@ -37,9 +37,9 @@ class ChatRoomController(
     fun findMyChatRooms(
         @LoginUser
         principal: Principal
-    ): ResponseEntity<ResponseDto<List<RoomDto>>> {
+    ): ResponseEntity<Response<List<RoomDto>>> {
         val rooms = chatRoomService.findMyChatRooms(principal)
-        val response = ResponseDto.of(rooms)
+        val response = Response.of(rooms)
 
         return ResponseEntity(response, HttpStatus.OK)
     }
@@ -53,9 +53,9 @@ class ChatRoomController(
         principal: Principal,
         @RequestBody
         request: CreateChatRoomRequest
-    ): ResponseEntity<ResponseDto<RoomDto>> {
+    ): ResponseEntity<Response<RoomDto>> {
         val room = chatRoomService.createChatRoom(principal, request)
-        val response = ResponseDto.of(room)
+        val response = Response.of(room)
 
         return ResponseEntity(response, HttpStatus.OK)
     }

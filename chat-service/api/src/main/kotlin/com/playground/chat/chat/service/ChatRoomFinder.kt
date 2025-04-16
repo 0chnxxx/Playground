@@ -1,6 +1,6 @@
 package com.playground.chat.chat.service
 
-import com.playground.chat.chat.data.FindChatRoomsRequest
+import com.playground.chat.chat.data.request.FindChatRoomsRequest
 import com.playground.chat.chat.entity.ChatRoomEntity
 import com.playground.chat.chat.repository.ChatRoomRepository
 import com.playground.chat.global.data.Page
@@ -25,10 +25,6 @@ class ChatRoomFinder(
             isLast = chatRooms.isLast,
             data = chatRooms.content
         )
-    }
-
-    fun findChatRoomsByUser(user: UserEntity): List<ChatRoomEntity> {
-        return chatRoomRepository.findAllByUser(user)
     }
 
     fun findChatRoom(roomId: Long): ChatRoomEntity {

@@ -1,6 +1,6 @@
 package com.playground.chat.chat.service
 
-import com.playground.chat.chat.data.CreateChatRoomRequest
+import com.playground.chat.chat.data.request.CreateChatRoomRequest
 import com.playground.chat.chat.entity.ChatEntity
 import com.playground.chat.chat.entity.ChatRoomEntity
 import com.playground.chat.chat.repository.ChatRepository

@@ -1,6 +1,6 @@
 package com.playground.chat.global.data
 
-data class ResponseDto<T>(
+data class Response<T>(
     val timestamp: Long,
     val pageResult: PageResult? = null,
     val data: T,
@@ -13,15 +13,15 @@ data class ResponseDto<T>(
     )
 
     companion object {
-        fun <T>of(data: T): ResponseDto<T> {
-            return ResponseDto(
+        fun <T>of(data: T): Response<T> {
+            return Response(
                 timestamp = System.currentTimeMillis(),
                 data = data
             )
         }
 
-        fun <T>of(page: Page<T>): ResponseDto<T> {
-            return ResponseDto(
+        fun <T>of(page: Page<T>): Response<T> {
+            return Response(
                 timestamp = System.currentTimeMillis(),
                 pageResult = PageResult(
                     totalPages = page.totalPages,

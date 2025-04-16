@@ -15,7 +15,7 @@ class ChatMessagePublisher(
 ) {
     private val log = logger()
 
-    @Value("\${spring.redis.channel.chat-message.prefix}")
+    @Value("\${spring.data.redis.channel.chat-message.topic}")
     private lateinit var channel: String
 
     @Value("\${spring.kafka.channel.chat.topic}")

@@ -14,7 +14,7 @@ class KafkaConsumerConfig {
     @Value("\${spring.kafka.bootstrap-servers}")
     lateinit var bootstrapServers: String
 
-    @Value("\${spring.kafka.chat.group-id}")
+    @Value("\${spring.kafka.channel.chat.group-id}")
     lateinit var groupId: String
 
     @Bean

@@ -13,17 +13,17 @@ class ChatEventPublisher(
 ) {
     private val log = logger()
 
-    @Value("\${spring.redis.channel.chat-event.prefix}")
+    @Value("\${spring.data.redis.channel.chat-event.topic}")
     private lateinit var channel: String
 
-    fun publish(roomId: String, message: Any) {
+    fun publish(roomId: String, event: Any) {
         try {
-            val json = mapper.writeValueAsString(message)
+            val json = mapper.writeValueAsString(event)
 
             // Redis로 채팅 이벤트 발행
-            redisTemplate.convertAndSend("${channel}:${roomId}", json)
+            redisTemplate.convertAndSend(channel, json)
 
-            log.info("[✅ Chat Event Send] channel : {}, event : {}", roomId, json)
+            log.info("[✅ Chat Event Send] event : {}", json)
         } catch (e: Exception) {
             log.error("[❌ Chat Event Send Fail] {}", e.printStackTrace())
         }

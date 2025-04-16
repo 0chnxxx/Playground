@@ -1,12 +1,12 @@
 package com.playground.chat.user.service
 
-import com.playground.chat.user.data.UserTokenDto
+import com.playground.chat.user.data.response.UserTokenDto
 import com.playground.chat.global.util.PasswordUtil
 import com.playground.chat.global.auth.TokenProvider
 import com.playground.chat.global.auth.TokenType
-import com.playground.chat.user.data.LoginUserRequest
-import com.playground.chat.user.data.RegisterUserRequest
-import com.playground.chat.user.data.UserDto
+import com.playground.chat.user.data.request.LoginUserRequest
+import com.playground.chat.user.data.request.RegisterUserRequest
+import com.playground.chat.user.data.response.UserDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.Principal

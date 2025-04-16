@@ -9,11 +9,4 @@ import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
-interface ChatRoomRepository: JpaRepository<ChatRoomEntity, Long> {
-    @Query("""
-        SELECT c.room
-        FROM ChatEntity c
-        WHERE c.user = :user
-    """)
-    fun findAllByUser(@Param("user") user: UserEntity): List<ChatRoomEntity>
-}
+interface ChatRoomRepository: JpaRepository<ChatRoomEntity, Long>

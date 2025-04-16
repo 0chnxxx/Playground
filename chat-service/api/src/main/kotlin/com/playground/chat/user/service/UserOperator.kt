@@ -1,7 +1,7 @@
 package com.playground.chat.user.service
 
 import com.playground.chat.global.util.PasswordUtil
-import com.playground.chat.user.data.RegisterUserRequest
+import com.playground.chat.user.data.request.RegisterUserRequest
 import com.playground.chat.user.entity.UserEntity
 import com.playground.chat.user.repository.UserRepository
 import org.springframework.stereotype.Component

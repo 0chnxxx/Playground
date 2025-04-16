@@ -1,11 +1,13 @@
 package com.playground.chat.channel.global.config
 
+import com.playground.chat.channel.service.ChatEventListener
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.listener.ChannelTopic
 import org.springframework.data.redis.listener.RedisMessageListenerContainer
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
@@ -18,12 +20,16 @@ class RedisConfig {
     @Value("\${spring.data.redis.port}")
     var port: Int = 6379
 
+    @Value("\${spring.data.redis.channel.chat-event.topic}")
+    private lateinit var channel: String
+
     /**
      * Redis 명령을 위한 RedisTemplate 설정
      */
     @Bean
     fun redisTemplate(
-        redisConnectionFactory: RedisConnectionFactory
+        redisConnectionFactory: RedisConnectionFactory,
+        chatEventListener: ChatEventListener
     ): RedisTemplate<String, String> {
         val template = RedisTemplate<String, String>()
 
@@ -47,11 +53,12 @@ class RedisConfig {
      */
     @Bean
     fun redisMessageListenerContainer(
-        redisConnectionFactory: RedisConnectionFactory
+        redisConnectionFactory: RedisConnectionFactory, chatEventListener: ChatEventListener
     ): RedisMessageListenerContainer {
         val container = RedisMessageListenerContainer()
 
         container.connectionFactory = redisConnectionFactory
+        container.addMessageListener(chatEventListener, ChannelTopic(channel))
 
         return container
     }

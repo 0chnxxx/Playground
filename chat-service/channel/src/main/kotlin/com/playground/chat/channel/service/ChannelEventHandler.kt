@@ -35,7 +35,7 @@ class ChannelEventHandler(
         val rooms = response.data
         val roomIds = rooms.map { it.id.toString() }.toList()
 
-        chatSubscriber.subscribe(userId, roomIds)
+        chatSubscriber.subscribeToRooms(userId, roomIds)
     }
 
     @EventListener
@@ -59,7 +59,7 @@ class ChannelEventHandler(
         val sessionId = accessor.sessionId!!
         val userId = principal.id.toString()
 
-        chatSubscriber.unsubscribe(userId)
+        chatSubscriber.unsubscribeToUser(userId)
 
         log.info("[❌ Chat Disconnected] sessionId: {}, userId: {}", sessionId, userId)
     }
