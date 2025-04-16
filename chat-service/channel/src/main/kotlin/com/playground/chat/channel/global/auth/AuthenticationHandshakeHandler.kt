@@ -25,16 +25,16 @@ class AuthenticationHandshakeHandler(
     ): Principal? {
         val token = attributes["token"] as String?
 
-        return if (token != null && tokenProvider.validate(token)) {
+        if (token != null && tokenProvider.validate(token)) {
             val userId = tokenProvider.parse(token, "userId").toString().toLong()
-            val token = tokenProvider.generate(TokenType.PASSPORT, userId)
+            val passport = tokenProvider.generate(TokenType.PASSPORT, userId)
 
-            UserPrincipal(
+            return UserPrincipal(
                 id = userId,
-                passport = token
+                passport = passport
             )
         } else {
-            null
+            throw Exception("Unauthorized")
         }
     }
 }

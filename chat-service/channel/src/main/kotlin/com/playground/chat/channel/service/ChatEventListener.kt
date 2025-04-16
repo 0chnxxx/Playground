@@ -22,6 +22,7 @@ class ChatEventListener(
             val destination = "/chat/rooms/${messageDto.roomId}"
 
             messagingTemplate.convertAndSend(destination, messageDto)
+
             log.info("[📨 Chat Message Receive] channel : {}, message : {}", messageDto.roomId, messageDto)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Receive Fail] {}", e.printStackTrace())
