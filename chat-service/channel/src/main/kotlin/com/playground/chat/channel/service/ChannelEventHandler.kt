@@ -1,6 +1,6 @@
 package com.playground.chat.channel.service
 
-import com.playground.chat.global.util.logger
+import com.playground.chat.global.log.logger
 import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.channel.client.ChatApiClient
 import org.springframework.context.event.EventListener

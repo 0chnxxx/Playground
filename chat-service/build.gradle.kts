@@ -47,8 +47,5 @@ subprojects {
         // Kotlin
         implementation("org.jetbrains.kotlin:kotlin-stdlib")
         testImplementation("org.jetbrains.kotlin:kotlin-test")
-
-        // Spring Boot
-        implementation("org.springframework.boot:spring-boot-starter")
     }
 }

@@ -1,6 +1,6 @@
 package com.playground.chat.global.filter
 
-import com.playground.chat.global.util.logger
+import com.playground.chat.global.log.logger
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

@@ -1,4 +1,4 @@
-package com.playground.chat.global.util
+package com.playground.chat.global.log
 
 import org.slf4j.LoggerFactory
 

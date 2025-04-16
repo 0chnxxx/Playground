@@ -1,6 +1,9 @@
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 dependencies {
+    // Spring Context
+    implementation("org.springframework:spring-context")
+
     // JWT
     implementation("io.jsonwebtoken:jjwt:0.12.6")
 

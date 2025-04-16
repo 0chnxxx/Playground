@@ -1,6 +1,7 @@
 package com.playground.chat.channel.service
 
-import com.playground.chat.global.util.logger
+import com.playground.chat.global.log.logger
+import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.listener.ChannelTopic
 import org.springframework.data.redis.listener.RedisMessageListenerContainer
@@ -11,12 +12,16 @@ import java.util.concurrent.atomic.AtomicInteger
 @Component
 class ChatSubscriber(
     private val container: RedisMessageListenerContainer,
-    private val chatMessageListener: ChatMessageListener
+    private val chatMessageListener: ChatMessageListener,
+    private val chatEventListener: ChatEventListener
 ) {
     private val log = logger()
 
     @Value("\${spring.data.redis.channel.chat-message.topic}")
-    private lateinit var channel: String
+    private lateinit var messageChannel: String
+
+    @Value("\${spring.data.redis.channel.chat-event.topic}")
+    private lateinit var eventChannel: String
 
     /**
      * UserId to Set(RoomId)
@@ -32,6 +37,11 @@ class ChatSubscriber(
      * RoomId to Topic
      */
     private val topics = ConcurrentHashMap<String, ChannelTopic>()
+
+    @PostConstruct
+    fun init() {
+        container.addMessageListener(chatEventListener, ChannelTopic(eventChannel))
+    }
 
     /**
      * [동적 구독 함수]
@@ -50,11 +60,11 @@ class ChatSubscriber(
     }
 
     fun subscribeToRoom(userId: String, roomId: String) {
-        val subscribedRooms = sessions.computeIfAbsent(userId) { ConcurrentHashMap.newKeySet() }
+        val subscribedRooms = sessions[userId] ?: return
 
-        if (!subscribedRooms.add(roomId)) return
-
-        subscribe(roomId, userId)
+        if (subscribedRooms.add(roomId)) {
+            subscribe(roomId, userId)
+        }
     }
 
     private fun subscribe(roomId: String, userId: String) {
@@ -62,7 +72,7 @@ class ChatSubscriber(
             if (count == null) {
                 topics
                     .computeIfAbsent(roomId) {
-                        ChannelTopic("${channel}:${roomId}")
+                        ChannelTopic("${messageChannel}:${roomId}")
                     }
                     .let { topic ->
                         container.addMessageListener(chatMessageListener, topic)

@@ -1,7 +1,7 @@
 package com.playground.chat.channel.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.playground.chat.global.util.logger
+import com.playground.chat.global.log.logger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.kafka.core.KafkaTemplate

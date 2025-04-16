@@ -1,26 +1,21 @@
 package com.playground.chat.global.auth
 
-import com.playground.chat.global.util.logger
+import com.playground.chat.global.log.logger
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
-import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.Date
 import javax.crypto.SecretKey
 
 @Component
-class TokenProvider {
+class TokenProvider(
+    @Value("\${jwt.secret-key}")
+    private val secretKey: String
+) {
     private val log = logger()
 
-    @Value("\${jwt.secret-key}")
-    private lateinit var secretKey: String
-    private lateinit var signingKey: SecretKey
-
-    @PostConstruct
-    fun init() {
-        signingKey = Keys.hmacShaKeyFor(secretKey.toByteArray())
-    }
+    val signingKey: SecretKey = Keys.hmacShaKeyFor(secretKey.toByteArray())
 
     fun generate(type: TokenType, userId: Long): String {
         val now = System.currentTimeMillis()
