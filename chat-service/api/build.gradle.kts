@@ -1,6 +1,8 @@
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 plugins {
+    kotlin("kapt")
+    kotlin("plugin.allopen")
     kotlin("plugin.jpa") version "1.9.25"
 }
 
@@ -9,9 +11,6 @@ dependencies {
 
     // Spring Web
     implementation("org.springframework.boot:spring-boot-starter-web")
-
-    // ObjectMapper
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     // Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
@@ -24,12 +23,19 @@ dependencies {
 
     // Spring Data JPA
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
 
-    // Spring Test
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // QueryDSL
+    implementation("io.github.openfeign.querydsl:querydsl-core:6.10.1")
+    implementation("io.github.openfeign.querydsl:querydsl-jpa:6.10.1")
+    kapt("io.github.openfeign.querydsl:querydsl-apt:6.10.1:jpa")
+
+    // ObjectMapper
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+}
+
+allOpen {
+    annotation("jakarta.persistence.Entity")
 }
 
 val jar: Jar by tasks

@@ -12,16 +12,16 @@ class ChatEventHandler(
     fun handleChatRoomEvent(event: ChatRoomEvent) {
         when (event.type) {
             ChatRoomEvent.EventType.CREATE -> {
-                chatSubscriber.subscribeToRoom(event.userId.toString(), event.roomId.toString())
+                chatSubscriber.subscribeToRoom(event.userId, event.roomId)
             }
             ChatRoomEvent.EventType.JOIN -> {
-                chatSubscriber.subscribeToRoom(event.userId.toString(), event.roomId.toString())
+                chatSubscriber.subscribeToRoom(event.userId, event.roomId)
             }
             ChatRoomEvent.EventType.LEAVE -> {
-                chatSubscriber.unsubscribeToUserRoom(event.userId.toString(), event.roomId.toString())
+                chatSubscriber.unsubscribeToUserRoom(event.userId, event.roomId)
             }
             ChatRoomEvent.EventType.DELETE -> {
-                chatSubscriber.unsubscribeToRoom(event.roomId.toString())
+                chatSubscriber.unsubscribeToRoom(event.roomId)
             }
         }
     }

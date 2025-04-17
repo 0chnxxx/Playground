@@ -21,7 +21,7 @@ class ChatMessagePublisher(
     @Value("\${spring.kafka.channel.chat.topic}")
     private lateinit var topic: String
 
-    fun publish(roomId: String, message: Any) {
+    fun publish(roomId: Long, message: Any) {
         try {
             val json = mapper.writeValueAsString(message)
 
@@ -29,7 +29,7 @@ class ChatMessagePublisher(
             redisTemplate.convertAndSend("${channel}:${roomId}", message)
 
             // Kafka로 채팅 메시지 발행
-            kafkaTemplate.send(topic, roomId, json)
+            kafkaTemplate.send(topic, roomId.toString(), json)
 
             log.info("[✅ Chat Message Send] channel : {}, message : {}", roomId, json)
         } catch (e: Exception) {

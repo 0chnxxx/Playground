@@ -12,7 +12,7 @@ import java.security.Principal
 @Component
 class PrincipalArgumentResolver: HandlerMethodArgumentResolver {
     override fun supportsParameter(parameter: MethodParameter): Boolean {
-        return parameter.getParameterAnnotation(LoginUser::class.java) != null
+        return parameter.getParameterAnnotation(AuthenticatedPrincipal::class.java) != null
                 && parameter.parameterType == Principal::class.java
     }
 

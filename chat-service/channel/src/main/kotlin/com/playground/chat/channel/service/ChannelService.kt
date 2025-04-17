@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service
 class ChannelService(
     private val chatMessagePublisher: ChatMessagePublisher
 ) {
-    fun sendChatMessage(roomId: String, message: ChatMessageDto) {
+    fun sendChatMessage(roomId: Long, message: ChatMessageDto) {
         chatMessagePublisher.publish(roomId, message)
     }
 }

@@ -9,12 +9,12 @@ class UserFinder(
     private val userRepository: UserRepository
 ) {
     fun findUser(userId: Long): UserEntity {
-        return userRepository.findById(userId)
-            .orElseThrow { throw Exception("User Not Found") }
+        return userRepository.findUserById(userId)
+            ?: throw Exception("User Not Found")
     }
 
     fun findUser(email: String): UserEntity {
-        return userRepository.findByEmail(email)
+        return userRepository.findUserByEmail(email)
             ?: throw Exception("User Not Found")
     }
 }

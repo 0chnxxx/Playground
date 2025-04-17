@@ -6,9 +6,6 @@ dependencies {
     // WebSocket
     implementation("org.springframework.boot:spring-boot-starter-websocket")
 
-    // ObjectMapper
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-
     // Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
@@ -18,10 +15,9 @@ dependencies {
     // OpenFeign
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
-    // Spring Test
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // ObjectMapper
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }
 
 val jar: Jar by tasks

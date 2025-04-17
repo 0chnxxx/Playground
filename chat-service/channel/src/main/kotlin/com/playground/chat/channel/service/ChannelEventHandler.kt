@@ -27,13 +27,13 @@ class ChannelEventHandler(
         val accessor = StompHeaderAccessor.wrap(event.message)
         val principal = accessor.user!! as UserPrincipal
         val sessionId = accessor.sessionId!!
-        val userId = principal.id.toString()
+        val userId = principal.id
 
         log.info("[🌐 Chat Connect Attempt] sessionId: {}, userId: {}", sessionId, userId)
 
         val response = chatApiClient.findMyChatRooms(principal.getBearerPassport())
         val rooms = response.data
-        val roomIds = rooms.map { it.id.toString() }.toList()
+        val roomIds = rooms.map { it.id }.toList()
 
         chatSubscriber.subscribeToRooms(userId, roomIds)
     }
@@ -57,7 +57,7 @@ class ChannelEventHandler(
         val accessor = StompHeaderAccessor.wrap(event.message)
         val principal = accessor.user!! as UserPrincipal
         val sessionId = accessor.sessionId!!
-        val userId = principal.id.toString()
+        val userId = principal.id
 
         chatSubscriber.unsubscribeToUser(userId)
 

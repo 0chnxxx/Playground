@@ -26,17 +26,17 @@ class ChatSubscriber(
     /**
      * UserId to Set(RoomId)
      */
-    private val sessions = ConcurrentHashMap<String, MutableSet<String>>()
+    private val sessions = ConcurrentHashMap<Long, MutableSet<Long>>()
 
     /**
      * RoomId to Count(UserId)
      */
-    private val subscribers = ConcurrentHashMap<String, AtomicInteger>()
+    private val subscribers = ConcurrentHashMap<Long, AtomicInteger>()
 
     /**
      * RoomId to Topic
      */
-    private val topics = ConcurrentHashMap<String, ChannelTopic>()
+    private val topics = ConcurrentHashMap<Long, ChannelTopic>()
 
     @PostConstruct
     fun init() {
@@ -49,7 +49,7 @@ class ChatSubscriber(
      * room별로 listener를 1:1로 생성하여 중복되는 listener의 경우 count 증가
      * count가 0인 경우 listener 생성
      */
-    fun subscribeToRooms(userId: String, roomIds: List<String>) {
+    fun subscribeToRooms(userId: Long, roomIds: List<Long>) {
         val subscribedRooms = sessions.computeIfAbsent(userId) { ConcurrentHashMap.newKeySet() }
 
         for (roomId in roomIds) {
@@ -59,7 +59,7 @@ class ChatSubscriber(
         }
     }
 
-    fun subscribeToRoom(userId: String, roomId: String) {
+    fun subscribeToRoom(userId: Long, roomId: Long) {
         val subscribedRooms = sessions[userId] ?: return
 
         if (subscribedRooms.add(roomId)) {
@@ -67,7 +67,7 @@ class ChatSubscriber(
         }
     }
 
-    private fun subscribe(roomId: String, userId: String) {
+    private fun subscribe(roomId: Long, userId: Long) {
         subscribers.compute(roomId) { _, count ->
             if (count == null) {
                 topics
@@ -94,7 +94,7 @@ class ChatSubscriber(
      * session 종료 시 구독 했던 room 들을 가져와 0명이 될 때까지 count 감소
      * count 가 0 인 경우 listener 삭제
      */
-    fun unsubscribeToUser(userId: String) {
+    fun unsubscribeToUser(userId: Long) {
         val subscribedRooms = sessions.remove(userId) ?: return
 
         for (roomId in subscribedRooms) {
@@ -102,7 +102,7 @@ class ChatSubscriber(
         }
     }
 
-    fun unsubscribeToRoom(roomId: String) {
+    fun unsubscribeToRoom(roomId: Long) {
         sessions.forEach { (userId, rooms) ->
             if (rooms.remove(roomId)) {
                 unsubscribe(roomId, userId)
@@ -110,7 +110,7 @@ class ChatSubscriber(
         }
     }
 
-    fun unsubscribeToUserRoom(userId: String, roomId: String) {
+    fun unsubscribeToUserRoom(userId: Long, roomId: Long) {
         val subscribedRooms = sessions[userId] ?: return
 
         if (subscribedRooms.remove(roomId)) {
@@ -118,7 +118,7 @@ class ChatSubscriber(
         }
     }
 
-    private fun unsubscribe(roomId: String, userId: String) {
+    private fun unsubscribe(roomId: Long, userId: Long) {
         subscribers.computeIfPresent(roomId) { _, count ->
             val remaining = count.decrementAndGet()
 

@@ -1,11 +1,15 @@
 package com.playground.chat.global.data
 
+import java.time.LocalDateTime
+
 data class Response<T>(
-    val timestamp: Long,
+    val serverTime: LocalDateTime,
     val pageResult: PageResult? = null,
     val data: T,
 ) {
     data class PageResult(
+        val page: Int,
+        val size: Int,
         val totalPages: Int,
         val totalElements: Long,
         val isFirst: Boolean,
@@ -15,21 +19,23 @@ data class Response<T>(
     companion object {
         fun <T>of(data: T): Response<T> {
             return Response(
-                timestamp = System.currentTimeMillis(),
+                serverTime = LocalDateTime.now(),
                 data = data
             )
         }
 
-        fun <T>of(page: Page<T>): Response<T> {
+        fun <T>of(pagination: Pagination<T>): Response<T> {
             return Response(
-                timestamp = System.currentTimeMillis(),
+                serverTime = LocalDateTime.now(),
                 pageResult = PageResult(
-                    totalPages = page.totalPages,
-                    totalElements = page.totalElements,
-                    isFirst = page.isFirst,
-                    isLast = page.isLast
+                    page = pagination.page,
+                    size = pagination.size,
+                    totalPages = pagination.totalPages,
+                    totalElements = pagination.totalElements,
+                    isFirst = pagination.isFirst,
+                    isLast = pagination.isLast
                 ),
-                data = page.data
+                data = pagination.data
             )
         }
     }

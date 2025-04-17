@@ -6,12 +6,12 @@ import com.playground.chat.chat.data.request.FindChatRoomsRequest
 import com.playground.chat.chat.data.response.ChatMessageDto
 import com.playground.chat.chat.data.response.ChatRoomDto
 import com.playground.chat.chat.service.ChatService
-import com.playground.chat.global.auth.LoginUser
+import com.playground.chat.global.auth.AuthenticatedPrincipal
+import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.global.data.Response
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.security.Principal
 
 @RestController
 @RequestMapping("/chat/rooms")
@@ -23,8 +23,8 @@ class ChatController(
      */
     @GetMapping
     fun findChatRooms(
-        @LoginUser
-        principal: Principal,
+        @AuthenticatedPrincipal
+        principal: UserPrincipal,
         request: FindChatRoomsRequest
     ): ResponseEntity<Response<List<ChatRoomDto>>> {
         val rooms = chatService.findChatRooms(principal, request)
@@ -38,8 +38,8 @@ class ChatController(
      */
     @GetMapping("/me")
     fun findMyChatRooms(
-        @LoginUser
-        principal: Principal
+        @AuthenticatedPrincipal
+        principal: UserPrincipal
     ): ResponseEntity<Response<List<ChatRoomDto>>> {
         val rooms = chatService.findMyChatRooms(principal)
         val response = Response.of(rooms)
@@ -52,8 +52,8 @@ class ChatController(
      */
     @PostMapping
     fun createChatRoom(
-        @LoginUser
-        principal: Principal,
+        @AuthenticatedPrincipal
+        principal: UserPrincipal,
         @RequestBody
         request: CreateChatRoomRequest
     ): ResponseEntity<Response<ChatRoomDto>> {
@@ -68,8 +68,8 @@ class ChatController(
      */
     @PostMapping("/{roomId}/join")
     fun joinChatRoom(
-        @LoginUser
-        principal: Principal,
+        @AuthenticatedPrincipal
+        principal: UserPrincipal,
         @PathVariable
         roomId: Long
     ): ResponseEntity<Void> {
@@ -83,8 +83,8 @@ class ChatController(
      */
     @PostMapping("/{roomId}/leave")
     fun leaveChatRoom(
-        @LoginUser
-        principal: Principal,
+        @AuthenticatedPrincipal
+        principal: UserPrincipal,
         @PathVariable
         roomId: Long
     ): ResponseEntity<Void> {
@@ -98,8 +98,8 @@ class ChatController(
      */
     @DeleteMapping("/{roomId}")
     fun deleteChatRoom(
-        @LoginUser
-        principal: Principal,
+        @AuthenticatedPrincipal
+        principal: UserPrincipal,
         @PathVariable
         roomId: Long
     ): ResponseEntity<Void> {
@@ -108,10 +108,13 @@ class ChatController(
         return ResponseEntity(HttpStatus.OK)
     }
 
+    /**
+     * 채팅 메세지 목록 조회 API
+     */
     @GetMapping("/{roomId}/messages")
     fun findChatMessages(
-        @LoginUser
-        principal: Principal,
+        @AuthenticatedPrincipal
+        principal: UserPrincipal,
         @PathVariable
         roomId: Long,
         request: FindChatMessagesRequest

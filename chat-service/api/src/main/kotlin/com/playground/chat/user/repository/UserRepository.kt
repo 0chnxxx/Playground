@@ -1,10 +1,35 @@
 package com.playground.chat.user.repository
 
+import com.playground.chat.user.entity.QUserEntity
 import com.playground.chat.user.entity.UserEntity
-import org.springframework.data.jpa.repository.JpaRepository
+import com.querydsl.jpa.impl.JPAQueryFactory
+import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Repository
 
 @Repository
-interface UserRepository: JpaRepository<UserEntity, Long> {
-    fun findByEmail(email: String): UserEntity?
+class UserRepository(
+    private val entityManager: EntityManager,
+    private val jpaQueryFactory: JPAQueryFactory
+) {
+    fun findUserById(userId: Long): UserEntity? {
+        val qUser = QUserEntity("user")
+
+        return jpaQueryFactory
+            .selectFrom(qUser)
+            .where(qUser.id.eq(userId))
+            .fetchOne()
+    }
+
+    fun findUserByEmail(email: String): UserEntity? {
+        val qUser = QUserEntity("user")
+
+        return jpaQueryFactory
+            .selectFrom(qUser)
+            .where(qUser.email.eq(email))
+            .fetchOne()
+    }
+
+    fun saveUser(user: UserEntity) {
+        entityManager.persist(user)
+    }
 }

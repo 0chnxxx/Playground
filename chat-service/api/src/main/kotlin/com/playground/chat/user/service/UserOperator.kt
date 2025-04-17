@@ -17,7 +17,7 @@ class UserOperator(
             nickname = registerUserRequest.nickname
         )
 
-        userRepository.save(user)
+        userRepository.saveUser(user)
 
         return user
     }

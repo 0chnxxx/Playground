@@ -263,8 +263,8 @@
                     if (recentMessages.length >= 100) {
                         recentMessages.shift();
                     }
-                    recentMessages.push({ ...msg, isMine: msg.sender.userId == userId });
-                    appendMessage({ ...msg, isMine: msg.sender.userId == userId });
+                    recentMessages.push({ ...msg, isMine: msg.userId == userId });
+                    appendMessage({ ...msg, isMine: msg.userId == userId });
                 }
                 updateRoomLastMessage(roomId, msg);
             });
@@ -499,7 +499,7 @@
         div.className = `flex items-start mb-2 ${isMine ? 'justify-end' : 'justify-start'}`;
         div.innerHTML = `
             <div class="flex flex-col max-w-xs">
-                <p class="text-xs text-gray-600 mb-1 ${isMine ? 'text-right' : 'text-left'}">${msg.sender?.name || 'Unknown'}</p>
+                <p class="text-xs text-gray-600 mb-1 ${isMine ? 'text-right' : 'text-left'}">${msg?.nickname || 'Unknown'}</p>
                 <div class="p-3 rounded-lg ${isMine ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}">
                     <p class="text-sm">${msg.content || ''}</p>
                 </div>
@@ -517,10 +517,8 @@
         if (!content.trim() || !stompClient || !stompClient.connected || !currentRoom) return;
         const message = {
             roomId: currentRoom.id,
-            sender: {
-                userId: userId,
-                name: nickname,
-            },
+            userId: userId,
+            nickname: nickname,
             content: content,
             isMine: true,
         };

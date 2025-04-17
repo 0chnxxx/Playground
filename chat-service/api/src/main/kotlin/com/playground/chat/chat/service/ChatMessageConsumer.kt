@@ -9,6 +9,7 @@ import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.EntityManager
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Transactional
 
 @Component
 class ChatMessageConsumer(
@@ -18,6 +19,7 @@ class ChatMessageConsumer(
 ) {
     private val log = logger()
 
+    @Transactional
     @KafkaListener(
         topics = ["\${spring.kafka.channel.chat.topic}"],
         groupId = "chat-group",
@@ -27,8 +29,8 @@ class ChatMessageConsumer(
         try {
             val chatMessageDto = mapper.readValue(message, ChatMessageDto::class.java)
 
-            val roomProxy = entityManager.getReference(ChatRoomEntity::class.java, chatMessageDto.roomId.toLong())
-            val userProxy = entityManager.getReference(UserEntity::class.java, chatMessageDto.sender.userId.toLong())
+            val roomProxy = entityManager.getReference(ChatRoomEntity::class.java, chatMessageDto.roomId)
+            val userProxy = entityManager.getReference(UserEntity::class.java, chatMessageDto.userId)
 
             chatOperator.saveChatMessage(
                 ChatMessageEntity(

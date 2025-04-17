@@ -1,5 +1,6 @@
 package com.playground.chat.global.auth
 
+import com.playground.chat.user.service.UserFinder
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletRequestWrapper
@@ -12,7 +13,8 @@ import java.security.Principal
 
 @Component
 class JwtAuthenticationFilter(
-    private val tokenProvider: TokenProvider
+    private val tokenProvider: TokenProvider,
+    private val userFinder: UserFinder
 ): OncePerRequestFilter() {
     private val excludedPaths = listOf("/users/login", "/users/register")
 
@@ -37,7 +39,9 @@ class JwtAuthenticationFilter(
 
         if (token != null && tokenProvider.validate(token)) {
             val userId = tokenProvider.parse(token, "userId").toString().toLong()
-            val principal = UserPrincipal(userId)
+            val user = userFinder.findUser(userId)
+
+            val principal = UserPrincipal(user.id!!)
 
             val wrappedRequest = object : HttpServletRequestWrapper(request) {
                 override fun getUserPrincipal(): Principal = principal
