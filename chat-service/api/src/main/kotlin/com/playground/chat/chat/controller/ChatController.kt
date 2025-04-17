@@ -1,8 +1,10 @@
 package com.playground.chat.chat.controller
 
 import com.playground.chat.chat.data.request.CreateChatRoomRequest
+import com.playground.chat.chat.data.request.FindChatMessagesRequest
 import com.playground.chat.chat.data.request.FindChatRoomsRequest
-import com.playground.chat.chat.data.response.RoomDto
+import com.playground.chat.chat.data.response.ChatMessageDto
+import com.playground.chat.chat.data.response.ChatRoomDto
 import com.playground.chat.chat.service.ChatService
 import com.playground.chat.global.auth.LoginUser
 import com.playground.chat.global.data.Response
@@ -24,7 +26,7 @@ class ChatController(
         @LoginUser
         principal: Principal,
         request: FindChatRoomsRequest
-    ): ResponseEntity<Response<List<RoomDto>>> {
+    ): ResponseEntity<Response<List<ChatRoomDto>>> {
         val rooms = chatService.findChatRooms(principal, request)
         val response = Response.of(rooms)
 
@@ -37,10 +39,9 @@ class ChatController(
     @GetMapping("/me")
     fun findMyChatRooms(
         @LoginUser
-        principal: Principal,
-        request: FindChatRoomsRequest
-    ): ResponseEntity<Response<List<RoomDto>>> {
-        val rooms = chatService.findMyChatRooms(principal, request)
+        principal: Principal
+    ): ResponseEntity<Response<List<ChatRoomDto>>> {
+        val rooms = chatService.findMyChatRooms(principal)
         val response = Response.of(rooms)
 
         return ResponseEntity(response, HttpStatus.OK)
@@ -55,7 +56,7 @@ class ChatController(
         principal: Principal,
         @RequestBody
         request: CreateChatRoomRequest
-    ): ResponseEntity<Response<RoomDto>> {
+    ): ResponseEntity<Response<ChatRoomDto>> {
         val room = chatService.createChatRoom(principal, request)
         val response = Response.of(room)
 
@@ -105,5 +106,19 @@ class ChatController(
         chatService.deleteChatRoom(principal, roomId)
 
         return ResponseEntity(HttpStatus.OK)
+    }
+
+    @GetMapping("/{roomId}/messages")
+    fun findChatMessages(
+        @LoginUser
+        principal: Principal,
+        @PathVariable
+        roomId: Long,
+        request: FindChatMessagesRequest
+    ): ResponseEntity<Response<List<ChatMessageDto>>> {
+        val messages = chatService.findChatMessages(principal, roomId, request)
+        val response = Response.of(messages)
+
+        return ResponseEntity(response, HttpStatus.OK)
     }
 }

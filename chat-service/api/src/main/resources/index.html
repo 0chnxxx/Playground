@@ -34,41 +34,53 @@
         </div>
     </div>
 
-    <!-- Chat Rooms Page -->
+    <!-- Chat Rooms Page (My Rooms) -->
     <div id="rooms-page" class="hidden flex-1 flex flex-col h-full">
         <div class="p-6 bg-blue-500 text-white flex items-center justify-between shrink-0">
             <div class="flex items-center">
                 <button id="logout-btn" class="mr-4 text-white hover:text-gray-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
                 </button>
-                <h1 class="text-xl font-bold">채팅방</h1>
+                <h1 class="text-xl font-bold">내 채팅방</h1>
             </div>
-            <button id="create-room-btn" class="text-white hover:text-gray-200">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-            </button>
-        </div>
-        <div class="flex border-b shrink-0">
-            <button id="all-rooms-tab" class="flex-1 p-4 text-center text-blue-500 border-b-2 border-blue-500">전체 채팅방</button>
-            <button id="my-rooms-tab" class="flex-1 p-4 text-center text-gray-500">내 채팅방</button>
+            <div class="flex space-x-2">
+                <button id="search-rooms-btn" class="text-white hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </button>
+                <button id="create-room-btn" class="text-white hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                </button>
+            </div>
         </div>
         <div id="rooms-list" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
     </div>
 
+    <!-- All Rooms Page -->
+    <div id="all-rooms-page" class="hidden flex-1 flex flex-col h-full">
+        <div class="p-6 bg-blue-500 text-white flex items-center justify-between shrink-0">
+            <div class="flex items-center">
+                <button id="back-to-my-rooms-btn" class="mr-4 text-white hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <h1 class="text-xl font-bold">전체 채팅방</h1>
+            </div>
+        </div>
+        <div id="all-rooms-list" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+    </div>
+
     <!-- Chat Page -->
-    <div id="chat-page" class="hidden flex-1 flex flex-col">
+    <div id="chat-page" class="hidden flex-1 flex flex-col h-full">
         <div class="p-6 bg-blue-500 text-white flex items-center shrink-0">
             <button id="back-to-rooms-btn" class="mr-4 text-white hover:text-gray-200">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
             </button>
             <h1 id="chat-room-title" class="text-xl font-bold"></h1>
         </div>
-        <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+        <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col"></div>
         <div class="p-4 border-t shrink-0">
             <div class="flex space-x-2">
                 <input id="message-input" type="text" placeholder="메시지 입력..." class="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button id="send-message-btn" class="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                </button>
+                <button id="send-message-btn" class="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">전송</button>
             </div>
         </div>
     </div>
@@ -105,13 +117,18 @@
     let nickname = localStorage.getItem('nickname') || null;
     let stompClient = null;
     let currentRoom = null;
-    let activeTab = 'all';
     let currentPage = 1;
     let isLoadingRooms = false;
     let hasMoreRooms = true;
     let pendingRoom = null;
     let roomsCache = [];
+    let allRoomsCache = [];
     let subscribedRooms = new Set();
+    let messagePage = 1;
+    let isLoadingMessages = false;
+    let hasMoreMessages = true;
+    let messagesCache = [];
+    let recentMessages = [];
 
     // Debounce utility
     function debounce(func, wait) {
@@ -131,6 +148,7 @@
         'login': document.getElementById('login-page'),
         'register': document.getElementById('register-page'),
         'rooms': document.getElementById('rooms-page'),
+        'all-rooms': document.getElementById('all-rooms-page'),
         'chat': document.getElementById('chat-page'),
     };
 
@@ -138,22 +156,28 @@
         Object.values(pages).forEach(p => p.classList.add('hidden'));
         pages[page].classList.remove('hidden');
         if (pushState) {
-            history.pushState({ page, activeTab }, '', `#${page}`);
+            history.pushState({ page }, '', `#${page}`);
         }
         if (page === 'rooms') {
+            loadRooms('my');
+        }
+        if (page === 'all-rooms') {
             currentPage = 1;
             hasMoreRooms = true;
-            loadRooms(activeTab);
+            loadRooms('all');
         }
         if (page === 'chat' && currentRoom) {
             document.getElementById('chat-room-title').textContent = currentRoom.name;
+            messagePage = 1;
+            hasMoreMessages = true;
+            messagesCache = [];
+            recentMessages = [];
             loadMessages(currentRoom.id);
         }
     }
 
     window.addEventListener('popstate', (e) => {
         const page = e.state?.page || 'login';
-        activeTab = e.state?.activeTab || 'all';
         navigate(page, false);
     });
 
@@ -220,6 +244,9 @@
             stompClient = Stomp.over(socket);
             stompClient.connect({}, () => {
                 console.log('WebSocket connected');
+                if (pages['rooms'].classList.contains('hidden') === false) {
+                    roomsCache.forEach(room => subscribeToRoom(room.id));
+                }
             }, (error) => {
                 console.error('WebSocket error:', error);
             });
@@ -233,7 +260,11 @@
             stompClient.subscribe(`/chat/rooms/${roomId}`, (message) => {
                 const msg = JSON.parse(message.body);
                 if (currentRoom && currentRoom.id === roomId) {
-                    appendMessage(msg);
+                    if (recentMessages.length >= 100) {
+                        recentMessages.shift();
+                    }
+                    recentMessages.push({ ...msg, isMine: msg.sender.userId == userId });
+                    appendMessage({ ...msg, isMine: msg.sender.userId == userId });
                 }
                 updateRoomLastMessage(roomId, msg);
             });
@@ -250,14 +281,22 @@
                 roomsCache[roomIndex].unreadCount = (roomsCache[roomIndex].unreadCount || 0) + 1;
             }
             roomsCache.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
-            renderRooms();
+            renderRooms('my');
+        }
+        const allRoomIndex = allRoomsCache.findIndex(room => room.id === roomId);
+        if (allRoomIndex !== -1) {
+            allRoomsCache[allRoomIndex].lastMessage = msg.content;
+            allRoomsCache[allRoomIndex].lastMessageTime = msg.timestamp;
+            allRoomsCache.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
+            renderRooms('all');
         }
     }
 
-    function renderRooms() {
-        const roomsList = document.getElementById('rooms-list');
+    function renderRooms(type) {
+        const roomsList = type === 'my' ? document.getElementById('rooms-list') : document.getElementById('all-rooms-list');
+        const cache = type === 'my' ? roomsCache : allRoomsCache;
         roomsList.innerHTML = '';
-        roomsCache.forEach(room => {
+        cache.forEach(room => {
             const div = document.createElement('div');
             div.className = 'p-4 bg-gray-100 rounded-lg hover:bg-gray-200 cursor-pointer';
             div.innerHTML = `
@@ -266,23 +305,23 @@
                     <div class="flex-1">
                         <div class="flex justify-between">
                             <h2 class="font-bold">${room.name || 'Unnamed Room'}</h2>
-                            <div class="text-right">
-                                <span class="text-sm text-gray-500 block">${room.lastMessageTime ? new Date(room.lastMessageTime).toLocaleTimeString() : ''}</span>
-                                ${room.unreadCount > 0 ? `<div class="bg-red-500 text-white text-xs px-2 py-1 rounded-full mt-1 inline-block">${room.unreadCount}</div>` : ''}
-                            </div>
+                            <span class="text-sm text-gray-500">${room.lastMessageTime ? new Date(room.lastMessageTime).toLocaleTimeString() : ''}</span>
                         </div>
-                        <p class="text-gray-600 truncate">${room.lastMessage || 'No messages'}</p>
+                        <div class="flex items-center space-x-2">
+                            <p class="text-gray-600 truncate flex-1">${room.lastMessage || 'No messages'}</p>
+                            ${room.unreadCount > 0 ? `<div class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">${room.unreadCount}</div>` : ''}
+                        </div>
                     </div>
                 </div>
             `;
             div.addEventListener('click', () => {
                 currentRoom = room;
-                if (activeTab === 'all' && !room.isJoined) {
+                if (type === 'all' && !room.isJoined) {
                     pendingRoom = room;
                     document.getElementById('join-room-modal').classList.remove('hidden');
                 } else {
                     room.unreadCount = 0;
-                    renderRooms();
+                    renderRooms(type);
                     navigate('chat');
                 }
             });
@@ -341,6 +380,8 @@
             if (stompClient && stompClient.connected) {
                 subscribeToRoom(newRoom.id);
             }
+            roomsCache.unshift(newRoom);
+            renderRooms('my');
             alert('채팅방이 생성되었습니다.');
             document.getElementById('create-room-modal').classList.add('hidden');
             document.getElementById('room-name-input').value = '';
@@ -356,6 +397,12 @@
             if (stompClient && stompClient.connected) {
                 subscribeToRoom(roomId);
             }
+            const room = allRoomsCache.find(r => r.id === roomId);
+            if (room) {
+                room.isJoined = true;
+                roomsCache.unshift(room);
+                renderRooms('my');
+            }
             navigate('chat');
         } catch (error) {
             alert('채팅방 참여 실패: ' + error.response?.data?.message || '오류 발생');
@@ -363,28 +410,28 @@
     }
 
     async function loadRooms(type, append = false) {
-        if (isLoadingRooms || !hasMoreRooms) return;
+        if (isLoadingRooms) return;
         isLoadingRooms = true;
         try {
-            const endpoint = type === 'all' ? `/chat/rooms?page=${currentPage}&size=10` : `/chat/rooms/me?page=${currentPage}&size=10`;
+            const endpoint = type === 'all' ? `/chat/rooms?page=${currentPage}&size=10` : '/chat/rooms/me';
             const res = await api.get(endpoint);
-            const roomsList = document.getElementById('rooms-list');
+            const roomsList = type === 'my' ? document.getElementById('rooms-list') : document.getElementById('all-rooms-list');
+            const cache = type === 'my' ? roomsCache : allRoomsCache;
             if (!append) {
-                roomsCache = [];
+                cache.length = 0;
                 roomsList.innerHTML = '';
             }
             const rooms = res.data.data || [];
-            if (rooms.length === 0) {
+            if (type === 'all' && rooms.length < 10) {
                 hasMoreRooms = false;
-            } else {
-                roomsCache.push(...rooms);
-                roomsCache.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
-                renderRooms();
-                rooms.forEach(room => {
-                    if ((type === 'my' || room.isJoined) && stompClient && stompClient.connected) {
-                        subscribeToRoom(room.id);
-                    }
-                });
+            }
+            cache.push(...rooms);
+            cache.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
+            renderRooms(type);
+            if (type === 'my' && stompClient && stompClient.connected) {
+                rooms.forEach(room => subscribeToRoom(room.id));
+            }
+            if (type === 'all' && append) {
                 currentPage++;
             }
         } catch (error) {
@@ -395,33 +442,74 @@
         }
     }
 
-    async function loadMessages(roomId) {
+    async function loadMessages(roomId, append = false) {
+        if (isLoadingMessages || !hasMoreMessages) return;
+        isLoadingMessages = true;
         try {
-            const res = await api.get(`/chat/rooms/${roomId}/messages`);
+            const res = await api.get(`/chat/rooms/${roomId}/messages?page=${messagePage}&size=30`);
             const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML = '';
-            const messages = res.data.data || [];
-            messages.forEach(appendMessage);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            const scrollHeightBefore = messagesDiv.scrollHeight;
+            const wasAtBottom = messagesDiv.scrollTop + messagesDiv.clientHeight >= messagesDiv.scrollHeight - 20;
+
+            if (!append) {
+                messagesCache = [];
+            }
+
+            const messages = (res.data.data || []).reverse();
+            if (messages.length < 30) {
+                hasMoreMessages = false;
+            }
+
+            if (append) {
+                messagesCache.unshift(...messages);
+            } else {
+                messagesCache.push(...messages);
+            }
+
+            renderMessages(messagesDiv, wasAtBottom, scrollHeightBefore, append);
+
+            messagePage++;
         } catch (error) {
             console.error('Failed to load messages:', error);
             alert('메시지를 불러오지 못했습니다.');
+        } finally {
+            isLoadingMessages = false;
         }
     }
 
-    function appendMessage(msg) {
+    function renderMessages(messagesDiv, wasAtBottom, scrollHeightBefore, append) {
+        requestAnimationFrame(() => {
+            messagesDiv.innerHTML = '';
+            [...messagesCache, ...recentMessages].forEach(msg => {
+                appendMessage(msg, false);
+            });
+
+            if (append) {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight - scrollHeightBefore;
+            } else if (wasAtBottom) {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        });
+    }
+
+    function appendMessage(msg, scrollToBottom = true) {
         const messagesDiv = document.getElementById('messages');
         const div = document.createElement('div');
         const isMine = msg.isMine || false;
-        div.className = `flex ${isMine ? 'justify-end' : 'justify-start'} mb-2`;
+        div.className = `flex items-start mb-2 ${isMine ? 'justify-end' : 'justify-start'}`;
         div.innerHTML = `
-            <div class="max-w-xs p-3 rounded-lg ${isMine ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}">
-                <p class="text-sm">${msg.content || ''}</p>
-                <p class="text-xs opacity-75">${msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}</p>
+            <div class="flex flex-col max-w-xs">
+                <p class="text-xs text-gray-600 mb-1 ${isMine ? 'text-right' : 'text-left'}">${msg.sender?.name || 'Unknown'}</p>
+                <div class="p-3 rounded-lg ${isMine ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}">
+                    <p class="text-sm">${msg.content || ''}</p>
+                </div>
+                ${msg.timestamp ? `<span class="text-xs text-gray-500 mt-1 ${isMine ? 'text-right' : 'text-left'}">${new Date(msg.timestamp).toLocaleTimeString()}</span>` : ''}
             </div>
         `;
         messagesDiv.appendChild(div);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        if (scrollToBottom) {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
     }
 
     function sendMessage() {
@@ -434,8 +522,13 @@
                 name: nickname,
             },
             content: content,
+            isMine: true,
         };
         stompClient.send(`/chat/rooms/${currentRoom.id}/messages/send`, {}, JSON.stringify(message));
+        if (recentMessages.length >= 100) {
+            recentMessages.shift();
+        }
+        recentMessages.push(message);
         document.getElementById('message-input').value = '';
     }
 
@@ -483,28 +576,12 @@
             navigate('login');
         });
 
-        document.getElementById('all-rooms-tab').addEventListener('click', () => {
-            document.getElementById('all-rooms-tab').classList.add('text-blue-500', 'border-b-2', 'border-blue-500');
-            document.getElementById('all-rooms-tab').classList.remove('text-gray-500');
-            document.getElementById('my-rooms-tab').classList.add('text-gray-500');
-            document.getElementById('my-rooms-tab').classList.remove('text-blue-500', 'border-b-2', 'border-blue-500');
-            activeTab = 'all';
-            currentPage = 1;
-            hasMoreRooms = true;
-            loadRooms('all');
-            document.getElementById('rooms-list').scrollTop = 0;
+        document.getElementById('search-rooms-btn').addEventListener('click', () => {
+            navigate('all-rooms');
         });
 
-        document.getElementById('my-rooms-tab').addEventListener('click', () => {
-            document.getElementById('my-rooms-tab').classList.add('text-blue-500', 'border-b-2', 'border-blue-500');
-            document.getElementById('my-rooms-tab').classList.remove('text-gray-500');
-            document.getElementById('all-rooms-tab').classList.add('text-gray-500');
-            document.getElementById('all-rooms-tab').classList.remove('text-blue-500', 'border-b-2', 'border-blue-500');
-            activeTab = 'my';
-            currentPage = 1;
-            hasMoreRooms = true;
-            loadRooms('my');
-            document.getElementById('rooms-list').scrollTop = 0;
+        document.getElementById('back-to-my-rooms-btn').addEventListener('click', () => {
+            navigate('rooms');
         });
 
         document.getElementById('back-to-rooms-btn').addEventListener('click', () => {
@@ -556,14 +633,23 @@
             currentRoom = null;
         });
 
-        // Infinite Scroll for Rooms with Debouncing
-        const roomsList = document.getElementById('rooms-list');
-        const debouncedLoadRooms = debounce(() => {
-            if (roomsList.scrollTop + roomsList.clientHeight >= roomsList.scrollHeight - 20 && !isLoadingRooms && hasMoreRooms) {
-                loadRooms(activeTab, true);
+        // Infinite Scroll for All Rooms
+        const allRoomsList = document.getElementById('all-rooms-list');
+        const debouncedLoadAllRooms = debounce(() => {
+            if (allRoomsList.scrollTop + allRoomsList.clientHeight >= allRoomsList.scrollHeight - 20 && !isLoadingRooms && hasMoreRooms) {
+                loadRooms('all', true);
             }
-        }, 200);
-        roomsList.addEventListener('scroll', debouncedLoadRooms);
+        }, 300);
+        allRoomsList.addEventListener('scroll', debouncedLoadAllRooms);
+
+        // Infinite Scroll for Messages
+        const messagesDiv = document.getElementById('messages');
+        const debouncedLoadMessages = debounce(() => {
+            if (messagesDiv.scrollTop <= 20 && !isLoadingMessages && hasMoreMessages && currentRoom) {
+                loadMessages(currentRoom.id, true);
+            }
+        }, 300);
+        messagesDiv.addEventListener('scroll', debouncedLoadMessages);
     }
 
     // Initial Setup

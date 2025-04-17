@@ -17,7 +17,7 @@ interface ChatRoomRepository: JpaRepository<ChatRoomEntity, Long> {
         JOIN c.users u
         WHERE u = :user
     """)
-    fun findAllByUser(@Param("user") user: UserEntity, pageable: Pageable): Page<ChatRoomEntity>
+    fun findAllByUser(@Param("user") user: UserEntity): List<ChatRoomEntity>
 
     @Query("""
         SELECT c

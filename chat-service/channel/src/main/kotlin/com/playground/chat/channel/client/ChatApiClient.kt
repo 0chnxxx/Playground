@@ -1,6 +1,6 @@
 package com.playground.chat.channel.client
 
-import com.playground.chat.chat.data.response.RoomDto
+import com.playground.chat.chat.data.response.ChatRoomDto
 import com.playground.chat.global.data.Response
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,5 +12,5 @@ interface ChatApiClient {
     fun findMyChatRooms(
         @RequestHeader("Authorization")
         token: String
-    ): Response<List<RoomDto>>
+    ): Response<List<ChatRoomDto>>
 }

@@ -1,7 +1,7 @@
 package com.playground.chat.chat.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.playground.chat.chat.domain.ChatMessage
+import com.playground.chat.chat.data.response.ChatMessageDto
 import com.playground.chat.chat.entity.ChatMessageEntity
 import com.playground.chat.chat.entity.ChatRoomEntity
 import com.playground.chat.global.log.logger
@@ -25,20 +25,20 @@ class ChatMessageConsumer(
     )
     fun consume(message: String) {
         try {
-            val chatMessage = mapper.readValue(message, ChatMessage::class.java)
+            val chatMessageDto = mapper.readValue(message, ChatMessageDto::class.java)
 
-            val roomProxy = entityManager.getReference(ChatRoomEntity::class.java, chatMessage.roomId.toLong())
-            val userProxy = entityManager.getReference(UserEntity::class.java, chatMessage.sender.userId.toLong())
+            val roomProxy = entityManager.getReference(ChatRoomEntity::class.java, chatMessageDto.roomId.toLong())
+            val userProxy = entityManager.getReference(UserEntity::class.java, chatMessageDto.sender.userId.toLong())
 
             chatOperator.saveChatMessage(
                 ChatMessageEntity(
                     room = roomProxy,
                     sender = userProxy,
-                    content = chatMessage.content
+                    content = chatMessageDto.content
                 )
             )
 
-            log.info("[📥 Chat Message Consume] message : {}", chatMessage)
+            log.info("[📥 Chat Message Consume] message : {}", chatMessageDto)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Consume Fail] {}", e.message)
         }

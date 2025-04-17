@@ -1,8 +1,7 @@
 package com.playground.chat.channel.controller
 
 import com.playground.chat.channel.service.ChannelService
-import com.playground.chat.chat.domain.ChatMessage
-import com.playground.chat.channel.service.ChatMessagePublisher
+import com.playground.chat.chat.data.response.ChatMessageDto
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.web.bind.annotation.RestController
 
@@ -15,7 +14,7 @@ class ChannelController(
      */
     @MessageMapping("/chat/rooms/{roomId}/messages/send")
     fun sendChatMessage(
-        message: ChatMessage
+        message: ChatMessageDto
     ) {
         channelService.sendChatMessage(message.roomId, message)
     }
