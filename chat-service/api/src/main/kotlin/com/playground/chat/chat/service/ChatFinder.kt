@@ -4,8 +4,8 @@ import com.playground.chat.chat.data.request.FindChatMessagesRequest
 import com.playground.chat.chat.data.request.FindChatRoomsRequest
 import com.playground.chat.chat.data.response.ChatMessageDto
 import com.playground.chat.chat.data.response.ChatRoomDto
+import com.playground.chat.chat.data.response.ChatUserDto
 import com.playground.chat.chat.data.response.MyChatRoomDto
-import com.playground.chat.chat.entity.ChatEntity
 import com.playground.chat.chat.entity.ChatMessageEntity
 import com.playground.chat.chat.entity.ChatRoomEntity
 import com.playground.chat.chat.repository.ChatRepository
@@ -36,5 +36,9 @@ class ChatFinder(
 
     fun findLastChatMessage(roomId: Long, userId: Long): ChatMessageEntity? {
         return chatRepository.findLastChatMessageByRoomIdAndUserId(roomId, userId)
+    }
+
+    fun findChatUsers(user: UserEntity, room: ChatRoomEntity): List<ChatUserDto> {
+        return chatRepository.findChatUsersByRoomId(user.id!!, room.id!!)
     }
 }

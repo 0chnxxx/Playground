@@ -9,10 +9,50 @@
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <style>
-        #messages {
+        #messages, #all-rooms-list {
             scroll-behavior: smooth;
             display: flex;
             flex-direction: column;
+        }
+        #drawer {
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%);
+            display: none;
+            position: absolute;
+            right: 0;
+            width: 66.666667%;
+            height: 100%;
+        }
+        #drawer-overlay {
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+            pointer-events: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        #drawer-overlay:not(.hidden) {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #app {
+            position: relative;
+        }
+        #all-rooms-page {
+            min-height: 100%;
+        }
+        #all-rooms-list {
+            height: 100%;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .room-image {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 9999px;
         }
     </style>
 </head>
@@ -65,14 +105,19 @@
                 <h1 class="text-xl font-bold">전체 채팅방</h1>
             </div>
         </div>
-        <div id="all-rooms-list" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+        <div id="all-rooms-list" class="p-4 space-y-4"></div>
     </div>
-    <div id="chat-page" class="hidden flex-1 flex flex-col h-full">
-        <div class="p-6 bg-blue-500 text-white flex items-center shrink-0">
-            <button id="back-to-rooms-btn" class="mr-4 text-white hover:text-gray-200">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+    <div id="chat-page" class="hidden flex-1 flex flex-col h-full relative">
+        <div class="p-6 bg-blue-500 text-white flex items-center justify-between shrink-0">
+            <div class="flex items-center">
+                <button id="back-to-rooms-btn" class="mr-4 text-white hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <h1 id="chat-room-title" class="text-xl font-bold"></h1>
+            </div>
+            <button id="drawer-toggle-btn" class="text-white hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
             </button>
-            <h1 id="chat-room-title" class="text-xl font-bold"></h1>
         </div>
         <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col"></div>
         <div class="p-4 border-t shrink-0">
@@ -81,8 +126,21 @@
                 <button id="send-message-btn" class="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">전송</button>
             </div>
         </div>
+        <div id="drawer-overlay" class="hidden bg-black bg-opacity-50 z-10"></div>
+        <div id="drawer" class="bg-white shadow-lg z-20 flex flex-col">
+            <div class="p-6 bg-blue-500 text-white flex items-center justify-between shrink-0">
+                <h2 class="text-lg font-bold">채팅방 유저</h2>
+                <button id="drawer-close-btn" class="text-white hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div id="room-users-list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+            <div class="p-4 border-t shrink-0">
+                <button id="leave-room-btn" class="w-full p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">채팅방 나가기</button>
+            </div>
+        </div>
     </div>
-    <div id="create-room-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div id="create-room-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
         <div class="bg-white p-6 rounded-lg w-full max-w-sm">
             <h2 class="text-xl font-bold mb-4">새 채팅방 만들기</h2>
             <input id="room-name-input" type="text" placeholder="채팅방 이름" class="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -92,12 +150,21 @@
             </div>
         </div>
     </div>
-    <div id="join-room-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div id="join-room-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
         <div class="bg-white p-6 rounded-lg w-full max-w-sm">
             <h2 class="text-xl font-bold mb-4">채팅방에 참여하겠습니까?</h2>
             <div class="flex space-x-2">
                 <button id="join-room-confirm-btn" class="flex-1 p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">예</button>
                 <button id="join-room-cancel-btn" class="flex-1 p-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">아니오</button>
+            </div>
+        </div>
+    </div>
+    <div id="leave-room-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
+        <div class="bg-white p-6 rounded-lg w-full max-w-sm">
+            <h2 id="leave-room-title" class="text-xl font-bold mb-4"></h2>
+            <div class="flex space-x-2">
+                <button id="leave-room-confirm-btn" class="flex-1 p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">예</button>
+                <button id="leave-room-cancel-btn" class="flex-1 p-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition">아니오</button>
             </div>
         </div>
     </div>
@@ -111,7 +178,6 @@
     let stompClient = null;
     let currentRoom = null;
     let currentRoomId = null;
-    let currentRoomMemberCount = 0;
     let currentPage = 1;
     let isLoadingRooms = false;
     let hasMoreRooms = true;
@@ -127,6 +193,10 @@
     let processedReadIds = new Set();
     let tempMessageMap = new Map();
     let isInitialRender = false;
+    let roomUsersCache = [];
+    let isLeavingRoom = false;
+    let drawerTimeout = null;
+    let scrollListener = null;
 
     function debounce(func, wait) {
         let timeout;
@@ -215,13 +285,160 @@
             try {
                 if (subscriptions.send) subscriptions.send.unsubscribe();
                 if (subscriptions.read) subscriptions.read.unsubscribe();
-                if (subscriptions.join) subscriptions.join.unsubscribe();
-                if (subscriptions.leave) subscriptions.leave.unsubscribe();
             } catch (error) {
                 console.error(`Error unsubscribing room ${roomId}:`, error);
             }
             subscribedRooms.delete(roomId);
         }
+    }
+
+    function toggleDrawer() {
+        const drawer = document.getElementById('drawer');
+        const overlay = document.getElementById('drawer-overlay');
+        const isOpening = drawer.style.display === 'none' || !drawer.style.display;
+
+        if (isOpening) {
+            if (drawerTimeout) {
+                clearTimeout(drawerTimeout);
+                drawerTimeout = null;
+            }
+            drawer.style.display = 'block';
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                drawer.style.transform = 'translateX(0)';
+                overlay.style.opacity = '1';
+            }, 10);
+            fetchRoomUsers(currentRoomId);
+        } else {
+            drawer.style.transform = 'translateX(100%)';
+            overlay.style.opacity = '0';
+            drawerTimeout = setTimeout(() => {
+                drawer.style.display = 'none';
+                overlay.classList.add('hidden');
+                drawerTimeout = null;
+            }, 300);
+        }
+    }
+
+    async function fetchRoomUsers(roomId) {
+        try {
+            const res = await api.get(`/chat/rooms/${roomId}/users`);
+            roomUsersCache = res.data.data || [];
+            renderRoomUsers();
+        } catch (error) {
+            console.error('Failed to fetch room users:', error);
+            alert('유저 목록을 불러오지 못했습니다.');
+            roomUsersCache = [];
+            renderRoomUsers();
+        }
+    }
+
+    function renderRoomUsers() {
+        const usersList = document.getElementById('room-users-list');
+        usersList.innerHTML = '';
+        if (roomUsersCache.length === 0) {
+            usersList.innerHTML = '<p class="text-gray-500 text-center">유저가 없습니다.</p>';
+            return;
+        }
+        roomUsersCache.forEach(user => {
+            const div = document.createElement('div');
+            div.className = 'p-2 bg-gray-100 rounded-lg flex items-center space-x-2';
+            div.innerHTML = `
+                <span class="text-gray-800">${user.nickname}</span>
+                ${user.isOwner ? '<svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3 6h6l-3 6 3 6h-6l-3-6-3 6H3l3-6-3-6h6l3-6z" /></svg>' : ''}
+            `;
+            usersList.appendChild(div);
+        });
+    }
+
+    async function leaveRoom(roomId) {
+        const modal = document.getElementById('leave-room-modal');
+        const title = document.getElementById('leave-room-title');
+        const currentUser = roomUsersCache.find(user => user.id === userId);
+        const isOwner = currentUser?.isOwner || false;
+
+        title.textContent = isOwner ? '채팅방을 삭제하시겠습니까?' : '채팅방을 나가시겠습니까?';
+        modal.classList.remove('hidden');
+    }
+
+    function confirmLeaveRoom(roomId) {
+        isLeavingRoom = true;
+        const currentUser = roomUsersCache.find(user => user.id === userId);
+        const isOwner = currentUser?.isOwner || false;
+
+        if (isOwner) {
+            api.delete(`/chat/rooms/${roomId}`)
+                .then(() => {
+                    roomsCache = roomsCache.filter(room => room.id !== roomId);
+                    allRoomsCache = allRoomsCache.filter(room => room.id !== roomId);
+                    unsubscribeRoom(roomId);
+                    alert('채팅방이 삭제되었습니다.');
+                    toggleDrawer();
+                    document.getElementById('leave-room-modal').classList.add('hidden');
+                    navigate('rooms');
+                    isLeavingRoom = false;
+                })
+                .catch(error => {
+                    console.error('Failed to delete room:', error);
+                    alert('채팅방 삭제에 실패했습니다: ' + error.response?.data?.message || '오류 발생');
+                    isLeavingRoom = false;
+                });
+        } else {
+            api.post(`/chat/rooms/${roomId}/leave`)
+                .then(() => {
+                    roomsCache = roomsCache.filter(room => room.id !== roomId);
+                    allRoomsCache = allRoomsCache.map(room =>
+                        room.id === roomId ? { ...room, isJoined: false, memberCount: Math.max(1, room.memberCount - 1) } : room
+                    );
+                    unsubscribeRoom(roomId);
+                    alert('채팅방에서 나갔습니다.');
+                    toggleDrawer();
+                    document.getElementById('leave-room-modal').classList.add('hidden');
+                    navigate('rooms');
+                    isLeavingRoom = false;
+                })
+                .catch(error => {
+                    console.error('Failed to leave room:', error);
+                    alert('채팅방 나가기에 실패했습니다: ' + error.response?.data?.message || '오류 발생');
+                    isLeavingRoom = false;
+                });
+        }
+    }
+
+    function setupInfiniteScroll() {
+        const allRoomsList = document.getElementById('all-rooms-list');
+        if (scrollListener) {
+            allRoomsList.removeEventListener('scroll', scrollListener);
+            console.log('Removed previous scroll listener');
+        }
+        const debouncedLoadAllRooms = debounce(() => {
+            const scrollPosition = allRoomsList.scrollTop + allRoomsList.clientHeight;
+            const triggerPoint = allRoomsList.scrollHeight - 100;
+            console.log('Scroll detected', {
+                scrollTop: allRoomsList.scrollTop,
+                clientHeight: allRoomsList.clientHeight,
+                scrollHeight: allRoomsList.scrollHeight,
+                scrollPosition,
+                triggerPoint,
+                isLoadingRooms,
+                hasMoreRooms,
+                currentPage,
+                cacheLength: allRoomsCache.length
+            });
+            if (scrollPosition >= triggerPoint && !isLoadingRooms && hasMoreRooms) {
+                console.log('Triggering loadRooms for all-rooms-page', { currentPage });
+                loadRooms('all', true).then(() => {
+                    currentPage++;
+                    console.log('Incremented currentPage after load', { currentPage });
+                });
+            }
+        }, 300);
+        scrollListener = debouncedLoadAllRooms;
+        console.log('Attaching new scroll listener');
+        setTimeout(() => {
+            allRoomsList.addEventListener('scroll', scrollListener);
+            console.log('Scroll listener attached after delay');
+        }, 300);
     }
 
     function navigate(page, pushState = true) {
@@ -233,27 +450,46 @@
         if (page === 'rooms') {
             currentRoom = null;
             currentRoomId = null;
-            currentRoomMemberCount = 0;
+            document.getElementById('drawer').style.display = 'none';
+            document.getElementById('drawer-overlay').classList.add('hidden');
+            document.getElementById('leave-room-modal').classList.add('hidden');
             loadRooms('my');
         }
         if (page === 'all-rooms') {
             currentRoom = null;
             currentRoomId = null;
-            currentRoomMemberCount = 0;
+            document.getElementById('drawer').style.display = 'none';
+            document.getElementById('drawer-overlay').classList.add('hidden');
+            document.getElementById('leave-room-modal').classList.add('hidden');
             currentPage = 1;
             hasMoreRooms = true;
-            loadRooms('all');
+            allRoomsCache = [];
+            const allRoomsList = document.getElementById('all-rooms-list');
+            if (scrollListener) {
+                allRoomsList.removeEventListener('scroll', scrollListener);
+                console.log('Removed scroll listener before initial load');
+            }
+            allRoomsList.scrollTop = 0;
+            loadRooms('all', false).then(() => {
+                console.log('Initial rooms rendered', {
+                    scrollHeight: allRoomsList.scrollHeight,
+                    clientHeight: allRoomsList.clientHeight,
+                    scrollTop: allRoomsList.scrollTop
+                });
+                allRoomsList.scrollTop = 0;
+                setupInfiniteScroll();
+            });
         }
         if (page === 'chat' && currentRoom) {
             currentRoomId = currentRoom.id;
             document.getElementById('chat-room-title').textContent = currentRoom.name;
-            currentRoomMemberCount = currentRoom.memberCount || 0;
             messagePage = 1;
             hasMoreMessages = true;
             messagesCache = [];
             processedMessageIds.clear();
             processedReadIds.clear();
             tempMessageMap.clear();
+            roomUsersCache = [];
             const messagesDiv = document.getElementById('messages');
             isInitialRender = true;
             loadMessages(currentRoom.id).then(() => {
@@ -263,7 +499,6 @@
                 if (stompClient && stompClient.connected && !subscribedRooms.has(currentRoom.id)) {
                     subscribeToRoom(currentRoom.id);
                     subscribeToReadMessages(currentRoom.id);
-                    subscribeToJoinLeave(currentRoom.id);
                 }
                 setTimeout(() => {
                     isInitialRender = false;
@@ -275,7 +510,6 @@
                 if (stompClient && stompClient.connected && !subscribedRooms.has(currentRoom.id)) {
                     subscribeToRoom(currentRoom.id);
                     subscribeToReadMessages(currentRoom.id);
-                    subscribeToJoinLeave(currentRoom.id);
                 }
                 isInitialRender = false;
             });
@@ -354,7 +588,6 @@
             const socket = new SockJS(`http://localhost:8081/ws?token=${accessToken}`);
             stompClient = Stomp.over(socket);
             stompClient.connect({}, () => {
-                // Subscriptions handled by loadRooms, createRoom, or joinRoom
             }, (error) => {
                 console.error('WebSocket connection error:', error);
                 setTimeout(connectWebSocket, 5000);
@@ -387,7 +620,7 @@
                         content: msg.content || msg.message || 'No content',
                         nickname: msg.nickname || 'Unknown',
                         timestamp: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString(),
-                        unreadCount: msg.unreadCount !== undefined && msg.unreadCount > 0 ? msg.unreadCount : (msg.userId == userId ? currentRoomMemberCount : currentRoomMemberCount),
+                        unreadCount: msg.unreadCount !== undefined && msg.unreadCount > 0 ? msg.unreadCount : (msg.userId == userId ? currentRoom.memberCount : currentRoom.memberCount),
                         isTemporary: false
                     };
                     if (!msg.content && !msg.message) {
@@ -409,7 +642,7 @@
                             temporaryMatch.id = normalizedMsg.id;
                             temporaryMatch.isTemporary = false;
                             temporaryMatch.timestamp = normalizedMsg.timestamp;
-                            temporaryMatch.unreadCount = normalizedMsg.isMine && (normalizedMsg.unreadCount === undefined || normalizedMsg.unreadCount === 0) ? currentRoomMemberCount : normalizedMsg.unreadCount;
+                            temporaryMatch.unreadCount = normalizedMsg.isMine && (normalizedMsg.unreadCount === undefined || normalizedMsg.unreadCount === 0) ? currentRoom.memberCount : normalizedMsg.unreadCount;
                             tempMessageMap.set(tempId, normalizedMsg.id);
                             const messageElement = document.querySelector(`[data-message-id="${tempId}"]`);
                             if (messageElement) {
@@ -433,9 +666,7 @@
             });
             subscribedRooms.set(roomId, {
                 send: subscription,
-                read: subscribedRooms.get(roomId)?.read,
-                join: subscribedRooms.get(roomId)?.join,
-                leave: subscribedRooms.get(roomId)?.leave
+                read: subscribedRooms.get(roomId)?.read
             });
         }
     }
@@ -541,12 +772,10 @@
                             return msg;
                         });
 
-                        // 갱신된 messagesCache에서 최신 메시지 찾기
                         messagesToUpdate = messagesToUpdate.map(original =>
                             messagesCache.find(m => m.id === original.id) || original
                         );
 
-                        // 렌더링
                         if (!pages['chat'].classList.contains('hidden')) {
                             const messagesDiv = document.getElementById('messages');
                             messagesToUpdate.forEach(msg => {
@@ -578,58 +807,7 @@
             });
             subscribedRooms.set(roomId, {
                 send: subscribedRooms.get(roomId)?.send,
-                read: subscription,
-                join: subscribedRooms.get(roomId)?.join,
-                leave: subscribedRooms.get(roomId)?.leave
-            });
-        }
-    }
-
-    function subscribeToJoinLeave(roomId) {
-        if (stompClient && stompClient.connected && !subscribedRooms.get(roomId)?.join) {
-            const joinSubscription = stompClient.subscribe(`/sub/chat/rooms/${roomId}/join`, (message) => {
-                try {
-                    const joinMsg = JSON.parse(message.body);
-                    if (!joinMsg.userId) {
-                        console.warn('Join message missing userId:', joinMsg);
-                        return;
-                    }
-                    if (currentRoomId === roomId) {
-                        currentRoomMemberCount = Math.max(1, currentRoomMemberCount + 1);
-                        const roomIndex = roomsCache.findIndex(room => room.id === roomId);
-                        if (roomIndex !== -1) {
-                            roomsCache[roomIndex].memberCount = currentRoomMemberCount;
-                            renderRooms('my');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error processing join message:', error, message.body);
-                }
-            });
-            const leaveSubscription = stompClient.subscribe(`/sub/chat/rooms/${roomId}/leave`, (message) => {
-                try {
-                    const leaveMsg = JSON.parse(message.body);
-                    if (!leaveMsg.userId) {
-                        console.warn('Leave message missing userId:', leaveMsg);
-                        return;
-                    }
-                    if (currentRoomId === roomId) {
-                        currentRoomMemberCount = Math.max(1, currentRoomMemberCount - 1);
-                        const roomIndex = roomsCache.findIndex(room => room.id === roomId);
-                        if (roomIndex !== -1) {
-                            roomsCache[roomIndex].memberCount = currentRoomMemberCount;
-                            renderRooms('my');
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error processing leave message:', error, message.body);
-                }
-            });
-            subscribedRooms.set(roomId, {
-                send: subscribedRooms.get(roomId)?.send,
-                read: subscribedRooms.get(roomId)?.read,
-                join: joinSubscription,
-                leave: leaveSubscription
+                read: subscription
             });
         }
     }
@@ -649,7 +827,6 @@
         if (allRoomIndex !== -1) {
             allRoomsCache[allRoomIndex].lastMessage = msg.content || msg.message;
             allRoomsCache[allRoomIndex].lastMessageTime = msg.timestamp;
-            allRoomsCache.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
             renderRooms('all');
         }
     }
@@ -657,13 +834,19 @@
     function renderRooms(type) {
         const roomsList = type === 'my' ? document.getElementById('rooms-list') : document.getElementById('all-rooms-list');
         const cache = type === 'my' ? roomsCache : allRoomsCache;
-        roomsList.innerHTML = '';
+        console.log(`Rendering ${type} rooms`, { cacheLength: cache.length, roomIds: cache.map(r => r.id) });
+        if (cache.length === 0) {
+            roomsList.innerHTML = '<p class="text-gray-500 text-center">No rooms available</p>';
+            return;
+        }
+        const fragment = document.createDocumentFragment();
         cache.forEach(room => {
             const div = document.createElement('div');
             div.className = 'p-4 bg-gray-100 rounded-lg hover:bg-gray-200 cursor-pointer';
+            const imageSrc = room.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E';
             div.innerHTML = `
                 <div class="flex items-center space-x-3">
-                    <img src="${room.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22white%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E'}" class="w-10 h-10 rounded-full object-cover">
+                    <img src="${imageSrc}" class="room-image" alt="Room image">
                     <div class="flex-1">
                         <div class="flex justify-between">
                             <h2 class="font-bold">${room.name || 'Unnamed Room'} <span class="text-gray-500 text-sm">(${room.memberCount || 0})</span></h2>
@@ -687,8 +870,13 @@
                     navigate('chat');
                 }
             });
-            roomsList.appendChild(div);
+            fragment.appendChild(div);
         });
+        roomsList.innerHTML = '';
+        roomsList.appendChild(fragment);
+        if (type === 'all') {
+            console.log('Rooms rendered, scrollHeight:', roomsList.scrollHeight);
+        }
     }
 
     async function register(email, nickname, password) {
@@ -739,11 +927,9 @@
             const newRoom = res.data.data;
             currentRoom = newRoom;
             currentRoomId = newRoom.id;
-            currentRoomMemberCount = newRoom.memberCount || 1;
             if (stompClient && stompClient.connected && !subscribedRooms.has(newRoom.id)) {
                 subscribeToRoom(newRoom.id);
                 subscribeToReadMessages(newRoom.id);
-                subscribeToJoinLeave(newRoom.id);
             }
             roomsCache.unshift(newRoom);
             renderRooms('my');
@@ -762,7 +948,6 @@
             if (stompClient && stompClient.connected && !subscribedRooms.has(roomId)) {
                 subscribeToRoom(roomId);
                 subscribeToReadMessages(roomId);
-                subscribeToJoinLeave(roomId);
             }
             const room = allRoomsCache.find(r => r.id === roomId);
             if (room) {
@@ -780,10 +965,23 @@
     }
 
     async function loadRooms(type, append = false) {
-        if (isLoadingRooms) return;
+        if (isLoadingRooms) {
+            console.log('Skipping loadRooms: already loading', { type, currentPage });
+            return;
+        }
+        if (type === 'all' && append && allRoomsCache.length >= currentPage * 10) {
+            console.log('Skipping loadRooms: page already loaded', {
+                currentPage,
+                cacheLength: allRoomsCache.length,
+                expectedRooms: currentPage * 10
+            });
+            isLoadingRooms = false;
+            return;
+        }
         isLoadingRooms = true;
         try {
             const endpoint = type === 'all' ? `/chat/rooms?page=${currentPage}&size=10` : '/chat/rooms/me';
+            console.log('Fetching rooms', { type, currentPage, append });
             const res = await api.get(endpoint);
             const roomsList = type === 'my' ? document.getElementById('rooms-list') : document.getElementById('all-rooms-list');
             const cache = type === 'my' ? roomsCache : allRoomsCache;
@@ -797,24 +995,40 @@
                 unreadCount: room.unreadCount || 0,
                 memberCount: room.memberCount || 1
             }));
-            if (type === 'all' && rooms.length < 10) {
-                hasMoreRooms = false;
-            }
-            cache.push(...rooms);
-            cache.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
-            renderRooms(type);
-            if (type === 'my' && stompClient && stompClient.connected) {
-                rooms.forEach(room => {
-                    if (!subscribedRooms.has(room.id)) {
-                        subscribeToRoom(room.id);
-                        subscribeToReadMessages(room.id);
-                        subscribeToJoinLeave(room.id);
-                    }
+            console.log('Rooms loaded', {
+                type,
+                append,
+                currentPage,
+                rooms: rooms.map(r => r.id),
+                cacheBefore: cache.map(r => r.id),
+                responseLength: rooms.length
+            });
+            if (type === 'my') {
+                cache.push(...rooms);
+                cache.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
+                if (stompClient && stompClient.connected) {
+                    rooms.forEach(room => {
+                        if (!subscribedRooms.has(room.id)) {
+                            subscribeToRoom(room.id);
+                            subscribeToReadMessages(room.id);
+                        }
+                    });
+                }
+            } else {
+                const existingIds = new Set(cache.map(room => room.id));
+                const newRooms = rooms.filter(room => !existingIds.has(room.id));
+                console.log('Deduplication', {
+                    existingIds: [...existingIds],
+                    newRoomIds: newRooms.map(r => r.id),
+                    filteredCount: rooms.length - newRooms.length
                 });
+                cache.push(...newRooms);
+                if (rooms.length < 10) {
+                    hasMoreRooms = false;
+                    console.log('No more rooms to load', { currentPage, responseLength: rooms.length });
+                }
             }
-            if (type === 'all' && append) {
-                currentPage++;
-            }
+            renderRooms(type);
         } catch (error) {
             console.error('Failed to load rooms:', error);
             alert('채팅방 목록을 불러오지 못했습니다.');
@@ -852,7 +1066,7 @@
                     content: msg.content || 'No content',
                     nickname: msg.nickname || 'Unknown',
                     timestamp: msg.timestamp || new Date().toISOString(),
-                    unreadCount: msg.unreadCount !== undefined ? msg.unreadCount : currentRoomMemberCount,
+                    unreadCount: msg.unreadCount !== undefined ? msg.unreadCount : currentRoom.memberCount,
                     isTemporary: false
                 };
             }).filter(msg => msg.id) : [];
@@ -979,7 +1193,7 @@
                 content: content,
                 isMine: true,
                 timestamp: new Date().toISOString(),
-                unreadCount: currentRoomMemberCount,
+                unreadCount: currentRoom.memberCount,
                 isTemporary: true
             };
             messagesCache.push(tempMessage);
@@ -1041,23 +1255,29 @@
             navigate('login');
         });
 
-        document.getElementById('search-rooms-btn').addEventListener('click', () => {
-            navigate('all-rooms');
+        document.getElementById('search-rooms-btn').addEventListener('click', () => navigate('all-rooms'));
+
+        document.getElementById('create-room-btn').addEventListener('click', () => {
+            document.getElementById('create-room-modal').classList.remove('hidden');
         });
 
-        document.getElementById('back-to-my-rooms-btn').addEventListener('click', () => {
-            navigate('rooms');
+        document.getElementById('create-room-confirm-btn').addEventListener('click', () => {
+            const name = document.getElementById('room-name-input').value;
+            if (!name.trim()) {
+                alert('채팅방 이름을 입력하세요.');
+                return;
+            }
+            createRoom(name);
         });
 
-        document.getElementById('back-to-rooms-btn').addEventListener('click', () => {
-            currentRoom = null;
-            currentRoomId = null;
-            currentRoomMemberCount = 0;
-            processedMessageIds.clear();
-            processedReadIds.clear();
-            tempMessageMap.clear();
-            navigate('rooms');
+        document.getElementById('create-room-cancel-btn').addEventListener('click', () => {
+            document.getElementById('create-room-modal').classList.add('hidden');
+            document.getElementById('room-name-input').value = '';
         });
+
+        document.getElementById('back-to-my-rooms-btn').addEventListener('click', () => navigate('rooms'));
+
+        document.getElementById('back-to-rooms-btn').addEventListener('click', () => navigate('rooms'));
 
         document.getElementById('send-message-btn').addEventListener('click', sendMessage);
 
@@ -1067,74 +1287,57 @@
             }
         });
 
-        document.getElementById('create-room-btn').addEventListener('click', () => {
-            document.getElementById('create-room-modal').classList.remove('hidden');
-        });
+        document.getElementById('drawer-toggle-btn').addEventListener('click', toggleDrawer);
 
-        document.getElementById('create-room-confirm-btn').addEventListener('click', () => {
-            const roomName = document.getElementById('room-name-input').value;
-            if (!roomName.trim()) {
-                alert('채팅방 이름을 입력하세요.');
-                return;
+        document.getElementById('drawer-close-btn').addEventListener('click', toggleDrawer);
+
+        document.getElementById('drawer-overlay').addEventListener('click', toggleDrawer);
+
+        document.getElementById('leave-room-btn').addEventListener('click', () => {
+            if (currentRoomId) {
+                leaveRoom(currentRoomId);
             }
-            createRoom(roomName);
         });
 
-        document.getElementById('create-room-cancel-btn').addEventListener('click', () => {
-            document.getElementById('create-room-modal').classList.add('hidden');
-            document.getElementById('room-name-input').value = '';
+        document.getElementById('leave-room-confirm-btn').addEventListener('click', () => {
+            if (currentRoomId) {
+                confirmLeaveRoom(currentRoomId);
+            }
+        });
+
+        document.getElementById('leave-room-cancel-btn').addEventListener('click', () => {
+            document.getElementById('leave-room-modal').classList.add('hidden');
         });
 
         document.getElementById('join-room-confirm-btn').addEventListener('click', () => {
             if (pendingRoom) {
                 joinRoom(pendingRoom.id);
+                document.getElementById('join-room-modal').classList.add('hidden');
+                pendingRoom = null;
             }
-            document.getElementById('join-room-modal').classList.add('hidden');
-            pendingRoom = null;
         });
 
         document.getElementById('join-room-cancel-btn').addEventListener('click', () => {
             document.getElementById('join-room-modal').classList.add('hidden');
             pendingRoom = null;
-            currentRoom = null;
-            currentRoomId = null;
         });
 
-        const allRoomsList = document.getElementById('all-rooms-list');
-        const debouncedLoadAllRooms = debounce(() => {
-            if (allRoomsList.scrollTop + allRoomsList.clientHeight >= allRoomsList.scrollHeight - 20 && !isLoadingRooms && hasMoreRooms) {
-                loadRooms('all', true);
-            }
-        }, 300);
-        allRoomsList.addEventListener('scroll', debouncedLoadAllRooms);
-
         const messagesDiv = document.getElementById('messages');
-        const debouncedLoadMessages = debounce(() => {
-            if (messagesDiv.scrollTop <= 20 && !isLoadingMessages && hasMoreMessages && currentRoom) {
-                loadMessages(currentRoom.id, true);
+        messagesDiv.addEventListener('scroll', () => {
+            if (messagesDiv.scrollTop === 0 && hasMoreMessages && !isLoadingMessages) {
+                loadMessages(currentRoomId, true);
             }
-        }, 300);
-        messagesDiv.addEventListener('scroll', debouncedLoadMessages);
+        });
     }
 
-    async function initialize() {
-        try {
-            if (accessToken && userId && nickname) {
-                await fetchCurrentUser();
-                connectWebSocket();
-                navigate('rooms');
-            } else {
-                navigate('login');
-            }
-        } catch (error) {
-            console.error('Initialization error:', error);
-            localStorage.clear();
-            navigate('login');
-        }
-        addEventListeners();
+    if (accessToken && refreshToken && userId && nickname) {
+        connectWebSocket();
+        navigate('rooms');
+    } else {
+        navigate('login');
     }
 
-    initialize();
+    addEventListeners();
 </script>
 </body>
 </html>

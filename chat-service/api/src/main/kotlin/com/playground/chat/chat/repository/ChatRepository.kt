@@ -4,6 +4,7 @@ import com.playground.chat.chat.data.request.FindChatMessagesRequest
 import com.playground.chat.chat.data.request.FindChatRoomsRequest
 import com.playground.chat.chat.data.response.ChatMessageDto
 import com.playground.chat.chat.data.response.ChatRoomDto
+import com.playground.chat.chat.data.response.ChatUserDto
 import com.playground.chat.chat.data.response.MyChatRoomDto
 import com.playground.chat.chat.entity.*
 import com.playground.chat.global.data.Pagination
@@ -35,7 +36,7 @@ class ChatRepository(
         val lastMessage = JPAExpressions
             .select(qLastMessage.id.max())
             .from(qLastMessage)
-            .where(qLastMessage.room.eq(qRoom))
+            .where(qLastMessage.room.id.eq(qRoom.id))
 
         val totalRoomCount = jpaQueryFactory
             .select(qRoom.id.countDistinct())
@@ -191,6 +192,27 @@ class ChatRepository(
             .fetchOne()
     }
 
+    fun findChatUsersByRoomId(userId: Long, roomId: Long): List<ChatUserDto> {
+        val qUser = QUserEntity("user")
+        val qChat = QChatEntity("chat")
+        val qRoom = QChatRoomEntity("room")
+
+        return jpaQueryFactory
+            .select(
+                Projections.constructor(
+                    ChatUserDto::class.java,
+                    qUser.id,
+                    qUser.nickname,
+                    qRoom.owner.eq(qUser)
+                )
+            )
+            .from(qChat)
+            .join(qChat.user, qUser)
+            .join(qChat.room, qRoom)
+            .where(qRoom.id.eq(roomId))
+            .fetch()
+    }
+
     fun saveChat(chat: ChatEntity) {
         entityManager.persist(chat)
     }
@@ -243,6 +265,7 @@ class ChatRepository(
         jpaQueryFactory
             .delete(qRoom)
             .where(qRoom.id.eq(room.id))
+            .execute()
     }
 
     fun deleteChatsByRoom(room: ChatRoomEntity) {
@@ -251,6 +274,7 @@ class ChatRepository(
         jpaQueryFactory
             .delete(qChat)
             .where(qChat.room.id.eq(room.id))
+            .execute()
     }
 
     fun deleteChatByUserAndRoom(user: UserEntity, room: ChatRoomEntity) {
@@ -259,5 +283,6 @@ class ChatRepository(
         jpaQueryFactory
             .delete(qChat)
             .where(qChat.room.id.eq(room.id).and(qChat.user.id.eq(user.id)))
+            .execute()
     }
 }

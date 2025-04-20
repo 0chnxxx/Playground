@@ -5,6 +5,7 @@ import com.playground.chat.chat.data.request.FindChatMessagesRequest
 import com.playground.chat.chat.data.request.FindChatRoomsRequest
 import com.playground.chat.chat.data.response.ChatMessageDto
 import com.playground.chat.chat.data.response.ChatRoomDto
+import com.playground.chat.chat.data.response.ChatUserDto
 import com.playground.chat.chat.data.response.MyChatRoomDto
 import com.playground.chat.chat.service.ChatService
 import com.playground.chat.global.auth.AuthenticatedPrincipal
@@ -121,6 +122,22 @@ class ChatController(
         request: FindChatMessagesRequest
     ): ResponseEntity<Response<List<ChatMessageDto>>> {
         val messages = chatService.findChatMessages(principal, roomId, request)
+        val response = Response.of(messages)
+
+        return ResponseEntity(response, HttpStatus.OK)
+    }
+
+    /**
+     * 채팅방 유저 목록 조회 API
+     */
+    @GetMapping("/{roomId}/users")
+    fun findChatUsers(
+        @AuthenticatedPrincipal
+        principal: UserPrincipal,
+        @PathVariable
+        roomId: Long
+    ): ResponseEntity<Response<List<ChatUserDto>>> {
+        val messages = chatService.findChatUsers(principal, roomId)
         val response = Response.of(messages)
 
         return ResponseEntity(response, HttpStatus.OK)

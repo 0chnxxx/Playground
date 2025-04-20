@@ -9,6 +9,7 @@ import com.playground.chat.chat.data.request.FindChatMessagesRequest
 import com.playground.chat.chat.data.request.FindChatRoomsRequest
 import com.playground.chat.chat.data.response.ChatMessageDto
 import com.playground.chat.chat.data.response.ChatRoomDto
+import com.playground.chat.chat.data.response.ChatUserDto
 import com.playground.chat.chat.data.response.MyChatRoomDto
 import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.global.data.Pagination
@@ -26,16 +27,14 @@ class ChatService(
 ) {
     fun findChatRooms(principal: UserPrincipal, request: FindChatRoomsRequest): Pagination<List<ChatRoomDto>> {
         val user = userFinder.findUser(principal.name.toLong())
-        val rooms = chatFinder.findChatRooms(user, request)
 
-        return rooms
+        return chatFinder.findChatRooms(user, request)
     }
 
     fun findMyChatRooms(principal: UserPrincipal): List<MyChatRoomDto> {
         val user = userFinder.findUser(principal.name.toLong())
-        val rooms = chatFinder.findMyChatRooms(user)
 
-        return rooms
+        return chatFinder.findMyChatRooms(user)
     }
 
     fun createChatRoom(principal: UserPrincipal, request: CreateChatRoomRequest): ChatRoomDto {
@@ -103,8 +102,14 @@ class ChatService(
     fun findChatMessages(principal: UserPrincipal, roomId: Long, request: FindChatMessagesRequest): Pagination<List<ChatMessageDto>> {
         val user = userFinder.findUser(principal.name.toLong())
         val room = chatFinder.findChatRoom(roomId)
-        val messages = chatFinder.findChatMessagesByRoom(user, room, request)
 
-        return messages
+        return chatFinder.findChatMessagesByRoom(user, room, request)
+    }
+
+    fun findChatUsers(principal: UserPrincipal, roomId: Long): List<ChatUserDto> {
+        val user = userFinder.findUser(principal.name.toLong())
+        val room = chatFinder.findChatRoom(roomId)
+
+        return chatFinder.findChatUsers(user, room)
     }
 }
