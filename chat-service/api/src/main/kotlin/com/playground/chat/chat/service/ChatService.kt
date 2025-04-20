@@ -1,11 +1,15 @@
 package com.playground.chat.chat.service
 
-import com.playground.chat.chat.data.event.ChatRoomEvent
+import com.playground.chat.chat.data.event.CreateChatRoomEvent
+import com.playground.chat.chat.data.event.DeleteChatRoomEvent
+import com.playground.chat.chat.data.event.JoinChatRoomEvent
+import com.playground.chat.chat.data.event.LeaveChatRoomEvent
 import com.playground.chat.chat.data.request.CreateChatRoomRequest
 import com.playground.chat.chat.data.request.FindChatMessagesRequest
 import com.playground.chat.chat.data.request.FindChatRoomsRequest
 import com.playground.chat.chat.data.response.ChatMessageDto
 import com.playground.chat.chat.data.response.ChatRoomDto
+import com.playground.chat.chat.data.response.MyChatRoomDto
 import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.global.data.Pagination
 import com.playground.chat.user.service.UserFinder
@@ -18,7 +22,7 @@ class ChatService(
     private val userFinder: UserFinder,
     private val chatFinder: ChatFinder,
     private val chatOperator: ChatOperator,
-    private val chatEventPublisher: ChatEventPublisher
+    private val chatPublisher: ChatPublisher
 ) {
     fun findChatRooms(principal: UserPrincipal, request: FindChatRoomsRequest): Pagination<List<ChatRoomDto>> {
         val user = userFinder.findUser(principal.name.toLong())
@@ -27,7 +31,7 @@ class ChatService(
         return rooms
     }
 
-    fun findMyChatRooms(principal: UserPrincipal): List<ChatRoomDto> {
+    fun findMyChatRooms(principal: UserPrincipal): List<MyChatRoomDto> {
         val user = userFinder.findUser(principal.name.toLong())
         val rooms = chatFinder.findMyChatRooms(user)
 
@@ -39,10 +43,8 @@ class ChatService(
 
         val room = chatOperator.createChatRoom(user, request)
 
-        chatEventPublisher.publish(
-            roomId = room.id!!.toString(),
-            event = ChatRoomEvent(
-                type = ChatRoomEvent.EventType.CREATE,
+        chatPublisher.publishChatRoomCreateEvent(
+            CreateChatRoomEvent(
                 roomId = room.id!!,
                 userId = principal.name.toLong(),
                 roomName = room.name
@@ -58,13 +60,10 @@ class ChatService(
 
         chatOperator.joinChatRoom(user, room)
 
-        chatEventPublisher.publish(
-            roomId = room.id!!.toString(),
-            event = ChatRoomEvent(
-                type = ChatRoomEvent.EventType.JOIN,
+        chatPublisher.publishChatRoomJoinEvent(
+            JoinChatRoomEvent(
                 roomId = room.id!!,
-                userId = user.id!!,
-                roomName = room.name
+                userId = user.id!!
             )
         )
     }
@@ -75,13 +74,10 @@ class ChatService(
 
         chatOperator.leaveChatRoom(user, room)
 
-        chatEventPublisher.publish(
-            roomId = room.id!!.toString(),
-            event = ChatRoomEvent(
-                type = ChatRoomEvent.EventType.LEAVE,
+        chatPublisher.publishChatRoomLeaveEvent(
+            LeaveChatRoomEvent(
                 roomId = room.id!!,
-                userId = user.id!!,
-                roomName = room.name
+                userId = user.id!!
             )
         )
     }
@@ -96,13 +92,10 @@ class ChatService(
 
         chatOperator.deleteChatRoom(room)
 
-        chatEventPublisher.publish(
-            roomId = room.id!!.toString(),
-            event = ChatRoomEvent(
-                type = ChatRoomEvent.EventType.DELETE,
+        chatPublisher.publishChatRoomDeleteEvent(
+            DeleteChatRoomEvent(
                 userId = user.id!!,
-                roomId = room.id!!,
-                roomName = room.name
+                roomId = room.id!!
             )
         )
     }

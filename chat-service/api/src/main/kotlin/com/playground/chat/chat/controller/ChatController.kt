@@ -5,6 +5,7 @@ import com.playground.chat.chat.data.request.FindChatMessagesRequest
 import com.playground.chat.chat.data.request.FindChatRoomsRequest
 import com.playground.chat.chat.data.response.ChatMessageDto
 import com.playground.chat.chat.data.response.ChatRoomDto
+import com.playground.chat.chat.data.response.MyChatRoomDto
 import com.playground.chat.chat.service.ChatService
 import com.playground.chat.global.auth.AuthenticatedPrincipal
 import com.playground.chat.global.auth.UserPrincipal
@@ -40,7 +41,7 @@ class ChatController(
     fun findMyChatRooms(
         @AuthenticatedPrincipal
         principal: UserPrincipal
-    ): ResponseEntity<Response<List<ChatRoomDto>>> {
+    ): ResponseEntity<Response<List<MyChatRoomDto>>> {
         val rooms = chatService.findMyChatRooms(principal)
         val response = Response.of(rooms)
 
@@ -72,7 +73,7 @@ class ChatController(
         principal: UserPrincipal,
         @PathVariable
         roomId: Long
-    ): ResponseEntity<Void> {
+    ): ResponseEntity<Unit> {
         chatService.joinChatRoom(principal, roomId)
 
         return ResponseEntity(HttpStatus.OK)
@@ -87,7 +88,7 @@ class ChatController(
         principal: UserPrincipal,
         @PathVariable
         roomId: Long
-    ): ResponseEntity<Void> {
+    ): ResponseEntity<Unit> {
         chatService.leaveChatRoom(principal, roomId)
 
         return ResponseEntity(HttpStatus.OK)
@@ -102,7 +103,7 @@ class ChatController(
         principal: UserPrincipal,
         @PathVariable
         roomId: Long
-    ): ResponseEntity<Void> {
+    ): ResponseEntity<Unit> {
         chatService.deleteChatRoom(principal, roomId)
 
         return ResponseEntity(HttpStatus.OK)

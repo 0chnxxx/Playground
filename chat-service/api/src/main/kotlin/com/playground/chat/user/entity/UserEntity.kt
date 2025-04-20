@@ -9,16 +9,16 @@ import jakarta.persistence.*
 class UserEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    var id: Long? = null,
 
-    val email: String,
+    var email: String,
 
-    val password: String,
+    var password: String,
 
-    val nickname: String,
+    var nickname: String,
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    val chats: MutableList<ChatEntity> = mutableListOf(),
+    var chats: MutableList<ChatEntity> = mutableListOf(),
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -26,7 +26,7 @@ class UserEntity(
         joinColumns = [JoinColumn(name = "user_id")],
         inverseJoinColumns = [JoinColumn(name = "room_id")]
     )
-    val rooms: MutableList<ChatRoomEntity> = mutableListOf()
+    var rooms: MutableList<ChatRoomEntity> = mutableListOf()
 ) {
     fun isOwner(room: ChatRoomEntity): Boolean {
         return this.rooms.any { it == room && it.owner == this }

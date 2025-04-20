@@ -7,9 +7,7 @@ import com.playground.chat.chat.entity.ChatMessageEntity
 import com.playground.chat.chat.entity.ChatRoomEntity
 import com.playground.chat.chat.repository.ChatRepository
 import com.playground.chat.user.entity.UserEntity
-import com.playground.chat.user.service.UserFinder
 import org.springframework.stereotype.Component
-import java.security.Principal
 
 @Component
 class ChatOperator(
@@ -33,9 +31,7 @@ class ChatOperator(
         return ChatRoomDto(
             id = room.id!!,
             name = room.name,
-            lastMessage = null,
-            lastMessageTime = null,
-            participantCount = 1,
+            memberCount = 1,
             isJoined = true
         )
     }
@@ -60,5 +56,13 @@ class ChatOperator(
 
     fun saveChatMessage(message: ChatMessageEntity) {
         chatRepository.saveChatMessage(message)
+    }
+
+    fun readLastChatMessage(roomId: Long, userId: Long) {
+        chatRepository.updateChatForLastMessage(roomId, userId)
+    }
+
+    fun readChatMessage(roomId: Long, userId: Long, messageId: Long) {
+        chatRepository.updateChatForMessage(roomId, userId, messageId)
     }
 }

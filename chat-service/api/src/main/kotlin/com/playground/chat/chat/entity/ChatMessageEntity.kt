@@ -9,18 +9,18 @@ import java.time.LocalDateTime
 class ChatMessageEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    var id: Long? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
-    val room: ChatRoomEntity,
+    var room: ChatRoomEntity,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id")
-    val sender: UserEntity,
+    var sender: UserEntity,
 
-    val content: String,
+    var content: String,
 
     @Column(name = "created_at")
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    var createdAt: LocalDateTime = LocalDateTime.now()
 )

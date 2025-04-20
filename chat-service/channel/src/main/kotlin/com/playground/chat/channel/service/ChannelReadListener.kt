@@ -1,7 +1,7 @@
 package com.playground.chat.channel.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.playground.chat.chat.data.response.ChatMessageDto
+import com.playground.chat.chat.data.event.ReadChatMessageEvent
 import com.playground.chat.global.log.logger
 import org.springframework.data.redis.connection.Message
 import org.springframework.data.redis.connection.MessageListener
@@ -9,7 +9,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 
 @Component
-class ChatMessageListener(
+class ChannelReadListener(
     private val mapper: ObjectMapper,
     private val messagingTemplate: SimpMessagingTemplate
 ): MessageListener {
@@ -17,15 +17,14 @@ class ChatMessageListener(
 
     override fun onMessage(message: Message, pattern: ByteArray?) {
         try {
+            log.info("[📨 Chat Message Read Event Receive] {}", message)
+
             val body = message.body.toString(Charsets.UTF_8)
-            val chatMessageDto = mapper.readValue(body, ChatMessageDto::class.java)
-            val destination = "/chat/rooms/${chatMessageDto.roomId}"
+            val event = mapper.readValue(body, ReadChatMessageEvent::class.java)
 
-            messagingTemplate.convertAndSend(destination, chatMessageDto)
-
-            log.info("[📨 Chat Message Receive] channel : {}, message : {}", chatMessageDto.roomId, chatMessageDto)
+            messagingTemplate.convertAndSend("/sub/chat/rooms/${event.roomId}/messages/read", event)
         } catch (e: Exception) {
-            log.error("[❌ Chat Message Receive Fail] {}", e.printStackTrace())
+            log.error("[❌ Chat Message Read Event Receive Fail] {}", e.printStackTrace())
         }
     }
 }

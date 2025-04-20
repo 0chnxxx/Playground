@@ -27,12 +27,15 @@ class RedisConfig(
      * Redis 명령을 위한 RedisTemplate 설정
      */
     @Bean
-    fun redisTemplate(): RedisTemplate<String, String> {
+    fun redisTemplate(
+        redisConnectionFactory: RedisConnectionFactory,
+        redisSerializer: GenericJackson2JsonRedisSerializer
+    ): RedisTemplate<String, String> {
         val template = RedisTemplate<String, String>()
 
-        template.connectionFactory = redisConnectionFactory()
+        template.connectionFactory = redisConnectionFactory
         template.keySerializer = StringRedisSerializer()
-        template.valueSerializer = redisSerializer()
+        template.valueSerializer = redisSerializer
 
         return template
     }
@@ -40,11 +43,13 @@ class RedisConfig(
     /**
      * Redis 연결을 위한 RedisConnectionFactory 설정
      */
-    private fun redisConnectionFactory(): RedisConnectionFactory {
+    @Bean
+    fun redisConnectionFactory(): RedisConnectionFactory {
         return LettuceConnectionFactory(host, port)
     }
 
-    private fun redisSerializer(): GenericJackson2JsonRedisSerializer {
+    @Bean
+    fun redisSerializer(): GenericJackson2JsonRedisSerializer {
         return GenericJackson2JsonRedisSerializer(objectMapper)
     }
 }

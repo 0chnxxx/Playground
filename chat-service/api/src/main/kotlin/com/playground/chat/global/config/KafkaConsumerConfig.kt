@@ -14,14 +14,10 @@ class KafkaConsumerConfig {
     @Value("\${spring.kafka.bootstrap-servers}")
     lateinit var bootstrapServers: String
 
-    @Value("\${spring.kafka.channel.chat.group-id}")
-    lateinit var groupId: String
-
     @Bean
     fun consumerFactory(): ConsumerFactory<String, String> {
         val props = mapOf(
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
-            ConsumerConfig.GROUP_ID_CONFIG to groupId,
             ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
             ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java
         )

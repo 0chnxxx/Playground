@@ -1,7 +1,6 @@
 package com.playground.chat.channel.global.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.playground.chat.channel.service.ChatEventListener
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -10,13 +9,12 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.listener.RedisMessageListenerContainer
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer
+import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 
 @Configuration
 class RedisConfig(
-    private val objectMapper: ObjectMapper,
-    private val chatEventListener: ChatEventListener
+    private val objectMapper: ObjectMapper
 ) {
     @Value("\${spring.data.redis.host}")
     lateinit var host: String
@@ -29,13 +27,14 @@ class RedisConfig(
      */
     @Bean
     fun redisTemplate(
-        redisConnectionFactory: RedisConnectionFactory
+        redisConnectionFactory: RedisConnectionFactory,
+        redisSerializer: GenericJackson2JsonRedisSerializer
     ): RedisTemplate<String, String> {
         val template = RedisTemplate<String, String>()
 
         template.connectionFactory = redisConnectionFactory
         template.keySerializer = StringRedisSerializer()
-        template.valueSerializer = redisSerializer()
+        template.valueSerializer = redisSerializer
 
         return template
     }
@@ -62,7 +61,8 @@ class RedisConfig(
         return container
     }
 
-    private fun redisSerializer(): GenericJackson2JsonRedisSerializer {
+    @Bean
+    fun redisSerializer(): GenericJackson2JsonRedisSerializer {
         return GenericJackson2JsonRedisSerializer(objectMapper)
     }
 }

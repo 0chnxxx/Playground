@@ -1,6 +1,5 @@
-package com.playground.chat.global.filter
+package com.playground.chat.global.log
 
-import com.playground.chat.global.log.logger
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -21,6 +20,13 @@ class AccessLogFilter: OncePerRequestFilter() {
         val query = request.queryString?.let { "?$it" } ?: ""
         val startTime = System.currentTimeMillis()
 
+        log.info(
+            "[🌐 HTTP Request] {} {}{}",
+            method,
+            uri,
+            query
+        )
+
         try {
             filterChain.doFilter(request, response)
         } finally {
@@ -29,10 +35,7 @@ class AccessLogFilter: OncePerRequestFilter() {
             val status = response.status
 
             log.info(
-                "[🌐 HTTP Call] {} {}{} -> {} ({}ms)",
-                method,
-                uri,
-                query,
+                "[🌐 HTTP Response] status code {} ({}ms)",
                 status,
                 duration
             )

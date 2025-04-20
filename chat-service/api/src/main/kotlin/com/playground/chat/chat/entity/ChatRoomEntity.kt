@@ -9,13 +9,16 @@ import java.time.LocalDateTime
 class ChatRoomEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    var id: Long? = null,
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
-    val owner: UserEntity,
+    var owner: UserEntity,
 
-    val name: String,
+    var name: String,
+
+    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
+    var chats: MutableList<ChatEntity> = mutableListOf(),
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -23,11 +26,11 @@ class ChatRoomEntity(
         joinColumns = [JoinColumn(name = "room_id")],
         inverseJoinColumns = [JoinColumn(name = "user_id")]
     )
-    val users: MutableList<UserEntity> = mutableListOf(),
+    var users: MutableList<UserEntity> = mutableListOf(),
 
     @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    val messages: MutableList<ChatMessageEntity> = mutableListOf(),
+    var messages: MutableList<ChatMessageEntity> = mutableListOf(),
 
     @Column(name = "created_at")
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    var createdAt: LocalDateTime = LocalDateTime.now()
 )

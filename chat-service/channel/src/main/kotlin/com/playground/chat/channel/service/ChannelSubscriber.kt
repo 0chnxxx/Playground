@@ -2,7 +2,7 @@ package com.playground.chat.channel.service
 
 import com.playground.chat.global.log.logger
 import jakarta.annotation.PostConstruct
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.redis.connection.MessageListener
 import org.springframework.data.redis.listener.ChannelTopic
 import org.springframework.data.redis.listener.RedisMessageListenerContainer
 import org.springframework.stereotype.Component
@@ -10,18 +10,13 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 @Component
-class ChatSubscriber(
+class ChannelSubscriber(
     private val container: RedisMessageListenerContainer,
-    private val chatMessageListener: ChatMessageListener,
-    private val chatEventListener: ChatEventListener
+    private val channelSendListener: ChannelSendListener,
+    private val channelReadListener: ChannelReadListener,
+    private val channelEventListener: ChannelEventListener
 ) {
     private val log = logger()
-
-    @Value("\${spring.data.redis.channel.chat-message.topic}")
-    private lateinit var messageChannel: String
-
-    @Value("\${spring.data.redis.channel.chat-event.topic}")
-    private lateinit var eventChannel: String
 
     /**
      * UserId to Set(RoomId)
@@ -29,19 +24,14 @@ class ChatSubscriber(
     private val sessions = ConcurrentHashMap<Long, MutableSet<Long>>()
 
     /**
-     * RoomId to Count(UserId)
+     * RoomId to UserId.count()
      */
     private val subscribers = ConcurrentHashMap<Long, AtomicInteger>()
 
     /**
-     * RoomId to Topic
+     * RoomId to Listener
      */
-    private val topics = ConcurrentHashMap<Long, ChannelTopic>()
-
-    @PostConstruct
-    fun init() {
-        container.addMessageListener(chatEventListener, ChannelTopic(eventChannel))
-    }
+    private val listeners = ConcurrentHashMap<Long, List<Pair<MessageListener, ChannelTopic>>>()
 
     /**
      * [동적 구독 함수]
@@ -70,12 +60,18 @@ class ChatSubscriber(
     private fun subscribe(roomId: Long, userId: Long) {
         subscribers.compute(roomId) { _, count ->
             if (count == null) {
-                topics
+                listeners
                     .computeIfAbsent(roomId) {
-                        ChannelTopic("${messageChannel}:${roomId}")
+                        listOf(
+                            channelEventListener to ChannelTopic("chat-room-event:${roomId}"),
+                            channelSendListener to ChannelTopic("chat-message-send:${roomId}"),
+                            channelReadListener to ChannelTopic("chat-message-read:${roomId}")
+                        )
                     }
-                    .let { topic ->
-                        container.addMessageListener(chatMessageListener, topic)
+                    .let { topics ->
+                        topics.forEach { topic ->
+                            container.addMessageListener(topic.first, topic.second)
+                        }
                     }
 
                 log.info("[✅ Chat Channel Subscribed] userId: {}, roomId : {}", userId, roomId)
@@ -123,9 +119,12 @@ class ChatSubscriber(
             val remaining = count.decrementAndGet()
 
             if (remaining <= 0) {
-                topics[roomId]?.let { topic ->
-                    container.removeMessageListener(chatMessageListener, topic)
-                    topics.remove(roomId)
+                listeners[roomId]?.let { topics ->
+                    topics.forEach { topic ->
+                        container.removeMessageListener(topic.first, topic.second)
+                    }
+
+                    listeners.remove(roomId)
                 }
 
                 log.info("[❌ Chat Channel Unsubscribed] userId : {}, roomId : {}", userId, roomId)
