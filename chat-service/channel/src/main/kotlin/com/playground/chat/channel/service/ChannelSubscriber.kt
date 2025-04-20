@@ -33,6 +33,11 @@ class ChannelSubscriber(
      */
     private val listeners = ConcurrentHashMap<Long, List<Pair<MessageListener, ChannelTopic>>>()
 
+    @PostConstruct
+    fun init() {
+        container.addMessageListener(channelEventListener, ChannelTopic("chat-room-event"))
+    }
+
     /**
      * [동적 구독 함수]
      * session별 room들에 대한 listener 를 관리
@@ -63,7 +68,6 @@ class ChannelSubscriber(
                 listeners
                     .computeIfAbsent(roomId) {
                         listOf(
-                            channelEventListener to ChannelTopic("chat-room-event:${roomId}"),
                             channelSendListener to ChannelTopic("chat-message-send:${roomId}"),
                             channelReadListener to ChannelTopic("chat-message-read:${roomId}")
                         )

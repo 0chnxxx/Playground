@@ -11,43 +11,13 @@ class ChatPublisher(
 ) {
     private val log = logger()
 
-    fun publishChatRoomCreateEvent(event: CreateChatRoomEvent) {
+    fun publishChatRoomEvent(event: ChatRoomEvent) {
         try {
-            redisTemplate.convertAndSend("chat-room-event:${event.roomId}", event)
+            redisTemplate.convertAndSend("chat-room-event", event)
 
-            log.info("[✅ Chat Room Create Event Publish] {}", event)
+            log.info("[✅ Chat Room Event Publish] {}", event)
         } catch (e: Exception) {
-            log.error("[❌ Chat Room Create Event Publish Fail] {}", e.printStackTrace())
-        }
-    }
-
-    fun publishChatRoomJoinEvent(event: JoinChatRoomEvent) {
-        try {
-            redisTemplate.convertAndSend("chat-room-event:${event.roomId}", event)
-
-            log.info("[✅ Chat Room Join Event Publish] {}", event)
-        } catch (e: Exception) {
-            log.error("[❌ Chat Room Join Event Publish Fail] {}", e.printStackTrace())
-        }
-    }
-
-    fun publishChatRoomLeaveEvent(event: LeaveChatRoomEvent) {
-        try {
-            redisTemplate.convertAndSend("chat-room-event:${event.roomId}", event)
-
-            log.info("[✅ Chat Room Leave Event Publish] {}", event)
-        } catch (e: Exception) {
-            log.error("[❌ Chat Room Leave Event Publish Fail] {}", e.printStackTrace())
-        }
-    }
-
-    fun publishChatRoomDeleteEvent(event: DeleteChatRoomEvent) {
-        try {
-            redisTemplate.convertAndSend("chat-room-event:${event.roomId}", event)
-
-            log.info("[✅ Chat Room Delete Event Publish] {}", event)
-        } catch (e: Exception) {
-            log.error("[❌ Chat Room Delete Event Publish Fail] {}", e.printStackTrace())
+            log.error("[❌ Chat Room Event Publish Fail] {}", e.printStackTrace())
         }
     }
 

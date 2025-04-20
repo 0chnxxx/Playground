@@ -230,6 +230,31 @@
         });
     }
 
+    async function ensureRoomSubscriptions(roomId, maxRetries = 3) {
+        let attempts = 0;
+        while (attempts < maxRetries) {
+            try {
+                await waitForWebSocketConnection(3000);
+                if (!subscribedRooms.has(roomId)) {
+                    subscribeToRoom(roomId);
+                    subscribeToReadMessages(roomId);
+                    return true;
+                } else {
+                    return true;
+                }
+            } catch (error) {
+                attempts++;
+                console.error(`Failed to subscribe to room ${roomId}, attempt ${attempts}:`, error);
+                if (attempts >= maxRetries) {
+                    console.error(`Max retries reached for room ${roomId}`);
+                    return false;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+        return false;
+    }
+
     async function sendViewMessage(roomId, messageId) {
         if (!stompClient) {
             console.warn('Cannot send view message: stompClient is null', { roomId, messageId });
@@ -409,35 +434,19 @@
         const allRoomsList = document.getElementById('all-rooms-list');
         if (scrollListener) {
             allRoomsList.removeEventListener('scroll', scrollListener);
-            console.log('Removed previous scroll listener');
         }
         const debouncedLoadAllRooms = debounce(() => {
             const scrollPosition = allRoomsList.scrollTop + allRoomsList.clientHeight;
             const triggerPoint = allRoomsList.scrollHeight - 100;
-            console.log('Scroll detected', {
-                scrollTop: allRoomsList.scrollTop,
-                clientHeight: allRoomsList.clientHeight,
-                scrollHeight: allRoomsList.scrollHeight,
-                scrollPosition,
-                triggerPoint,
-                isLoadingRooms,
-                hasMoreRooms,
-                currentPage,
-                cacheLength: allRoomsCache.length
-            });
             if (scrollPosition >= triggerPoint && !isLoadingRooms && hasMoreRooms) {
-                console.log('Triggering loadRooms for all-rooms-page', { currentPage });
                 loadRooms('all', true).then(() => {
                     currentPage++;
-                    console.log('Incremented currentPage after load', { currentPage });
                 });
             }
         }, 300);
         scrollListener = debouncedLoadAllRooms;
-        console.log('Attaching new scroll listener');
         setTimeout(() => {
             allRoomsList.addEventListener('scroll', scrollListener);
-            console.log('Scroll listener attached after delay');
         }, 300);
     }
 
@@ -467,15 +476,9 @@
             const allRoomsList = document.getElementById('all-rooms-list');
             if (scrollListener) {
                 allRoomsList.removeEventListener('scroll', scrollListener);
-                console.log('Removed scroll listener before initial load');
             }
             allRoomsList.scrollTop = 0;
             loadRooms('all', false).then(() => {
-                console.log('Initial rooms rendered', {
-                    scrollHeight: allRoomsList.scrollHeight,
-                    clientHeight: allRoomsList.clientHeight,
-                    scrollTop: allRoomsList.scrollTop
-                });
                 allRoomsList.scrollTop = 0;
                 setupInfiniteScroll();
             });
@@ -496,10 +499,7 @@
                 const latestMessage = messagesCache[messagesCache.length - 1];
                 const messageId = latestMessage && latestMessage.id && latestMessage.id !== '0' && latestMessage.id !== 0 ? latestMessage.id : null;
                 sendViewMessage(currentRoom.id, messageId);
-                if (stompClient && stompClient.connected && !subscribedRooms.has(currentRoom.id)) {
-                    subscribeToRoom(currentRoom.id);
-                    subscribeToReadMessages(currentRoom.id);
-                }
+                ensureRoomSubscriptions(currentRoom.id);
                 setTimeout(() => {
                     isInitialRender = false;
                 }, 100);
@@ -507,10 +507,7 @@
             }).catch(error => {
                 console.error('Error loading messages:', error);
                 sendViewMessage(currentRoom.id, null);
-                if (stompClient && stompClient.connected && !subscribedRooms.has(currentRoom.id)) {
-                    subscribeToRoom(currentRoom.id);
-                    subscribeToReadMessages(currentRoom.id);
-                }
+                ensureRoomSubscriptions(currentRoom.id);
                 isInitialRender = false;
             });
         }
@@ -588,6 +585,7 @@
             const socket = new SockJS(`http://localhost:8081/ws?token=${accessToken}`);
             stompClient = Stomp.over(socket);
             stompClient.connect({}, () => {
+                roomsCache.forEach(room => ensureRoomSubscriptions(room.id));
             }, (error) => {
                 console.error('WebSocket connection error:', error);
                 setTimeout(connectWebSocket, 5000);
@@ -612,6 +610,8 @@
                         return;
                     }
                     processedMessageIds.add(messageId);
+                    const room = roomsCache.find(r => r.id === roomId) || allRoomsCache.find(r => r.id === roomId);
+                    const memberCount = room ? room.memberCount || 1 : 1;
                     const normalizedMsg = {
                         ...msg,
                         id: messageId,
@@ -620,38 +620,50 @@
                         content: msg.content || msg.message || 'No content',
                         nickname: msg.nickname || 'Unknown',
                         timestamp: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString(),
-                        unreadCount: msg.unreadCount !== undefined && msg.unreadCount > 0 ? msg.unreadCount : (msg.userId == userId ? currentRoom.memberCount : currentRoom.memberCount),
+                        unreadCount: msg.unreadCount !== undefined && msg.unreadCount > 0 ? msg.unreadCount : (msg.userId == userId ? memberCount : memberCount),
                         isTemporary: false
                     };
                     if (!msg.content && !msg.message) {
                         console.warn('Message missing content:', msg);
                     }
                     if (currentRoomId === roomId && !pages['chat'].classList.contains('hidden')) {
-                        const recentDuplicate = messagesCache.find(cached =>
-                            cached.content === normalizedMsg.content &&
-                            cached.userId === normalizedMsg.userId &&
-                            new Date().getTime() - new Date(cached.timestamp).getTime() < 1000
-                        );
-                        const temporaryMatch = messagesCache.find(cached =>
-                            cached.isTemporary &&
-                            cached.content === normalizedMsg.content &&
-                            cached.userId === normalizedMsg.userId
-                        );
-                        if (temporaryMatch) {
-                            const tempId = temporaryMatch.id;
-                            temporaryMatch.id = normalizedMsg.id;
-                            temporaryMatch.isTemporary = false;
-                            temporaryMatch.timestamp = normalizedMsg.timestamp;
-                            temporaryMatch.unreadCount = normalizedMsg.isMine && (normalizedMsg.unreadCount === undefined || normalizedMsg.unreadCount === 0) ? currentRoom.memberCount : normalizedMsg.unreadCount;
-                            tempMessageMap.set(tempId, normalizedMsg.id);
+                        let tempMsg = null;
+                        let tempId = null;
+                        for (let [key, value] of tempMessageMap.entries()) {
+                            const cached = messagesCache.find(m => m.id === key);
+                            if (cached && cached.content === normalizedMsg.content && cached.userId === normalizedMsg.userId && cached.isTemporary) {
+                                tempMsg = cached;
+                                tempId = key;
+                                break;
+                            }
+                        }
+                        if (tempMsg && tempId) {
+                            messagesCache = messagesCache.map(m =>
+                                m.id === tempId
+                                    ? { ...normalizedMsg, id: messageId, isTemporary: false, unreadCount: normalizedMsg.isMine ? memberCount : normalizedMsg.unreadCount }
+                                    : m
+                            );
                             const messageElement = document.querySelector(`[data-message-id="${tempId}"]`);
                             if (messageElement) {
-                                messageElement.setAttribute('data-message-id', normalizedMsg.id);
-                                updateUnreadSpan(messageElement, normalizedMsg.id, temporaryMatch.unreadCount);
+                                messageElement.setAttribute('data-message-id', messageId);
+                                updateUnreadSpan(messageElement, messageId, normalizedMsg.unreadCount);
+                                const contentElement = messageElement.querySelector('p.text-sm');
+                                if (contentElement) contentElement.textContent = normalizedMsg.content;
+                                const timestampElement = messageElement.querySelector('.timestamp');
+                                if (timestampElement) timestampElement.textContent = new Date(normalizedMsg.timestamp).toLocaleTimeString();
                             }
-                        } else if (!recentDuplicate && !messagesCache.some(cached => cached.id === normalizedMsg.id)) {
-                            messagesCache.push(normalizedMsg);
-                            appendMessage(normalizedMsg);
+                            tempMessageMap.delete(tempId);
+                        } else {
+                            const recentDuplicate = messagesCache.find(cached =>
+                                cached.content === normalizedMsg.content &&
+                                cached.userId === normalizedMsg.userId &&
+                                Math.abs(new Date().getTime() - new Date(cached.timestamp).getTime()) < 1000 &&
+                                !cached.isTemporary
+                            );
+                            if (!recentDuplicate && !messagesCache.some(cached => cached.id === normalizedMsg.id)) {
+                                messagesCache.push(normalizedMsg);
+                                appendMessage(normalizedMsg);
+                            }
                         }
                         if (!processedReadIds.has(normalizedMsg.id)) {
                             sendReadMessage(roomId, normalizedMsg.id);
@@ -817,11 +829,29 @@
         if (roomIndex !== -1) {
             roomsCache[roomIndex].lastMessage = msg.content || msg.message;
             roomsCache[roomIndex].lastMessageTime = msg.timestamp;
-            if (currentRoomId !== roomId && msg.userId !== userId) {
+            if (msg.userId !== userId && currentRoomId !== roomId) {
                 roomsCache[roomIndex].unreadCount = (roomsCache[roomIndex].unreadCount || 0) + 1;
+            } else {
+                roomsCache[roomIndex].unreadCount = 0;
             }
             roomsCache.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
             renderRooms('my');
+        } else {
+            console.warn(`Room ${roomId} not found in roomsCache, fetching room`);
+            api.get(`/chat/rooms/${roomId}`).then(res => {
+                const room = res.data.data;
+                roomsCache.push({
+                    ...room,
+                    lastMessage: msg.content || msg.message,
+                    lastMessageTime: msg.timestamp,
+                    unreadCount: msg.userId === userId ? 0 : 1,
+                    memberCount: room.memberCount || 1
+                });
+                roomsCache.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
+                renderRooms('my');
+            }).catch(error => {
+                console.error('Failed to fetch room:', error);
+            });
         }
         const allRoomIndex = allRoomsCache.findIndex(room => room.id === roomId);
         if (allRoomIndex !== -1) {
@@ -834,7 +864,6 @@
     function renderRooms(type) {
         const roomsList = type === 'my' ? document.getElementById('rooms-list') : document.getElementById('all-rooms-list');
         const cache = type === 'my' ? roomsCache : allRoomsCache;
-        console.log(`Rendering ${type} rooms`, { cacheLength: cache.length, roomIds: cache.map(r => r.id) });
         if (cache.length === 0) {
             roomsList.innerHTML = '<p class="text-gray-500 text-center">No rooms available</p>';
             return;
@@ -874,9 +903,6 @@
         });
         roomsList.innerHTML = '';
         roomsList.appendChild(fragment);
-        if (type === 'all') {
-            console.log('Rooms rendered, scrollHeight:', roomsList.scrollHeight);
-        }
     }
 
     async function register(email, nickname, password) {
@@ -927,28 +953,28 @@
             const newRoom = res.data.data;
             currentRoom = newRoom;
             currentRoomId = newRoom.id;
-            if (stompClient && stompClient.connected && !subscribedRooms.has(newRoom.id)) {
-                subscribeToRoom(newRoom.id);
-                subscribeToReadMessages(newRoom.id);
-            }
             roomsCache.unshift(newRoom);
             renderRooms('my');
+            const subscribed = await ensureRoomSubscriptions(newRoom.id);
+            if (!subscribed) {
+                throw new Error('Failed to subscribe to room after creation');
+            }
             alert('채팅방이 생성되었습니다.');
             document.getElementById('create-room-modal').classList.add('hidden');
             document.getElementById('room-name-input').value = '';
             navigate('chat');
         } catch (error) {
-            alert('채팅방 생성 실패: ' + error.response?.data?.message || '오류 발생');
+            console.error('Error creating room:', error);
+            alert('채팅방 생성 실패: ' + error.message || error.response?.data?.message || '오류 발생');
+            if (error.message.includes('subscribe')) {
+                connectWebSocket();
+            }
         }
     }
 
     async function joinRoom(roomId) {
         try {
             await api.post(`/chat/rooms/${roomId}/join`);
-            if (stompClient && stompClient.connected && !subscribedRooms.has(roomId)) {
-                subscribeToRoom(roomId);
-                subscribeToReadMessages(roomId);
-            }
             const room = allRoomsCache.find(r => r.id === roomId);
             if (room) {
                 room.isJoined = true;
@@ -958,6 +984,7 @@
                 currentRoomId = roomId;
                 renderRooms('my');
             }
+            await ensureRoomSubscriptions(roomId);
             navigate('chat');
         } catch (error) {
             alert('채팅방 참여 실패: ' + error.response?.data?.message || '오류 발생');
@@ -966,22 +993,15 @@
 
     async function loadRooms(type, append = false) {
         if (isLoadingRooms) {
-            console.log('Skipping loadRooms: already loading', { type, currentPage });
             return;
         }
         if (type === 'all' && append && allRoomsCache.length >= currentPage * 10) {
-            console.log('Skipping loadRooms: page already loaded', {
-                currentPage,
-                cacheLength: allRoomsCache.length,
-                expectedRooms: currentPage * 10
-            });
             isLoadingRooms = false;
             return;
         }
         isLoadingRooms = true;
         try {
             const endpoint = type === 'all' ? `/chat/rooms?page=${currentPage}&size=10` : '/chat/rooms/me';
-            console.log('Fetching rooms', { type, currentPage, append });
             const res = await api.get(endpoint);
             const roomsList = type === 'my' ? document.getElementById('rooms-list') : document.getElementById('all-rooms-list');
             const cache = type === 'my' ? roomsCache : allRoomsCache;
@@ -995,37 +1015,20 @@
                 unreadCount: room.unreadCount || 0,
                 memberCount: room.memberCount || 1
             }));
-            console.log('Rooms loaded', {
-                type,
-                append,
-                currentPage,
-                rooms: rooms.map(r => r.id),
-                cacheBefore: cache.map(r => r.id),
-                responseLength: rooms.length
-            });
             if (type === 'my') {
                 cache.push(...rooms);
                 cache.sort((a, b) => new Date(b.lastMessageTime || 0) - new Date(a.lastMessageTime || 0));
                 if (stompClient && stompClient.connected) {
                     rooms.forEach(room => {
-                        if (!subscribedRooms.has(room.id)) {
-                            subscribeToRoom(room.id);
-                            subscribeToReadMessages(room.id);
-                        }
+                        ensureRoomSubscriptions(room.id);
                     });
                 }
             } else {
                 const existingIds = new Set(cache.map(room => room.id));
                 const newRooms = rooms.filter(room => !existingIds.has(room.id));
-                console.log('Deduplication', {
-                    existingIds: [...existingIds],
-                    newRoomIds: newRooms.map(r => r.id),
-                    filteredCount: rooms.length - newRooms.length
-                });
                 cache.push(...newRooms);
                 if (rooms.length < 10) {
                     hasMoreRooms = false;
-                    console.log('No more rooms to load', { currentPage, responseLength: rooms.length });
                 }
             }
             renderRooms(type);
@@ -1121,9 +1124,18 @@
             return;
         }
 
-        const existingElement = messagesDiv.querySelector(`[data-message-id="${msg.id}"]`);
+        const tempId = [...tempMessageMap.keys()].find(key => tempMessageMap.get(key) === msg.id || key === msg.id);
+        const existingElement = messagesDiv.querySelector(`[data-message-id="${msg.id}"]`) ||
+            (tempId ? messagesDiv.querySelector(`[data-message-id="${tempId}"]`) : null);
+
         if (existingElement) {
-            existingElement.remove();
+            existingElement.setAttribute('data-message-id', msg.id);
+            const contentElement = existingElement.querySelector('p.text-sm');
+            if (contentElement) contentElement.textContent = msg.content;
+            const timestampElement = existingElement.querySelector('.timestamp');
+            if (timestampElement) timestampElement.textContent = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : '';
+            updateUnreadSpan(existingElement, msg.id, msg.unreadCount);
+            return;
         }
 
         const div = document.createElement('div');
@@ -1169,7 +1181,7 @@
         }
     }
 
-    function sendMessage() {
+    async function sendMessage() {
         const content = document.getElementById('message-input').value;
         if (!content.trim()) {
             alert('메시지를 입력하세요.');
@@ -1184,7 +1196,13 @@
             return;
         }
         try {
-            const tempId = `temp-${Date.now()}`;
+            if (!subscribedRooms.has(currentRoom.id)) {
+                const subscribed = await ensureRoomSubscriptions(currentRoom.id);
+                if (!subscribed) {
+                    throw new Error('Failed to subscribe to room before sending message');
+                }
+            }
+            const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
             const tempMessage = {
                 id: tempId,
                 roomId: currentRoom.id,
@@ -1193,10 +1211,11 @@
                 content: content,
                 isMine: true,
                 timestamp: new Date().toISOString(),
-                unreadCount: currentRoom.memberCount,
+                unreadCount: currentRoom.memberCount || 1,
                 isTemporary: true
             };
             messagesCache.push(tempMessage);
+            tempMessageMap.set(tempId, tempId);
             appendMessage(tempMessage);
             stompClient.send(`/pub/chat/rooms/${currentRoom.id}/messages/send`, {}, JSON.stringify({
                 roomId: currentRoom.id,
@@ -1207,137 +1226,129 @@
             document.getElementById('message-input').value = '';
         } catch (error) {
             console.error('Error sending message:', error);
-            alert('메시지 전송에 실패했습니다.');
+            alert('메시지 전송에 실패했습니다: ' + error.message);
         }
     }
 
-    function addEventListeners() {
-        document.getElementById('login-btn').addEventListener('click', () => {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            if (!email || !password) {
-                alert('이메일과 비밀번호를 입력하세요.');
-                return;
-            }
-            login(email, password);
-        });
+    document.getElementById('login-btn').addEventListener('click', () => {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        login(email, password);
+    });
 
-        document.getElementById('to-register-btn').addEventListener('click', () => navigate('register'));
+    document.getElementById('to-register-btn').addEventListener('click', () => navigate('register'));
 
-        document.getElementById('register-btn').addEventListener('click', () => {
-            const email = document.getElementById('register-email').value;
-            const nickname = document.getElementById('register-nickname').value;
-            const password = document.getElementById('register-password').value;
-            if (!email || !nickname || !password) {
-                alert('이메일, 닉네임, 비밀번호를 입력하세요.');
-                return;
-            }
-            register(email, nickname, password);
-        });
+    document.getElementById('register-btn').addEventListener('click', () => {
+        const email = document.getElementById('register-email').value;
+        const nickname = document.getElementById('register-nickname').value;
+        const password = document.getElementById('register-password').value;
+        register(email, nickname, password);
+    });
 
-        document.getElementById('back-to-login-btn').addEventListener('click', () => navigate('login'));
+    document.getElementById('back-to-login-btn').addEventListener('click', () => navigate('login'));
 
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            accessToken = null;
-            refreshToken = null;
-            userId = null;
-            nickname = null;
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('userId');
-            localStorage.removeItem('nickname');
-            if (stompClient) {
-                stompClient.disconnect();
-                stompClient = null;
-            }
-            subscribedRooms.forEach((_, roomId) => unsubscribeRoom(roomId));
-            subscribedRooms.clear();
-            navigate('login');
-        });
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        accessToken = null;
+        refreshToken = null;
+        userId = null;
+        nickname = null;
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('nickname');
+        if (stompClient) {
+            stompClient.disconnect();
+            stompClient = null;
+        }
+        subscribedRooms.forEach((_, roomId) => unsubscribeRoom(roomId));
+        subscribedRooms.clear();
+        navigate('login');
+    });
 
-        document.getElementById('search-rooms-btn').addEventListener('click', () => navigate('all-rooms'));
+    document.getElementById('search-rooms-btn').addEventListener('click', () => navigate('all-rooms'));
 
-        document.getElementById('create-room-btn').addEventListener('click', () => {
-            document.getElementById('create-room-modal').classList.remove('hidden');
-        });
+    document.getElementById('create-room-btn').addEventListener('click', () => {
+        document.getElementById('create-room-modal').classList.remove('hidden');
+    });
 
-        document.getElementById('create-room-confirm-btn').addEventListener('click', () => {
-            const name = document.getElementById('room-name-input').value;
-            if (!name.trim()) {
-                alert('채팅방 이름을 입력하세요.');
-                return;
-            }
+    document.getElementById('create-room-confirm-btn').addEventListener('click', () => {
+        const name = document.getElementById('room-name-input').value;
+        if (name.trim()) {
             createRoom(name);
-        });
+        } else {
+            alert('채팅방 이름을 입력하세요.');
+        }
+    });
 
-        document.getElementById('create-room-cancel-btn').addEventListener('click', () => {
-            document.getElementById('create-room-modal').classList.add('hidden');
-            document.getElementById('room-name-input').value = '';
-        });
+    document.getElementById('create-room-cancel-btn').addEventListener('click', () => {
+        document.getElementById('create-room-modal').classList.add('hidden');
+        document.getElementById('room-name-input').value = '';
+    });
 
-        document.getElementById('back-to-my-rooms-btn').addEventListener('click', () => navigate('rooms'));
+    document.getElementById('back-to-my-rooms-btn').addEventListener('click', () => navigate('rooms'));
 
-        document.getElementById('back-to-rooms-btn').addEventListener('click', () => navigate('rooms'));
-
-        document.getElementById('send-message-btn').addEventListener('click', sendMessage);
-
-        document.getElementById('message-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        document.getElementById('drawer-toggle-btn').addEventListener('click', toggleDrawer);
-
-        document.getElementById('drawer-close-btn').addEventListener('click', toggleDrawer);
-
-        document.getElementById('drawer-overlay').addEventListener('click', toggleDrawer);
-
-        document.getElementById('leave-room-btn').addEventListener('click', () => {
-            if (currentRoomId) {
-                leaveRoom(currentRoomId);
-            }
-        });
-
-        document.getElementById('leave-room-confirm-btn').addEventListener('click', () => {
-            if (currentRoomId) {
-                confirmLeaveRoom(currentRoomId);
-            }
-        });
-
-        document.getElementById('leave-room-cancel-btn').addEventListener('click', () => {
-            document.getElementById('leave-room-modal').classList.add('hidden');
-        });
-
-        document.getElementById('join-room-confirm-btn').addEventListener('click', () => {
-            if (pendingRoom) {
-                joinRoom(pendingRoom.id);
-                document.getElementById('join-room-modal').classList.add('hidden');
-                pendingRoom = null;
-            }
-        });
-
-        document.getElementById('join-room-cancel-btn').addEventListener('click', () => {
+    document.getElementById('join-room-confirm-btn').addEventListener('click', () => {
+        if (pendingRoom) {
+            joinRoom(pendingRoom.id);
             document.getElementById('join-room-modal').classList.add('hidden');
             pendingRoom = null;
-        });
+        }
+    });
 
+    document.getElementById('join-room-cancel-btn').addEventListener('click', () => {
+        document.getElementById('join-room-modal').classList.add('hidden');
+        pendingRoom = null;
+    });
+
+    document.getElementById('back-to-rooms-btn').addEventListener('click', () => navigate('rooms'));
+
+    document.getElementById('send-message-btn').addEventListener('click', sendMessage);
+
+    document.getElementById('message-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    document.getElementById('drawer-toggle-btn').addEventListener('click', toggleDrawer);
+
+    document.getElementById('drawer-close-btn').addEventListener('click', toggleDrawer);
+
+    document.getElementById('drawer-overlay').addEventListener('click', toggleDrawer);
+
+    document.getElementById('leave-room-btn').addEventListener('click', () => {
+        if (currentRoomId) {
+            leaveRoom(currentRoomId);
+        }
+    });
+
+    document.getElementById('leave-room-confirm-btn').addEventListener('click', () => {
+        if (currentRoomId) {
+            confirmLeaveRoom(currentRoomId);
+        }
+    });
+
+    document.getElementById('leave-room-cancel-btn').addEventListener('click', () => {
+        document.getElementById('leave-room-modal').classList.add('hidden');
+    });
+
+    document.getElementById('messages').addEventListener('scroll', () => {
         const messagesDiv = document.getElementById('messages');
-        messagesDiv.addEventListener('scroll', () => {
-            if (messagesDiv.scrollTop === 0 && hasMoreMessages && !isLoadingMessages) {
-                loadMessages(currentRoomId, true);
-            }
-        });
-    }
+        if (messagesDiv.scrollTop < 100 && !isLoadingMessages && hasMoreMessages) {
+            loadMessages(currentRoomId, true);
+        }
+    });
 
-    if (accessToken && refreshToken && userId && nickname) {
-        connectWebSocket();
-        navigate('rooms');
+    if (accessToken && refreshToken) {
+        fetchCurrentUser().then(() => {
+            connectWebSocket();
+            navigate('rooms');
+        }).catch(() => {
+            navigate('login');
+        });
     } else {
         navigate('login');
     }
-
-    addEventListeners();
 </script>
 </body>
 </html>

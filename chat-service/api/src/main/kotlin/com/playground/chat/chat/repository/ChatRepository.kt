@@ -11,6 +11,7 @@ import com.playground.chat.global.data.Pagination
 import com.playground.chat.user.entity.QUserEntity
 import com.playground.chat.user.entity.UserEntity
 import com.querydsl.core.types.Projections
+import com.querydsl.core.types.dsl.CaseBuilder
 import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
@@ -203,13 +204,20 @@ class ChatRepository(
                     ChatUserDto::class.java,
                     qUser.id,
                     qUser.nickname,
-                    qRoom.owner.eq(qUser)
+                    qRoom.owner.id.eq(qUser.id)
                 )
             )
             .from(qChat)
             .join(qChat.user, qUser)
             .join(qChat.room, qRoom)
             .where(qRoom.id.eq(roomId))
+            .orderBy(
+                CaseBuilder()
+                    .`when`(qRoom.owner.id.eq(qUser.id))
+                    .then(1)
+                    .otherwise(0)
+                    .desc()
+            )
             .fetch()
     }
 

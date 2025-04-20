@@ -1,9 +1,6 @@
 package com.playground.chat.chat.service
 
-import com.playground.chat.chat.data.event.CreateChatRoomEvent
-import com.playground.chat.chat.data.event.DeleteChatRoomEvent
-import com.playground.chat.chat.data.event.JoinChatRoomEvent
-import com.playground.chat.chat.data.event.LeaveChatRoomEvent
+import com.playground.chat.chat.data.event.ChatRoomEvent
 import com.playground.chat.chat.data.request.CreateChatRoomRequest
 import com.playground.chat.chat.data.request.FindChatMessagesRequest
 import com.playground.chat.chat.data.request.FindChatRoomsRequest
@@ -42,8 +39,9 @@ class ChatService(
 
         val room = chatOperator.createChatRoom(user, request)
 
-        chatPublisher.publishChatRoomCreateEvent(
-            CreateChatRoomEvent(
+        chatPublisher.publishChatRoomEvent(
+            ChatRoomEvent(
+                type = ChatRoomEvent.Type.CREATE,
                 roomId = room.id!!,
                 userId = principal.name.toLong(),
                 roomName = room.name
@@ -59,10 +57,12 @@ class ChatService(
 
         chatOperator.joinChatRoom(user, room)
 
-        chatPublisher.publishChatRoomJoinEvent(
-            JoinChatRoomEvent(
+        chatPublisher.publishChatRoomEvent(
+            ChatRoomEvent(
+                type = ChatRoomEvent.Type.JOIN,
                 roomId = room.id!!,
-                userId = user.id!!
+                userId = user.id!!,
+                roomName = room.name
             )
         )
     }
@@ -73,10 +73,12 @@ class ChatService(
 
         chatOperator.leaveChatRoom(user, room)
 
-        chatPublisher.publishChatRoomLeaveEvent(
-            LeaveChatRoomEvent(
+        chatPublisher.publishChatRoomEvent(
+            ChatRoomEvent(
+                type = ChatRoomEvent.Type.LEAVE,
                 roomId = room.id!!,
-                userId = user.id!!
+                userId = user.id!!,
+                roomName = room.name
             )
         )
     }
@@ -91,10 +93,12 @@ class ChatService(
 
         chatOperator.deleteChatRoom(room)
 
-        chatPublisher.publishChatRoomDeleteEvent(
-            DeleteChatRoomEvent(
+        chatPublisher.publishChatRoomEvent(
+            ChatRoomEvent(
+                type = ChatRoomEvent.Type.DELETE,
                 userId = user.id!!,
-                roomId = room.id!!
+                roomId = room.id!!,
+                roomName = room.name
             )
         )
     }

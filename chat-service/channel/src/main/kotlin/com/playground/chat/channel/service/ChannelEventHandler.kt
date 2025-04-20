@@ -3,10 +3,7 @@ package com.playground.chat.channel.service
 import com.playground.chat.global.log.logger
 import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.channel.client.ChatApiClient
-import com.playground.chat.chat.data.event.CreateChatRoomEvent
-import com.playground.chat.chat.data.event.DeleteChatRoomEvent
-import com.playground.chat.chat.data.event.JoinChatRoomEvent
-import com.playground.chat.chat.data.event.LeaveChatRoomEvent
+import com.playground.chat.chat.data.event.ChatRoomEvent
 import org.springframework.context.event.EventListener
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.stereotype.Component
@@ -17,7 +14,6 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent
 @Component
 class ChannelEventHandler(
     private val chatApiClient: ChatApiClient,
-    private val channelPublisher: ChannelPublisher,
     private val channelSubscriber: ChannelSubscriber
 ) {
     private val log = logger()
@@ -70,26 +66,12 @@ class ChannelEventHandler(
     }
 
     @EventListener
-    fun handleChatRoomCreate(event: CreateChatRoomEvent) {
-        channelSubscriber.subscribeToRoom(event.userId, event.roomId)
-        channelPublisher.publishChatRoomCreateEvent(event)
-    }
-
-    @EventListener
-    fun handleChatRoomJoin(event: JoinChatRoomEvent) {
-        channelSubscriber.subscribeToRoom(event.userId, event.roomId)
-        channelPublisher.publishChatRoomJoinEvent(event)
-    }
-
-    @EventListener
-    fun handleChatRoomLeave(event: LeaveChatRoomEvent) {
-        channelSubscriber.unsubscribeToUserRoom(event.userId, event.roomId)
-        channelPublisher.publishChatRoomLeaveEvent(event)
-    }
-
-    @EventListener
-    fun handleChatRoomDelete(event: DeleteChatRoomEvent) {
-        channelSubscriber.unsubscribeToRoom(event.roomId)
-        channelPublisher.publishChatRoomDeleteEvent(event)
+    fun handleChatRoomEvent(event: ChatRoomEvent) {
+        when (event.type) {
+            ChatRoomEvent.Type.CREATE -> channelSubscriber.subscribeToRoom(event.userId, event.roomId)
+            ChatRoomEvent.Type.JOIN -> channelSubscriber.subscribeToRoom(event.userId, event.roomId)
+            ChatRoomEvent.Type.LEAVE -> channelSubscriber.unsubscribeToUserRoom(event.userId, event.roomId)
+            ChatRoomEvent.Type.DELETE -> channelSubscriber.unsubscribeToRoom(event.roomId)
+        }
     }
 }

@@ -13,22 +13,6 @@ class ChannelPublisher(
 ) {
     private val log = logger()
 
-    fun publishChatRoomCreateEvent(event: CreateChatRoomEvent) {
-        TODO("Not yet implemented")
-    }
-
-    fun publishChatRoomJoinEvent(event: JoinChatRoomEvent) {
-        TODO("Not yet implemented")
-    }
-
-    fun publishChatRoomLeaveEvent(event: LeaveChatRoomEvent) {
-        TODO("Not yet implemented")
-    }
-
-    fun publishChatRoomDeleteEvent(event: DeleteChatRoomEvent) {
-        TODO("Not yet implemented")
-    }
-
     fun publishChatMessageViewEvent(event: ViewChatRoomEvent) {
         try {
             val viewEventJson = mapper.writeValueAsString(event)

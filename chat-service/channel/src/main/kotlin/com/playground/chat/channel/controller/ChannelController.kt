@@ -2,7 +2,6 @@ package com.playground.chat.channel.controller
 
 import com.playground.chat.channel.service.ChannelService
 import com.playground.chat.chat.data.event.SendChatMessageEvent
-import com.playground.chat.chat.data.event.JoinChatRoomEvent
 import com.playground.chat.chat.data.event.ReadChatMessageEvent
 import com.playground.chat.chat.data.event.ViewChatRoomEvent
 import com.playground.chat.global.auth.UserPrincipal
