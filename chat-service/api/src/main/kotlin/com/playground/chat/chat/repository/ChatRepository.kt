@@ -10,13 +10,16 @@ import com.playground.chat.chat.entity.*
 import com.playground.chat.global.data.Pagination
 import com.playground.chat.user.entity.QUserEntity
 import com.playground.chat.user.entity.UserEntity
+import com.querydsl.core.types.ExpressionUtils
 import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.CaseBuilder
+import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import java.util.Collections
 
 @Repository
 class ChatRepository(
@@ -135,14 +138,6 @@ class ChatRepository(
         val qRoom = QChatRoomEntity("room")
         val qMessage = QChatMessageEntity("message")
 
-        val unreadCount = JPAExpressions
-            .select(qUnreadChat.user.id.count())
-            .from(qUnreadChat)
-            .where(
-                qUnreadChat.room.id.eq(roomId),
-                qUnreadChat.lastReadAt.coalesce(qUnreadChat.joinedAt).lt(qMessage.createdAt)
-            )
-
         val totalCount = jpaQueryFactory
             .select(qMessage.id.count())
             .from(qMessage)
@@ -151,7 +146,7 @@ class ChatRepository(
             .where(qMessage.room.id.eq(roomId))
             .fetchOne() ?: 0
 
-        val rooms = jpaQueryFactory
+        val messages = jpaQueryFactory
             .select(
                 Projections.constructor(
                     ChatMessageDto::class.java,
@@ -159,7 +154,6 @@ class ChatRepository(
                     qUser.id,
                     qUser.nickname,
                     qMessage.content,
-                    unreadCount,
                     qUser.id.eq(userId),
                     qMessage.createdAt
                 )
@@ -173,11 +167,33 @@ class ChatRepository(
             .limit(request.size.toLong())
             .fetch()
 
+        val messageIds = messages.map { it.messageId }.toList();
+
+        val unreadUsers = if (messageIds.isNotEmpty()) {
+            jpaQueryFactory
+                .select(
+                    qMessage.id,
+                    qUnreadChat.user.id
+                )
+                .from(qMessage)
+                .join(qUnreadChat).on(qUnreadChat.room.id.eq(roomId), qUnreadChat.lastReadAt.coalesce(qUnreadChat.joinedAt).lt(qMessage.createdAt))
+                .join(qUnreadChat.user, qUser)
+                .where(qMessage.id.`in`(messageIds))
+                .fetch()
+                .groupBy({ it.get(qMessage.id!!) }, { it.get(qUnreadChat.user.id)!! })
+        } else {
+            emptyMap()
+        }
+
+        val finalMessages = messages.map { message ->
+            message.copy(unreadUserIds = unreadUsers[message.messageId] ?: emptyList())
+        }
+
         return Pagination.of(
             totalCount = totalCount,
             page = request.page,
             size = request.size,
-            data = rooms
+            data = finalMessages
         )
     }
 

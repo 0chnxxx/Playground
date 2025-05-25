@@ -197,6 +197,9 @@
     let isLeavingRoom = false;
     let drawerTimeout = null;
     let scrollListener = null;
+    
+    // 메시지별 읽지 않은 사용자 추적을 위한 Map 추가
+    let messageUnreadUsersMap = new Map(); // messageId -> Set of userIds
 
     function debounce(func, wait) {
         let timeout;
@@ -350,11 +353,13 @@
             const res = await api.get(`/chat/rooms/${roomId}/users`);
             roomUsersCache = res.data.data || [];
             renderRoomUsers();
+            return roomUsersCache;
         } catch (error) {
             console.error('Failed to fetch room users:', error);
             alert('유저 목록을 불러오지 못했습니다.');
             roomUsersCache = [];
             renderRoomUsers();
+            return [];
         }
     }
 
@@ -493,9 +498,14 @@
             processedReadIds.clear();
             tempMessageMap.clear();
             roomUsersCache = [];
+            messageUnreadUsersMap.clear(); // 읽지 않은 사용자 Map 초기화
             const messagesDiv = document.getElementById('messages');
             isInitialRender = true;
-            loadMessages(currentRoom.id).then(() => {
+            
+            // 먼저 채팅방 사용자 목록을 가져온 후 메시지를 로드
+            fetchRoomUsers(currentRoom.id).then(() => {
+                return loadMessages(currentRoom.id);
+            }).then(() => {
                 const latestMessage = messagesCache[messagesCache.length - 1];
                 const messageId = latestMessage && latestMessage.id && latestMessage.id !== '0' && latestMessage.id !== 0 ? latestMessage.id : null;
                 sendViewMessage(currentRoom.id, messageId);
@@ -620,9 +630,36 @@
                         content: msg.content || msg.message || 'No content',
                         nickname: msg.nickname || 'Unknown',
                         timestamp: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString(),
-                        unreadCount: msg.unreadCount !== undefined && msg.unreadCount > 0 ? msg.unreadCount : (msg.userId == userId ? memberCount : memberCount),
+                        unreadCount: 0, // 초기값은 0으로 설정
                         isTemporary: false
                     };
+                    
+                    // 새 메시지의 경우 읽지 않은 사용자 목록 초기화
+                    if (!messageUnreadUsersMap.has(messageId)) {
+                        // 채팅방의 모든 사용자를 읽지 않은 사용자로 초기화
+                        const unreadUsers = new Set();
+                        
+                        // roomUsersCache가 있으면 사용, 없으면 멤버 수 기반으로 초기화
+                        if (roomUsersCache.length > 0) {
+                            roomUsersCache.forEach(user => {
+                                if (String(user.id) !== String(msg.userId)) {
+                                    unreadUsers.add(String(user.id));
+                                }
+                            });
+                        } else {
+                            // 채팅방 멤버 수 기반으로 초기화 (자신 제외)
+                            for (let i = 0; i < memberCount - 1; i++) {
+                                unreadUsers.add(`unknown-${i}`);
+                            }
+                        }
+                        
+                        messageUnreadUsersMap.set(messageId, unreadUsers);
+                        normalizedMsg.unreadCount = unreadUsers.size;
+                    } else {
+                        // 이미 있는 경우 현재 크기로 설정
+                        const unreadUsers = messageUnreadUsersMap.get(messageId);
+                        normalizedMsg.unreadCount = unreadUsers ? unreadUsers.size : 0;
+                    }
                     if (!msg.content && !msg.message) {
                         console.warn('Message missing content:', msg);
                     }
@@ -638,15 +675,19 @@
                             }
                         }
                         if (tempMsg && tempId) {
+                            // 읽지 않은 사용자 수 계산
+                            const unreadUsers = messageUnreadUsersMap.get(messageId) || new Set();
+                            const unreadCount = normalizedMsg.isMine ? unreadUsers.size : unreadUsers.size;
+                            
                             messagesCache = messagesCache.map(m =>
                                 m.id === tempId
-                                    ? { ...normalizedMsg, id: messageId, isTemporary: false, unreadCount: normalizedMsg.isMine ? memberCount : normalizedMsg.unreadCount }
+                                    ? { ...normalizedMsg, id: messageId, isTemporary: false, unreadCount: unreadCount }
                                     : m
                             );
                             const messageElement = document.querySelector(`[data-message-id="${tempId}"]`);
                             if (messageElement) {
                                 messageElement.setAttribute('data-message-id', messageId);
-                                updateUnreadSpan(messageElement, messageId, normalizedMsg.unreadCount);
+                                updateUnreadSpan(messageElement, messageId, unreadCount);
                                 const contentElement = messageElement.querySelector('p.text-sm');
                                 if (contentElement) contentElement.textContent = normalizedMsg.content;
                                 const timestampElement = messageElement.querySelector('.timestamp');
@@ -737,78 +778,69 @@
                         return;
                     }
 
+                    const readUserId = String(readMsg.userId);
                     const roomIndex = roomsCache.findIndex(room => room.id === roomId);
                     if (roomIndex === -1) {
                         console.warn(`Room ${roomId} not found in roomsCache`);
                         return;
                     }
 
-                    const decrement = 1;
-
                     if (currentRoomId === roomId) {
                         let messagesToUpdate = [];
 
                         if (readMsg.type === 'ALL') {
-                            const targetMessage = messagesCache.find(msg => String(msg.id) === String(readMsg.messageId));
-                            if (targetMessage) {
-                                const targetUnreadCount = targetMessage.unreadCount || 0;
-                                messagesToUpdate = messagesCache.filter(msg =>
-                                    msg.roomId === roomId &&
-                                    (msg.unreadCount || 0) === targetUnreadCount &&
-                                    String(msg.id) <= String(readMsg.messageId)
-                                );
-                            } else {
-                                console.warn('Target message not found for ALL:', readMsg.messageId);
-                                return;
-                            }
-                        } else if (readMsg.type === 'ONE') {
-                            const msg = messagesCache.find(msg => {
-                                const tempId = tempMessageMap.get(msg.id);
-                                return String(msg.id) === String(readMsg.messageId) || (tempId && String(tempId) === String(readMsg.messageId));
+                            // ALL 타입의 경우 messageId 이전의 모든 메시지에서 해당 사용자 제거
+                            messagesCache.forEach(msg => {
+                                if (msg.roomId === roomId && String(msg.id) <= String(readMsg.messageId)) {
+                                    const unreadUsers = messageUnreadUsersMap.get(msg.id);
+                                    if (unreadUsers && unreadUsers.has(readUserId)) {
+                                        unreadUsers.delete(readUserId);
+                                        messagesToUpdate.push(msg);
+                                    }
+                                }
                             });
-                            if (msg) {
-                                messagesToUpdate.push(msg);
-                            } else {
-                                console.warn('Target message not found for ONE:', readMsg.messageId);
-                                return;
+                        } else if (readMsg.type === 'ONE') {
+                            // ONE 타입의 경우 특정 메시지에서만 해당 사용자 제거
+                            const unreadUsers = messageUnreadUsersMap.get(String(readMsg.messageId));
+                            if (unreadUsers && unreadUsers.has(readUserId)) {
+                                unreadUsers.delete(readUserId);
+                                const msg = messagesCache.find(m => String(m.id) === String(readMsg.messageId));
+                                if (msg) {
+                                    messagesToUpdate.push(msg);
+                                }
                             }
                         }
 
+                        // 메시지 캐시 업데이트
                         messagesCache = messagesCache.map(msg => {
                             const isTarget = messagesToUpdate.some(target => target.id === msg.id);
-                            if (isTarget && msg.roomId === roomId && (msg.unreadCount || 0) > 0) {
-                                if (readMsg.type === 'ALL' || (readMsg.type === 'ONE' && (!isInitialRender || msg.isMine))) {
-                                    return { ...msg, unreadCount: Math.max(0, (msg.unreadCount || 0) - 1) };
-                                }
+                            if (isTarget) {
+                                const unreadUsers = messageUnreadUsersMap.get(msg.id);
+                                const newUnreadCount = unreadUsers ? unreadUsers.size : 0;
+                                return { ...msg, unreadCount: newUnreadCount };
                             }
                             return msg;
                         });
 
-                        messagesToUpdate = messagesToUpdate.map(original =>
-                            messagesCache.find(m => m.id === original.id) || original
-                        );
-
+                        // DOM 업데이트
                         if (!pages['chat'].classList.contains('hidden')) {
                             const messagesDiv = document.getElementById('messages');
                             messagesToUpdate.forEach(msg => {
+                                const unreadUsers = messageUnreadUsersMap.get(msg.id);
+                                const newUnreadCount = unreadUsers ? unreadUsers.size : 0;
                                 const messageElement = messagesDiv.querySelector(`[data-message-id="${msg.id}"]`);
                                 if (messageElement) {
-                                    messageElement.remove();
+                                    updateUnreadSpan(messageElement, msg.id, newUnreadCount);
                                 }
-                                appendMessage(msg, false);
                             });
-
-                            const wasAtBottom = messagesDiv.scrollTop + messagesDiv.clientHeight >= messagesDiv.scrollHeight - 20;
-                            if (wasAtBottom) {
-                                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                            }
                         }
                     } else {
+                        // 다른 방에서의 읽음 처리
                         const targetRoom = roomsCache[roomIndex];
-                        if (targetRoom && targetRoom.unreadCount > 0 && readMsg.userId === userId) {
+                        if (targetRoom && targetRoom.unreadCount > 0 && readUserId === String(userId)) {
                             roomsCache[roomIndex] = {
                                 ...targetRoom,
-                                unreadCount: Math.max(0, targetRoom.unreadCount - decrement)
+                                unreadCount: Math.max(0, targetRoom.unreadCount - 1)
                             };
                             renderRooms('my');
                         }
@@ -1061,6 +1093,12 @@
                 if (!id) {
                     console.warn('Message missing id:', msg);
                 }
+                
+                // 읽지 않은 사용자 목록 초기화
+                if (msg.unreadUserIds && msg.unreadUserIds.length >= 0) {
+                    messageUnreadUsersMap.set(id, new Set(msg.unreadUserIds.map(uid => String(uid))));
+                }
+                
                 return {
                     ...msg,
                     id,
@@ -1069,7 +1107,7 @@
                     content: msg.content || 'No content',
                     nickname: msg.nickname || 'Unknown',
                     timestamp: msg.timestamp || new Date().toISOString(),
-                    unreadCount: msg.unreadCount !== undefined ? msg.unreadCount : currentRoom.memberCount,
+                    unreadCount: msg.unreadUserIds ? msg.unreadUserIds.length : 0,
                     isTemporary: false
                 };
             }).filter(msg => msg.id) : [];
@@ -1203,6 +1241,10 @@
                 }
             }
             const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            
+            // 채팅방 사용자 수 계산 (자신 제외)
+            const unreadUsersCount = roomUsersCache.length > 0 ? roomUsersCache.length - 1 : currentRoom.memberCount - 1;
+            
             const tempMessage = {
                 id: tempId,
                 roomId: currentRoom.id,
@@ -1211,7 +1253,7 @@
                 content: content,
                 isMine: true,
                 timestamp: new Date().toISOString(),
-                unreadCount: currentRoom.memberCount || 1,
+                unreadCount: unreadUsersCount,
                 isTemporary: true
             };
             messagesCache.push(tempMessage);
