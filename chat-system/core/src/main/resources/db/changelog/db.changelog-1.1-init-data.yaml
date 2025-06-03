@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+     id: 1.1
+     author: chat-system
+     changes:
+       - sqlFile:
+          dbms: mysql
+          encoding: UTF-8
+          endDelimiter: ';'
+          path: db/changelog/data.sql
+          splitStatements: true
+          stripComments: false
