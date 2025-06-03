@@ -1,0 +1,10 @@
+spring:
+  profiles:
+    include:
+      - jwt
+      - redis
+      - kafka
+
+servers:
+  api:
+    url: chat-server
