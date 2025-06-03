@@ -8,6 +8,7 @@ import com.playground.chat.global.auth.UserPrincipal
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.web.bind.annotation.RestController
+import java.util.UUID
 
 @RestController
 class ChannelController(
@@ -19,7 +20,7 @@ class ChannelController(
     @MessageMapping("/chat/rooms/{roomId}/view")
     fun viewChatRoom(
         @DestinationVariable
-        roomId: Long,
+        roomId: UUID,
         principal: UserPrincipal,
         event: ViewChatRoomEvent
     ) {
@@ -32,7 +33,7 @@ class ChannelController(
     @MessageMapping("/chat/rooms/{roomId}/messages/send")
     fun sendChatMessage(
         @DestinationVariable
-        roomId: Long,
+        roomId: UUID,
         principal: UserPrincipal,
         event: SendChatMessageEvent
     ) {
@@ -45,9 +46,9 @@ class ChannelController(
     @MessageMapping("/chat/rooms/{roomId}/messages/{messageId}/read")
     fun readChatMessage(
         @DestinationVariable
-        roomId: Long,
+        roomId: UUID,
         @DestinationVariable
-        messageId: Long,
+        messageId: UUID,
         principal: UserPrincipal,
         event: ReadChatMessageEvent
     ) {

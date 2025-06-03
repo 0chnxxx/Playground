@@ -14,6 +14,7 @@ import com.playground.chat.global.data.Response
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.util.UUID
 
 @RestController
 @RequestMapping("/chat/rooms")
@@ -73,7 +74,7 @@ class ChatController(
         @AuthenticatedPrincipal
         principal: UserPrincipal,
         @PathVariable
-        roomId: Long
+        roomId: UUID
     ): ResponseEntity<Unit> {
         chatService.joinChatRoom(principal, roomId)
 
@@ -88,7 +89,7 @@ class ChatController(
         @AuthenticatedPrincipal
         principal: UserPrincipal,
         @PathVariable
-        roomId: Long
+        roomId: UUID
     ): ResponseEntity<Unit> {
         chatService.leaveChatRoom(principal, roomId)
 
@@ -103,7 +104,7 @@ class ChatController(
         @AuthenticatedPrincipal
         principal: UserPrincipal,
         @PathVariable
-        roomId: Long
+        roomId: UUID
     ): ResponseEntity<Unit> {
         chatService.deleteChatRoom(principal, roomId)
 
@@ -118,7 +119,7 @@ class ChatController(
         @AuthenticatedPrincipal
         principal: UserPrincipal,
         @PathVariable
-        roomId: Long,
+        roomId: UUID,
         request: FindChatMessagesRequest
     ): ResponseEntity<Response<List<ChatMessageDto>>> {
         val messages = chatService.findChatMessages(principal, roomId, request)
@@ -135,7 +136,7 @@ class ChatController(
         @AuthenticatedPrincipal
         principal: UserPrincipal,
         @PathVariable
-        roomId: Long
+        roomId: UUID
     ): ResponseEntity<Response<List<ChatUserDto>>> {
         val messages = chatService.findChatUsers(principal, roomId)
         val response = Response.of(messages)

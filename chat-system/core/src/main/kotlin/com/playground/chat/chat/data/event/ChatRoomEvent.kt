@@ -1,9 +1,11 @@
 package com.playground.chat.chat.data.event
 
+import java.util.UUID
+
 data class ChatRoomEvent(
     val type: Type,
-    val userId: Long,
-    val roomId: Long,
+    val userId: UUID,
+    val roomId: UUID,
     val roomName: String
 ) {
     enum class Type {

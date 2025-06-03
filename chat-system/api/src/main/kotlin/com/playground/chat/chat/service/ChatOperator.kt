@@ -8,6 +8,7 @@ import com.playground.chat.chat.entity.ChatRoomEntity
 import com.playground.chat.chat.repository.ChatRepository
 import com.playground.chat.user.entity.UserEntity
 import org.springframework.stereotype.Component
+import java.util.UUID
 
 @Component
 class ChatOperator(
@@ -58,11 +59,11 @@ class ChatOperator(
         chatRepository.saveChatMessage(message)
     }
 
-    fun readLastChatMessage(roomId: Long, userId: Long) {
+    fun readLastChatMessage(roomId: UUID, userId: UUID) {
         chatRepository.updateChatForLastMessage(roomId, userId)
     }
 
-    fun readChatMessage(roomId: Long, userId: Long, messageId: Long) {
+    fun readChatMessage(roomId: UUID, userId: UUID, messageId: UUID) {
         chatRepository.updateChatForMessage(roomId, userId, messageId)
     }
 }

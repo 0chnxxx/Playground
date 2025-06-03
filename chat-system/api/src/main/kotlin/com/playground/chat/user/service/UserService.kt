@@ -4,6 +4,7 @@ import com.playground.chat.user.data.response.UserTokenDto
 import com.playground.chat.global.util.PasswordUtil
 import com.playground.chat.global.auth.TokenProvider
 import com.playground.chat.global.auth.TokenType
+import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.user.data.request.LoginUserRequest
 import com.playground.chat.user.data.request.RegisterUserRequest
 import com.playground.chat.user.data.response.UserDto
@@ -46,8 +47,8 @@ class UserService(
         )
     }
 
-    fun refresh(principal: Principal): UserTokenDto {
-        val user = userFinder.findUser(principal.name)
+    fun refresh(principal: UserPrincipal): UserTokenDto {
+        val user = userFinder.findUser(principal.id)
 
         val accessToken = tokenProvider.generate(TokenType.ACESS, user.id!!)
         val refreshToken = tokenProvider.generate(TokenType.REFRESH, user.id!!)
@@ -58,8 +59,8 @@ class UserService(
         )
     }
 
-    fun findMe(principal: Principal): UserDto {
-        val user = userFinder.findUser(principal.name.toLong())
+    fun findMe(principal: UserPrincipal): UserDto {
+        val user = userFinder.findUser(principal.id)
 
         return UserDto(
             id = user.id!!,

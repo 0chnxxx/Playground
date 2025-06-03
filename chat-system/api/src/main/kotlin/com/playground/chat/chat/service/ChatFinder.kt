@@ -12,12 +12,13 @@ import com.playground.chat.chat.repository.ChatRepository
 import com.playground.chat.global.data.Pagination
 import com.playground.chat.user.entity.UserEntity
 import org.springframework.stereotype.Component
+import java.util.UUID
 
 @Component
 class ChatFinder(
     private val chatRepository: ChatRepository
 ) {
-    fun findChatRoom(roomId: Long): ChatRoomEntity {
+    fun findChatRoom(roomId: UUID): ChatRoomEntity {
         return chatRepository.findChatRoomByRoomId(roomId)
             ?: throw Exception("Chat Room Not Found")
     }
@@ -34,7 +35,7 @@ class ChatFinder(
         return chatRepository.findChatMessagesByRoomId(user.id!!, room.id!!, request)
     }
 
-    fun findLastChatMessage(roomId: Long, userId: Long): ChatMessageEntity? {
+    fun findLastChatMessage(roomId: UUID, userId: UUID): ChatMessageEntity? {
         return chatRepository.findLastChatMessageByRoomIdAndUserId(roomId, userId)
     }
 

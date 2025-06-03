@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.Date
+import java.util.UUID
 import javax.crypto.SecretKey
 
 @Component
@@ -17,7 +18,7 @@ class TokenProvider(
 
     val signingKey: SecretKey = Keys.hmacShaKeyFor(secretKey.toByteArray())
 
-    fun generate(type: TokenType, userId: Long): String {
+    fun generate(type: TokenType, userId: UUID): String {
         val now = System.currentTimeMillis()
 
         val expiration = when (type) {

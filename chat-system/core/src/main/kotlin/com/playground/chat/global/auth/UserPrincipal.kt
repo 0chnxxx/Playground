@@ -1,9 +1,10 @@
 package com.playground.chat.global.auth
 
 import java.security.Principal
+import java.util.UUID
 
 class UserPrincipal(
-    val id: Long,
+    val id: UUID,
     val passport: String? = null
 ): Principal {
     override fun getName(): String {

@@ -42,7 +42,7 @@ class ChatConsumer(
                     type = ReadChatMessageEvent.Type.ALL,
                     roomId = message.roomId,
                     userId = message.userId,
-                    messageId = message.messageId
+                    messageId = message.messageId!!
                 )
 
                 chatPublisher.publishChatMessageReadEvent(readEvent)

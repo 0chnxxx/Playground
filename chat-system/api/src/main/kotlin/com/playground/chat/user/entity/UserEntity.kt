@@ -3,13 +3,14 @@ package com.playground.chat.user.entity
 import com.playground.chat.chat.entity.ChatEntity
 import com.playground.chat.chat.entity.ChatRoomEntity
 import jakarta.persistence.*
+import java.util.UUID
 
 @Entity
 @Table(name = "user")
 class UserEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var id: UUID? = null,
 
     var email: String,
 

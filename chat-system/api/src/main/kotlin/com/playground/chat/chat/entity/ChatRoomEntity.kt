@@ -3,13 +3,14 @@ package com.playground.chat.chat.entity
 import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.*
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Entity
 @Table(name = "chat_room")
 class ChatRoomEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var id: UUID? = null,
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")

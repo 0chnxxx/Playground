@@ -4,6 +4,7 @@ import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.*
 import java.io.Serializable
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Entity
 @Table(name = "chat")
@@ -31,8 +32,8 @@ class ChatEntity(
 ) {
     @Embeddable
     data class ChatId(
-        val user: Long,
-        val room: Long
+        val user: UUID,
+        val room: UUID
     ): Serializable {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

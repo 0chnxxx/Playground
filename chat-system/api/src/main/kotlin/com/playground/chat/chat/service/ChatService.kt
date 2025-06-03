@@ -13,6 +13,7 @@ import com.playground.chat.global.data.Pagination
 import com.playground.chat.user.service.UserFinder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.util.UUID
 
 @Service
 @Transactional
@@ -23,27 +24,27 @@ class ChatService(
     private val chatPublisher: ChatPublisher
 ) {
     fun findChatRooms(principal: UserPrincipal, request: FindChatRoomsRequest): Pagination<List<ChatRoomDto>> {
-        val user = userFinder.findUser(principal.name.toLong())
+        val user = userFinder.findUser(principal.id)
 
         return chatFinder.findChatRooms(user, request)
     }
 
     fun findMyChatRooms(principal: UserPrincipal): List<MyChatRoomDto> {
-        val user = userFinder.findUser(principal.name.toLong())
+        val user = userFinder.findUser(principal.id)
 
         return chatFinder.findMyChatRooms(user)
     }
 
     fun createChatRoom(principal: UserPrincipal, request: CreateChatRoomRequest): ChatRoomDto {
-        val user = userFinder.findUser(principal.name.toLong())
+        val user = userFinder.findUser(principal.id)
 
         val room = chatOperator.createChatRoom(user, request)
 
         chatPublisher.publishChatRoomEvent(
             ChatRoomEvent(
                 type = ChatRoomEvent.Type.CREATE,
-                roomId = room.id!!,
-                userId = principal.name.toLong(),
+                roomId = room.id,
+                userId = principal.id,
                 roomName = room.name
             )
         )
@@ -51,8 +52,8 @@ class ChatService(
         return room
     }
 
-    fun joinChatRoom(principal: UserPrincipal, roomId: Long) {
-        val user = userFinder.findUser(principal.name.toLong())
+    fun joinChatRoom(principal: UserPrincipal, roomId: UUID) {
+        val user = userFinder.findUser(principal.id)
         val room = chatFinder.findChatRoom(roomId)
 
         chatOperator.joinChatRoom(user, room)
@@ -67,8 +68,8 @@ class ChatService(
         )
     }
 
-    fun leaveChatRoom(principal: UserPrincipal, roomId: Long) {
-        val user = userFinder.findUser(principal.name.toLong())
+    fun leaveChatRoom(principal: UserPrincipal, roomId: UUID) {
+        val user = userFinder.findUser(principal.id)
         val room = chatFinder.findChatRoom(roomId)
 
         chatOperator.leaveChatRoom(user, room)
@@ -83,8 +84,8 @@ class ChatService(
         )
     }
 
-    fun deleteChatRoom(principal: UserPrincipal, roomId: Long) {
-        val user = userFinder.findUser(principal.name.toLong())
+    fun deleteChatRoom(principal: UserPrincipal, roomId: UUID) {
+        val user = userFinder.findUser(principal.id)
         val room = chatFinder.findChatRoom(roomId)
 
         if (!user.isOwner(room)) {
@@ -103,15 +104,15 @@ class ChatService(
         )
     }
 
-    fun findChatMessages(principal: UserPrincipal, roomId: Long, request: FindChatMessagesRequest): Pagination<List<ChatMessageDto>> {
-        val user = userFinder.findUser(principal.name.toLong())
+    fun findChatMessages(principal: UserPrincipal, roomId: UUID, request: FindChatMessagesRequest): Pagination<List<ChatMessageDto>> {
+        val user = userFinder.findUser(principal.id)
         val room = chatFinder.findChatRoom(roomId)
 
         return chatFinder.findChatMessagesByRoom(user, room, request)
     }
 
-    fun findChatUsers(principal: UserPrincipal, roomId: Long): List<ChatUserDto> {
-        val user = userFinder.findUser(principal.name.toLong())
+    fun findChatUsers(principal: UserPrincipal, roomId: UUID): List<ChatUserDto> {
+        val user = userFinder.findUser(principal.id)
         val room = chatFinder.findChatRoom(roomId)
 
         return chatFinder.findChatUsers(user, room)

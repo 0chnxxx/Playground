@@ -6,6 +6,7 @@ import org.springframework.data.redis.connection.MessageListener
 import org.springframework.data.redis.listener.ChannelTopic
 import org.springframework.data.redis.listener.RedisMessageListenerContainer
 import org.springframework.stereotype.Component
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -21,17 +22,17 @@ class ChannelSubscriber(
     /**
      * UserId to Set(RoomId)
      */
-    private val sessions = ConcurrentHashMap<Long, MutableSet<Long>>()
+    private val sessions = ConcurrentHashMap<UUID, MutableSet<UUID>>()
 
     /**
      * RoomId to UserId.count()
      */
-    private val subscribers = ConcurrentHashMap<Long, AtomicInteger>()
+    private val subscribers = ConcurrentHashMap<UUID, AtomicInteger>()
 
     /**
      * RoomId to Listener
      */
-    private val listeners = ConcurrentHashMap<Long, List<Pair<MessageListener, ChannelTopic>>>()
+    private val listeners = ConcurrentHashMap<UUID, List<Pair<MessageListener, ChannelTopic>>>()
 
     @PostConstruct
     fun init() {
@@ -44,7 +45,7 @@ class ChannelSubscriber(
      * room별로 listener를 1:1로 생성하여 중복되는 listener의 경우 count 증가
      * count가 0인 경우 listener 생성
      */
-    fun subscribeToRooms(userId: Long, roomIds: List<Long>) {
+    fun subscribeToRooms(userId: UUID, roomIds: List<UUID>) {
         val subscribedRooms = sessions.computeIfAbsent(userId) { ConcurrentHashMap.newKeySet() }
 
         for (roomId in roomIds) {
@@ -54,7 +55,7 @@ class ChannelSubscriber(
         }
     }
 
-    fun subscribeToRoom(userId: Long, roomId: Long) {
+    fun subscribeToRoom(userId: UUID, roomId: UUID) {
         val subscribedRooms = sessions[userId] ?: return
 
         if (subscribedRooms.add(roomId)) {
@@ -62,7 +63,7 @@ class ChannelSubscriber(
         }
     }
 
-    private fun subscribe(roomId: Long, userId: Long) {
+    private fun subscribe(roomId: UUID, userId: UUID) {
         subscribers.compute(roomId) { _, count ->
             if (count == null) {
                 listeners
@@ -94,7 +95,7 @@ class ChannelSubscriber(
      * session 종료 시 구독 했던 room 들을 가져와 0명이 될 때까지 count 감소
      * count 가 0 인 경우 listener 삭제
      */
-    fun unsubscribeToUser(userId: Long) {
+    fun unsubscribeToUser(userId: UUID) {
         val subscribedRooms = sessions.remove(userId) ?: return
 
         for (roomId in subscribedRooms) {
@@ -102,7 +103,7 @@ class ChannelSubscriber(
         }
     }
 
-    fun unsubscribeToRoom(roomId: Long) {
+    fun unsubscribeToRoom(roomId: UUID) {
         sessions.forEach { (userId, rooms) ->
             if (rooms.remove(roomId)) {
                 unsubscribe(roomId, userId)
@@ -110,7 +111,7 @@ class ChannelSubscriber(
         }
     }
 
-    fun unsubscribeToUserRoom(userId: Long, roomId: Long) {
+    fun unsubscribeToUserRoom(userId: UUID, roomId: UUID) {
         val subscribedRooms = sessions[userId] ?: return
 
         if (subscribedRooms.remove(roomId)) {
@@ -118,7 +119,7 @@ class ChannelSubscriber(
         }
     }
 
-    private fun unsubscribe(roomId: Long, userId: Long) {
+    private fun unsubscribe(roomId: UUID, userId: UUID) {
         subscribers.computeIfPresent(roomId) { _, count ->
             val remaining = count.decrementAndGet()
 

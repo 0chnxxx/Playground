@@ -20,13 +20,14 @@ import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.util.Collections
+import java.util.UUID
 
 @Repository
 class ChatRepository(
     private val entityManager: EntityManager,
     private val jpaQueryFactory: JPAQueryFactory
 ) {
-    fun findChatRooms(userId: Long, request: FindChatRoomsRequest): Pagination<List<ChatRoomDto>> {
+    fun findChatRooms(userId: UUID, request: FindChatRoomsRequest): Pagination<List<ChatRoomDto>> {
         val qRoom = QChatRoomEntity("room")
         val qMe = QChatEntity("me")
         val qMember = QChatEntity("member")
@@ -77,7 +78,7 @@ class ChatRepository(
         )
     }
 
-    fun findChatRoomsByUserId(userId: Long): List<MyChatRoomDto> {
+    fun findChatRoomsByUserId(userId: UUID): List<MyChatRoomDto> {
         val qRoom = QChatRoomEntity("room")
         val qChat = QChatEntity("chat")
         val qMember = QChatEntity("member")
@@ -119,7 +120,7 @@ class ChatRepository(
             .fetch()
     }
 
-    fun findChatRoomByRoomId(roomId: Long): ChatRoomEntity? {
+    fun findChatRoomByRoomId(roomId: UUID): ChatRoomEntity? {
         val qRoom = QChatRoomEntity("room")
 
         return jpaQueryFactory
@@ -129,8 +130,8 @@ class ChatRepository(
     }
 
     fun findChatMessagesByRoomId(
-        userId: Long,
-        roomId: Long,
+        userId: UUID,
+        roomId: UUID,
         request: FindChatMessagesRequest
     ): Pagination<List<ChatMessageDto>> {
         val qUser = QUserEntity("user")
@@ -197,7 +198,7 @@ class ChatRepository(
         )
     }
 
-    fun findLastChatMessageByRoomIdAndUserId(roomId: Long, userId: Long): ChatMessageEntity? {
+    fun findLastChatMessageByRoomIdAndUserId(roomId: UUID, userId: UUID): ChatMessageEntity? {
         val qChat = QChatEntity("chat")
         val qMessage = QChatMessageEntity("message")
 
@@ -209,7 +210,7 @@ class ChatRepository(
             .fetchOne()
     }
 
-    fun findChatUsersByRoomId(userId: Long, roomId: Long): List<ChatUserDto> {
+    fun findChatUsersByRoomId(userId: UUID, roomId: UUID): List<ChatUserDto> {
         val qUser = QUserEntity("user")
         val qChat = QChatEntity("chat")
         val qRoom = QChatRoomEntity("room")
@@ -249,7 +250,7 @@ class ChatRepository(
         entityManager.persist(message)
     }
 
-    fun updateChatForMessage(roomId: Long, userId: Long, messageId: Long) {
+    fun updateChatForMessage(roomId: UUID, userId: UUID, messageId: UUID) {
         val qChat = QChatEntity("chat")
 
         jpaQueryFactory
@@ -263,7 +264,7 @@ class ChatRepository(
             .execute()
     }
 
-    fun updateChatForLastMessage(roomId: Long, userId: Long) {
+    fun updateChatForLastMessage(roomId: UUID, userId: UUID) {
         val qChat = QChatEntity("chat")
         val qLastMessage = QChatMessageEntity("lastMessage")
 

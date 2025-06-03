@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.socket.WebSocketHandler
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler
 import java.security.Principal
+import java.util.UUID
 
 @Component
 class AuthenticationHandshakeHandler(
@@ -26,7 +27,7 @@ class AuthenticationHandshakeHandler(
         val token = attributes["token"] as String?
 
         if (token != null && tokenProvider.validate(token)) {
-            val userId = tokenProvider.parse(token, "userId").toString().toLong()
+            val userId = UUID.fromString(tokenProvider.parse(token, "userId").toString())
             val passport = tokenProvider.generate(TokenType.PASSPORT, userId)
 
             return UserPrincipal(

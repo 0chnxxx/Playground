@@ -1,6 +1,7 @@
 package com.playground.chat.user.controller
 
 import com.playground.chat.global.auth.AuthenticatedPrincipal
+import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.global.data.Response
 import com.playground.chat.user.data.response.UserTokenDto
 import com.playground.chat.user.data.request.LoginUserRequest
@@ -41,7 +42,7 @@ class UserController(
     @PostMapping("/users/refresh")
     fun refresh(
         @AuthenticatedPrincipal
-        principal: Principal
+        principal: UserPrincipal
     ): ResponseEntity<Response<UserTokenDto>> {
         val token = userService.refresh(principal)
         val response = Response.of(token)
@@ -52,7 +53,7 @@ class UserController(
     @GetMapping("/users/me")
     fun findMe(
         @AuthenticatedPrincipal
-        principal: Principal
+        principal: UserPrincipal
     ): ResponseEntity<Response<UserDto>> {
         val user = userService.findMe(principal)
         val response = Response.of(user)

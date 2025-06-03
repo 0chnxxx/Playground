@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.security.Principal
+import java.util.UUID
 
 @Component
 class JwtAuthenticationFilter(
@@ -38,7 +39,7 @@ class JwtAuthenticationFilter(
             ?.substring(7)
 
         if (token != null && tokenProvider.validate(token)) {
-            val userId = tokenProvider.parse(token, "userId").toString().toLong()
+            val userId = UUID.fromString(tokenProvider.parse(token, "userId").toString())
             val user = userFinder.findUser(userId)
 
             val principal = UserPrincipal(user.id!!)
