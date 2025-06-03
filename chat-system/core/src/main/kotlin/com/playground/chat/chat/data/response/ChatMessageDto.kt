@@ -1,6 +1,6 @@
 package com.playground.chat.chat.data.response
 
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 
 data class ChatMessageDto(
@@ -10,7 +10,7 @@ data class ChatMessageDto(
     val content: String,
     val unreadUserIds: List<UUID> = emptyList(),
     val isMine: Boolean,
-    val timestamp: LocalDateTime? = LocalDateTime.now()
+    val timestamp: Instant? = Instant.now()
 ) {
     constructor(
         messageId: UUID,
@@ -18,7 +18,7 @@ data class ChatMessageDto(
         nickname: String,
         content: String,
         isMine: Boolean,
-        timestamp: LocalDateTime? = LocalDateTime.now()
+        timestamp: Instant? = Instant.now()
     ) : this(
         messageId = messageId,
         userId = userId,

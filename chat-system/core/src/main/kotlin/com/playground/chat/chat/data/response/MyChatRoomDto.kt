@@ -1,6 +1,6 @@
 package com.playground.chat.chat.data.response
 
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 
 data class MyChatRoomDto(
@@ -8,6 +8,6 @@ data class MyChatRoomDto(
     val name: String,
     val lastMessage: String? = null,
     val unreadCount: Long,
-    val lastSentAt: LocalDateTime? = null,
+    val lastSentAt: Instant? = null,
     val memberCount: Long
 )

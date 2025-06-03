@@ -2,7 +2,7 @@ package com.playground.chat.chat.entity
 
 import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.*
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 
 @Entity
@@ -23,5 +23,5 @@ class ChatMessageEntity(
     var content: String,
 
     @Column(name = "created_at")
-    var createdAt: LocalDateTime = LocalDateTime.now()
+    var createdAt: Instant = Instant.now()
 )

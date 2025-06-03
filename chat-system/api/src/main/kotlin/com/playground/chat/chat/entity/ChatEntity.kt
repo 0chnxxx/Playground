@@ -3,7 +3,7 @@ package com.playground.chat.chat.entity
 import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.*
 import java.io.Serializable
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 
 @Entity
@@ -25,10 +25,10 @@ class ChatEntity(
     var lastMessage: ChatMessageEntity? = null,
 
     @Column(name = "last_read_at")
-    var lastReadAt: LocalDateTime? = null,
+    var lastReadAt: Instant? = null,
 
     @Column(name = "joined_at")
-    var joinedAt: LocalDateTime = LocalDateTime.now()
+    var joinedAt: Instant = Instant.now()
 ) {
     @Embeddable
     data class ChatId(

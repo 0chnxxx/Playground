@@ -18,8 +18,7 @@ import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
-import java.util.Collections
+import java.time.Instant
 import java.util.UUID
 
 @Repository
@@ -256,7 +255,7 @@ class ChatRepository(
         jpaQueryFactory
             .update(qChat)
             .set(qChat.lastMessage.id, messageId)
-            .set(qChat.lastReadAt, LocalDateTime.now())
+            .set(qChat.lastReadAt, Instant.now())
             .where(
                 qChat.room.id.eq(roomId),
                 qChat.user.id.eq(userId)
@@ -276,7 +275,7 @@ class ChatRepository(
         jpaQueryFactory
             .update(qChat)
             .set(qChat.lastMessage.id, lastMessage)
-            .set(qChat.lastReadAt, LocalDateTime.now())
+            .set(qChat.lastReadAt, Instant.now())
             .where(
                 qChat.room.id.eq(roomId),
                 qChat.user.id.eq(userId)

@@ -1,4 +1,5 @@
 set global sql_mode = '';
+set global time_zone = '+00:00';
 
 set foreign_key_checks = 0;
 

@@ -1,9 +1,9 @@
 package com.playground.chat.global.data
 
-import java.time.LocalDateTime
+import java.time.Instant
 
 data class Response<T>(
-    val serverTime: LocalDateTime,
+    val serverTime: Instant,
     val pageResult: PageResult? = null,
     val data: T,
 ) {
@@ -19,14 +19,14 @@ data class Response<T>(
     companion object {
         fun <T>of(data: T): Response<T> {
             return Response(
-                serverTime = LocalDateTime.now(),
+                serverTime = Instant.now(),
                 data = data
             )
         }
 
         fun <T>of(pagination: Pagination<T>): Response<T> {
             return Response(
-                serverTime = LocalDateTime.now(),
+                serverTime = Instant.now(),
                 pageResult = PageResult(
                     page = pagination.page,
                     size = pagination.size,

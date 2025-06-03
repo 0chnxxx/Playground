@@ -1,6 +1,6 @@
 package com.playground.chat.chat.data.event
 
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 
 data class ReadChatMessageEvent(
@@ -8,7 +8,7 @@ data class ReadChatMessageEvent(
     val roomId: UUID,
     val userId: UUID,
     val messageId: UUID,
-    val timestamp: LocalDateTime? = LocalDateTime.now()
+    val timestamp: Instant? = Instant.now()
 ) {
     enum class Type {
         ALL, ONE
