@@ -1,4 +1,4 @@
-rootProject.name = "chat-service"
+rootProject.name = "chat-system"
 
 include("api")
 include("channel")
