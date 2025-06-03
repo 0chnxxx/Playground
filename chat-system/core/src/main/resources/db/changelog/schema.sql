@@ -1,3 +1,5 @@
+set global sql_mode = '';
+
 set foreign_key_checks = 0;
 
 drop table if exists user;

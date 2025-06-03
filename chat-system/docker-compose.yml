@@ -61,10 +61,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      DATABASE_URL: jdbc:mysql://host.docker.internal:3306/chat_system
+      DATABASE_URL: jdbc:mysql://mysql:3306/chat_system
       DATABASE_USERNAME: "root"
       DATABASE_PASSWORD: "root"
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       - mysql
       - redis
@@ -80,9 +81,11 @@ services:
     ports:
       - "8081:8080"
     environment:
+      DATABASE_URL: jdbc:mysql://mysql:3306/chat_system
+      DATABASE_USERNAME: "root"
+      DATABASE_PASSWORD: "root"
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       - mysql
       - redis

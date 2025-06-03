@@ -8,4 +8,4 @@ spring:
 
 servers:
   api:
-    url: chat-server
+    url: api-server:8080
