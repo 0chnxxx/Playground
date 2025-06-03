@@ -263,14 +263,22 @@
             console.warn('Cannot send view message: stompClient is null', { roomId, messageId });
             return;
         }
+        
+        if (!messageId) {
+            console.warn('Cannot send view message: messageId is null or empty', { roomId, messageId });
+            return;
+        }
+        
         const viewPayload = {
             userId,
             roomId,
-            messageId
+            messageId,
+            type: 'ALL'  // ALL 타입으로 전송하여 해당 메시지 이하의 모든 메시지를 읽음 처리
         };
         try {
             await waitForWebSocketConnection();
             stompClient.send(`/pub/chat/rooms/${roomId}/view`, {}, JSON.stringify(viewPayload));
+            console.log('View message sent:', viewPayload);
         } catch (error) {
             console.warn('Failed to send view message:', error, viewPayload);
         }
@@ -506,20 +514,59 @@
             fetchRoomUsers(currentRoom.id).then(() => {
                 return loadMessages(currentRoom.id);
             }).then(() => {
-                const latestMessage = messagesCache[messagesCache.length - 1];
-                const messageId = latestMessage && latestMessage.id && latestMessage.id !== '0' && latestMessage.id !== 0 ? latestMessage.id : null;
-                sendViewMessage(currentRoom.id, messageId);
+                // 읽지 않은 모든 메시지에 대해 읽음 처리
+                const unreadMessages = messagesCache.filter(msg => {
+                    const unreadUsers = messageUnreadUsersMap.get(msg.id);
+                    return unreadUsers && unreadUsers.has(String(userId));
+                });
+                
+                if (unreadMessages.length > 0) {
+                    // 가장 최근 읽지 않은 메시지로 ALL 타입 view 메시지 전송
+                    const latestUnreadMessage = unreadMessages[unreadMessages.length - 1];
+                    sendViewMessage(currentRoom.id, latestUnreadMessage.id);
+                } else {
+                    // 읽지 않은 메시지가 없다면 가장 최근 메시지로 처리
+                    const latestMessage = messagesCache[messagesCache.length - 1];
+                    const messageId = latestMessage && latestMessage.id && latestMessage.id !== '0' && latestMessage.id !== 0 ? latestMessage.id : null;
+                    if (messageId) {
+                        sendViewMessage(currentRoom.id, messageId);
+                    }
+                }
+                
                 ensureRoomSubscriptions(currentRoom.id);
                 setTimeout(() => {
                     isInitialRender = false;
                 }, 100);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                
+                // DOM 렌더링 완료 후 스크롤을 최하단으로 이동
+                setTimeout(() => {
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }, 50);
+                
+                // 추가적으로 더 확실하게 스크롤 처리
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    });
+                });
             }).catch(error => {
                 console.error('Error loading messages:', error);
-                sendViewMessage(currentRoom.id, null);
                 ensureRoomSubscriptions(currentRoom.id);
                 isInitialRender = false;
             });
+            
+            // 추가적인 스크롤 보장 로직
+            const ensureScrollToBottom = () => {
+                const messagesDiv = document.getElementById('messages');
+                if (messagesDiv) {
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                }
+            };
+            
+            // 다양한 시점에서 스크롤 처리
+            setTimeout(ensureScrollToBottom, 200);
+            setTimeout(ensureScrollToBottom, 500);
+            setTimeout(ensureScrollToBottom, 1000);
         }
     }
 
@@ -703,10 +750,11 @@
                             );
                             if (!recentDuplicate && !messagesCache.some(cached => cached.id === normalizedMsg.id)) {
                                 messagesCache.push(normalizedMsg);
-                                appendMessage(normalizedMsg);
+                                appendMessage(normalizedMsg, true); // 스크롤 활성화
                             }
                         }
                         if (!processedReadIds.has(normalizedMsg.id)) {
+                            // 현재 채팅방에 있을 때만 자동으로 읽음 처리
                             sendReadMessage(roomId, normalizedMsg.id);
                         }
                     } else {
@@ -789,13 +837,20 @@
                         let messagesToUpdate = [];
 
                         if (readMsg.type === 'ALL') {
-                            // ALL 타입의 경우 messageId 이전의 모든 메시지에서 해당 사용자 제거
+                            // ALL 타입의 경우 messageId 이하의 모든 메시지에서 해당 사용자 제거
+                            const targetMessageId = String(readMsg.messageId);
                             messagesCache.forEach(msg => {
-                                if (msg.roomId === roomId && String(msg.id) <= String(readMsg.messageId)) {
-                                    const unreadUsers = messageUnreadUsersMap.get(msg.id);
-                                    if (unreadUsers && unreadUsers.has(readUserId)) {
-                                        unreadUsers.delete(readUserId);
-                                        messagesToUpdate.push(msg);
+                                if (msg.roomId === roomId) {
+                                    // 메시지 ID를 숫자로 비교하거나 타임스탬프로 비교
+                                    const shouldUpdate = parseInt(msg.id) <= parseInt(targetMessageId) || 
+                                                       new Date(msg.timestamp) <= new Date(messagesCache.find(m => String(m.id) === targetMessageId)?.timestamp || new Date());
+                                    
+                                    if (shouldUpdate) {
+                                        const unreadUsers = messageUnreadUsersMap.get(msg.id);
+                                        if (unreadUsers && unreadUsers.has(readUserId)) {
+                                            unreadUsers.delete(readUserId);
+                                            messagesToUpdate.push(msg);
+                                        }
                                     }
                                 }
                             });
@@ -1094,10 +1149,15 @@
                     console.warn('Message missing id:', msg);
                 }
                 
-                // 읽지 않은 사용자 목록 초기화
-                if (msg.unreadUserIds && msg.unreadUserIds.length >= 0) {
+                // 읽지 않은 사용자 목록 초기화 (서버에서 온 데이터 우선)
+                if (msg.unreadUserIds !== undefined && Array.isArray(msg.unreadUserIds)) {
                     messageUnreadUsersMap.set(id, new Set(msg.unreadUserIds.map(uid => String(uid))));
+                } else if (!messageUnreadUsersMap.has(id)) {
+                    // 서버에서 unreadUserIds가 없다면 빈 Set으로 초기화 (이미 모두 읽음)
+                    messageUnreadUsersMap.set(id, new Set());
                 }
+                
+                const unreadUsers = messageUnreadUsersMap.get(id) || new Set();
                 
                 return {
                     ...msg,
@@ -1107,7 +1167,7 @@
                     content: msg.content || 'No content',
                     nickname: msg.nickname || 'Unknown',
                     timestamp: msg.timestamp || new Date().toISOString(),
-                    unreadCount: msg.unreadUserIds ? msg.unreadUserIds.length : 0,
+                    unreadCount: unreadUsers.size,
                     isTemporary: false
                 };
             }).filter(msg => msg.id) : [];
@@ -1126,7 +1186,19 @@
             renderMessages(messagesDiv, wasAtBottom, scrollHeightBefore, append, scrollTopBefore, messages);
 
             if (!append) {
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                // 초기 로딩시 확실한 스크롤 처리
+                const forceScrollToBottom = () => {
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                };
+                
+                // 여러 시점에서 스크롤 시도
+                setTimeout(forceScrollToBottom, 0);
+                setTimeout(forceScrollToBottom, 100);
+                
+                requestAnimationFrame(() => {
+                    forceScrollToBottom();
+                    requestAnimationFrame(forceScrollToBottom);
+                });
             } else {
                 messagesDiv.scrollTop = messagesDiv.scrollHeight - scrollHeightBefore + scrollTopBefore;
             }
@@ -1153,6 +1225,27 @@
         messagesToRender.forEach(msg => {
             appendMessage(msg, false, append);
         });
+        
+        // 초기 로딩시 스크롤을 최하단으로 확실히 이동
+        if (!append) {
+            // 여러 번 시도하여 확실한 스크롤 처리
+            const scrollToBottom = () => {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            };
+            
+            // 즉시 실행
+            scrollToBottom();
+            
+            // DOM 업데이트 후 실행
+            setTimeout(scrollToBottom, 0);
+            setTimeout(scrollToBottom, 50);
+            
+            // requestAnimationFrame으로 추가 보장
+            requestAnimationFrame(() => {
+                scrollToBottom();
+                requestAnimationFrame(scrollToBottom);
+            });
+        }
     }
 
     function appendMessage(msg, scrollToBottom = true, prepend = false) {
@@ -1205,14 +1298,24 @@
         `;
 
         try {
-            const wasAtBottom = messagesDiv.scrollTop + messagesDiv.clientHeight >= messagesDiv.scrollHeight - 50;
+            // 스크롤 위치 체크: 사용자가 하단 근처에 있는지 확인
+            const wasAtBottom = messagesDiv.scrollTop + messagesDiv.clientHeight >= messagesDiv.scrollHeight - 100;
+            
             if (prepend) {
                 messagesDiv.insertBefore(div, messagesDiv.firstChild);
             } else {
                 messagesDiv.appendChild(div);
             }
-            if (scrollToBottom && (wasAtBottom || isMine) && !prepend) {
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // 스크롤 처리 로직 개선
+            if (!prepend && scrollToBottom) {
+                // 내 메시지이거나 사용자가 하단 근처에 있으면 자동 스크롤
+                if (isMine || wasAtBottom) {
+                    // 부드러운 스크롤을 위해 requestAnimationFrame 사용
+                    requestAnimationFrame(() => {
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    });
+                }
             }
         } catch (error) {
             console.error('Error appending message to DOM:', error, msg, div.outerHTML);
@@ -1258,7 +1361,7 @@
             };
             messagesCache.push(tempMessage);
             tempMessageMap.set(tempId, tempId);
-            appendMessage(tempMessage);
+            appendMessage(tempMessage, true); // 내 메시지는 항상 스크롤
             stompClient.send(`/pub/chat/rooms/${currentRoom.id}/messages/send`, {}, JSON.stringify({
                 roomId: currentRoom.id,
                 userId: userId,
