@@ -25,7 +25,7 @@ class ChannelPublisher(
             // Socket 에 BroadCast를 위한 Redis Publish
             redisTemplate.convertAndSend("chat-message-send:${event.roomId}", event)
 
-            log.info("[✅ Chat Message Send Event Publish] {}", event)
+            log.info("[🛫 Chat Message Send Event Publish] {}", event)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Send Event Publish Fail] {}", e.printStackTrace())
         }
@@ -41,7 +41,7 @@ class ChannelPublisher(
             // Socket 에 BroadCast를 위한 Redis Publish
             redisTemplate.convertAndSend("chat-message-read:${event.roomId}", event)
 
-            log.info("[✅ Chat Message Read Event Publish] {}", event)
+            log.info("[🛫 Chat Message Read Event Publish] {}", event)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Read Event Publish Fail] {}", e.printStackTrace())
         }

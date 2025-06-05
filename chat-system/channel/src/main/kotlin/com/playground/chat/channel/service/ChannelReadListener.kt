@@ -17,7 +17,7 @@ class ChannelReadListener(
 
     override fun onMessage(message: Message, pattern: ByteArray?) {
         try {
-            log.info("[📨 Chat Message Read Event Receive] {}", message)
+            log.info("[🛬 Chat Message Read Event Receive] {}", message)
 
             val body = message.body.toString(Charsets.UTF_8)
             val event = mapper.readValue(body, ReadChatMessageEvent::class.java)

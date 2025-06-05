@@ -30,7 +30,7 @@ class ChannelEventHandler(
         val sessionId = accessor.sessionId!!
         val userId = principal.id
 
-        log.info("[🌐 Chat Connect Attempt] sessionId: {}, userId: {}", sessionId, userId)
+        log.info("[♻️ Chat Connect Attempt] sessionId: {}, userId: {}", sessionId, userId)
 
         val response = chatApiClient.findMyChatRooms(principal.getBearerPassport())
         val rooms = response.data

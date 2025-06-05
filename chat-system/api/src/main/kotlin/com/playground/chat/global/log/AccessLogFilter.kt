@@ -21,7 +21,7 @@ class AccessLogFilter: OncePerRequestFilter() {
         val startTime = System.currentTimeMillis()
 
         log.info(
-            "[🌐 HTTP Request] {} {}{}",
+            "[👀 HTTP Request] {} {}{}",
             method,
             uri,
             query
@@ -35,7 +35,7 @@ class AccessLogFilter: OncePerRequestFilter() {
             val status = response.status
 
             log.info(
-                "[🌐 HTTP Response] status code {} ({}ms)",
+                "[👀 HTTP Response] status code {} ({}ms)",
                 status,
                 duration
             )

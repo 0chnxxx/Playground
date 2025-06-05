@@ -51,7 +51,7 @@ class ChatConsumer(
                 SecurityContext.clear()
             }
 
-            log.info("[📥 Chat Message Send Event Consume] message : {}", event)
+            log.info("[📨 Chat Message Send Event Consume] message : {}", event)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Send Event Consume Fail] {}", e.message)
         }
@@ -84,7 +84,7 @@ class ChatConsumer(
                 SecurityContext.clear()
             }
 
-            log.info("[📥 Chat Message Read Event Consume] message : {}", event)
+            log.info("[📨 Chat Message Read Event Consume] message : {}", event)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Read Event Consume Fail] {}", e.message)
         }

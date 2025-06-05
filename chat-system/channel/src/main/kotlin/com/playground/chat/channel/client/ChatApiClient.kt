@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestHeader
 
 @FeignClient(name = "chatApiClient", url = "\${servers.api.url}")
-interface ChatApiClient {
+fun interface ChatApiClient {
     @GetMapping("/chat/rooms/me")
     fun findMyChatRooms(
         @RequestHeader("Authorization")

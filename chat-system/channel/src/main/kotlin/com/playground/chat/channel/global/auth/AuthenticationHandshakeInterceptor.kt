@@ -34,6 +34,5 @@ class AuthenticationHandshakeInterceptor: HandshakeInterceptor {
         response: ServerHttpResponse,
         wsHandler: WebSocketHandler,
         exception: Exception?
-    ) {
-    }
+    ) {}
 }

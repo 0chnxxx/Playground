@@ -48,7 +48,7 @@ class TokenProvider(
 
             return true
         } catch (e: Exception) {
-            log.info("❌ Fail Jwt Validate")
+            log.info("[❌ Fail Jwt Validate] {}", e.message)
             return false
         }
     }
@@ -61,7 +61,7 @@ class TokenProvider(
                 .parseSignedClaims(token)
                 .payload[key]
         } catch (e: Exception) {
-            log.info("❌ Fail Jwt Parse")
+            log.info("[❌ Fail Jwt Parse] {}", e.message)
             return null
         }
     }

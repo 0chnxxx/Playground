@@ -18,7 +18,7 @@ class ChannelEventListener(
 
     override fun onMessage(message: Message, pattern: ByteArray?) {
         try {
-            log.info("[📨 Chat Event Receive] event : {}", message)
+            log.info("[🛬 Chat Event Receive] event : {}", message)
 
             val event = mapper.readValue(message.toString(), ChatRoomEvent::class.java)
 

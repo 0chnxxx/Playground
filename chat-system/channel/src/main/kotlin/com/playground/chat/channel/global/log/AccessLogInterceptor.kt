@@ -9,7 +9,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.messaging.support.ChannelInterceptor
 import org.springframework.messaging.support.MessageHeaderAccessor
 import org.springframework.stereotype.Component
-import java.util.Base64
+import java.nio.charset.StandardCharsets
 
 @Component
 class AccessLogInterceptor(
@@ -23,14 +23,13 @@ class AccessLogInterceptor(
         if (accessor != null && accessor.command == StompCommand.SEND) {
             val sessionId = accessor.sessionId
             val destination = accessor.destination
-            val encodedPayload = mapper.writeValueAsString(message.payload)
-//            val decodedPayload = Base64.getDecoder().decode(encodedPayload)
+            val payload = String(message.payload as ByteArray, StandardCharsets.UTF_8)
 
             log.info(
-                "[STOMP SEND] sessionId={}, destination={}, payload={}",
+                "[👀 ACCESS LOG] sessionId={}, destination={}, payload={}",
                 sessionId,
                 destination,
-                encodedPayload
+                payload
             )
         }
 
