@@ -16,8 +16,7 @@ class ChatConsumer(
     private val mapper: ObjectMapper,
     private val userFinder: UserFinder,
     private val chatFinder: ChatFinder,
-    private val chatOperator: ChatOperator,
-    private val chatPublisher: ChatPublisher
+    private val chatOperator: ChatOperator
 ) {
     private val log = logger()
 
@@ -29,24 +28,15 @@ class ChatConsumer(
     )
     fun consumeChatRoomView(event: String) {
         try {
-            log.info("[📥 Chat Room View Event Consume] message : {}", event)
-
             val message = mapper.readValue(event, ViewChatRoomEvent::class.java)
 
             val lastMessage = chatFinder.findLastChatMessage(message.roomId, message.userId)
 
             if (lastMessage != null && lastMessage.id != message.messageId) {
                 chatOperator.readLastChatMessage(message.roomId, message.userId)
-
-                val readEvent = ReadChatMessageEvent(
-                    type = ReadChatMessageEvent.Type.ALL,
-                    roomId = message.roomId,
-                    userId = message.userId,
-                    messageId = message.messageId!!
-                )
-
-                chatPublisher.publishChatMessageReadEvent(readEvent)
             }
+
+            log.info("[📥 Chat Room View Event Consume] message : {}", event)
         } catch (e: Exception) {
             log.error("[❌ Chat Room View Event Consume Fail] {}", e.message)
         }
@@ -60,30 +50,21 @@ class ChatConsumer(
     )
     fun consumeChatMessageSend(event: String) {
         try {
-            log.info("[📥 Chat Message Send Event Consume] message : {}", event)
+            val sendEvent = mapper.readValue(event, SendChatMessageEvent::class.java)
 
-            var sendMessage = mapper.readValue(event, SendChatMessageEvent::class.java)
-
-            val user = userFinder.findUser(sendMessage.userId)
-            val room = chatFinder.findChatRoom(sendMessage.roomId)
+            val user = userFinder.findUser(sendEvent.userId)
+            val room = chatFinder.findChatRoom(sendEvent.roomId)
 
             val message = ChatMessageEntity(
+                id = sendEvent.messageId,
                 room = room,
                 sender = user,
-                content = sendMessage.content
+                content = sendEvent.content
             )
 
             chatOperator.saveChatMessage(message)
 
-            chatPublisher.publishChatMessageSendEvent(
-                SendChatMessageEvent(
-                    roomId = room.id!!,
-                    userId = user.id!!,
-                    nickname = user.nickname,
-                    messageId = message.id!!,
-                    content = message.content
-                )
-            )
+            log.info("[📥 Chat Message Send Event Consume] message : {}", event)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Send Event Consume Fail] {}", e.message)
         }
@@ -97,12 +78,11 @@ class ChatConsumer(
     )
     fun consumeChatMessageRead(event: String) {
         try {
-            log.info("[📥 Chat Message Read Event Consume] message : {}", event)
-
             val message = mapper.readValue(event, ReadChatMessageEvent::class.java)
 
             chatOperator.readChatMessage(message.roomId, message.userId, message.messageId)
-            chatPublisher.publishChatMessageReadEvent(message)
+
+            log.info("[📥 Chat Message Read Event Consume] message : {}", event)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Read Event Consume Fail] {}", e.message)
         }

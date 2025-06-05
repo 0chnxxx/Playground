@@ -11,8 +11,7 @@ import java.util.UUID
 @Table(name = "chat_message")
 class ChatMessageEntity(
     @Id
-    @UuidGenerator(algorithm = IdGenerator::class)
-    var id: UUID? = null,
+    var id: UUID,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
