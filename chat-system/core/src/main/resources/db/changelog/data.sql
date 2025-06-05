@@ -5,9 +5,9 @@ SET @userId3 = UUID_TO_BIN('01973e4a-1a20-7a2a-8891-7d892c4e52f1');
 
 -- 사용자 데이터 삽입
 INSERT INTO `user` VALUES
-(@userId1,'test1@test.com','fa585d89c851dd338a70dcf535aa2a92fee7836dd6aff1226583e88e0996293f16bc009c652826e0fc5c706695a03cddce372f139eff4d13959da6f1f5d3eabe','A','2025-04-13 15:54:57'),
-(@userId2,'test2@test.com','fa585d89c851dd338a70dcf535aa2a92fee7836dd6aff1226583e88e0996293f16bc009c652826e0fc5c706695a03cddce372f139eff4d13959da6f1f5d3eabe','B','2025-04-16 15:10:08'),
-(@userId3,'test3@test.com','fa585d89c851dd338a70dcf535aa2a92fee7836dd6aff1226583e88e0996293f16bc009c652826e0fc5c706695a03cddce372f139eff4d13959da6f1f5d3eabe','C','2025-04-20 10:37:58');
+(@userId1,'test1@test.com','fa585d89c851dd338a70dcf535aa2a92fee7836dd6aff1226583e88e0996293f16bc009c652826e0fc5c706695a03cddce372f139eff4d13959da6f1f5d3eabe','A','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@userId2,'test2@test.com','fa585d89c851dd338a70dcf535aa2a92fee7836dd6aff1226583e88e0996293f16bc009c652826e0fc5c706695a03cddce372f139eff4d13959da6f1f5d3eabe','B','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@userId3,'test3@test.com','fa585d89c851dd338a70dcf535aa2a92fee7836dd6aff1226583e88e0996293f16bc009c652826e0fc5c706695a03cddce372f139eff4d13959da6f1f5d3eabe','C','2025-01-01 00:00:00','system',NULL,NULL,FALSE);
 
 -- 채팅룸 UUID 설정
 SET @roomId1 = UUID_TO_BIN('01973e48-1a08-7291-98cd-c310411e7ec2');
@@ -22,24 +22,24 @@ SET @roomId9 = UUID_TO_BIN('01973e48-3948-769c-9f44-232fddad0156');
 
 -- 채팅룸 데이터 삽입
 INSERT INTO `chat_room` VALUES
-(@roomId1,@userId1,'테스트룸1','2025-04-13 17:05:13'),
-(@roomId2,@userId1,'테스트룸2','2025-04-13 17:05:13'),
-(@roomId3,@userId1,'테스트룸3','2025-04-13 17:05:13'),
-(@roomId4,@userId2,'테스트룸4','2025-04-13 17:05:13'),
-(@roomId5,@userId2,'테스트룸5','2025-04-13 17:05:13'),
-(@roomId6,@userId2,'테스트룸6','2025-04-13 17:05:13'),
-(@roomId7,@userId3,'테스트룸7','2025-04-16 09:27:36'),
-(@roomId8,@userId3,'테스트룸8','2025-04-16 10:27:31'),
-(@roomId9,@userId3,'테스트룸9','2025-04-16 10:40:32');
+(@roomId1,@userId1,'테스트룸1','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@roomId2,@userId1,'테스트룸2','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@roomId3,@userId1,'테스트룸3','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@roomId4,@userId2,'테스트룸4','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@roomId5,@userId2,'테스트룸5','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@roomId6,@userId2,'테스트룸6','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@roomId7,@userId3,'테스트룸7','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@roomId8,@userId3,'테스트룸8','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@roomId9,@userId3,'테스트룸9','2025-01-01 00:00:00','system',NULL,NULL,FALSE);
 
 -- 채팅 데이터 삽입
 INSERT INTO `chat` VALUES
-(@userId1,@roomId1,NULL,NULL,'2025-04-15 04:53:49'),
-(@userId1,@roomId2,NULL,NULL,'2025-04-13 17:05:20'),
-(@userId1,@roomId3,NULL,NULL,'2025-04-13 17:05:20'),
-(@userId2,@roomId4,NULL,NULL,'2025-04-13 17:05:20'),
-(@userId2,@roomId5,NULL,NULL,'2025-04-13 17:05:20'),
-(@userId2,@roomId6,NULL,NULL,'2025-04-13 17:05:20'),
-(@userId3,@roomId7,NULL,NULL,'2025-04-16 09:27:36'),
-(@userId3,@roomId8,NULL,NULL,'2025-04-16 10:27:31'),
-(@userId3,@roomId9,NULL,NULL,'2025-04-16 10:40:32');
+(@userId1,@roomId1,NULL,NULL,'2025-01-01 00:00:00','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@userId1,@roomId2,NULL,NULL,'2025-01-01 00:00:00','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@userId1,@roomId3,NULL,NULL,'2025-01-01 00:00:00','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@userId2,@roomId4,NULL,NULL,'2025-01-01 00:00:00','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@userId2,@roomId5,NULL,NULL,'2025-01-01 00:00:00','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@userId2,@roomId6,NULL,NULL,'2025-01-01 00:00:00','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@userId3,@roomId7,NULL,NULL,'2025-01-01 00:00:00','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@userId3,@roomId8,NULL,NULL,'2025-01-01 00:00:00','2025-01-01 00:00:00','system',NULL,NULL,FALSE),
+(@userId3,@roomId9,NULL,NULL,'2025-01-01 00:00:00','2025-01-01 00:00:00','system',NULL,NULL,FALSE);

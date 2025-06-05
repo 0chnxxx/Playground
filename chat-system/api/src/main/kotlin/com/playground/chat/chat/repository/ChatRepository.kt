@@ -34,7 +34,6 @@ class ChatRepository(
             .select(qLastMessage.id.max())
             .from(qLastMessage)
             .where(qLastMessage.room.id.eq(qRoom.id))
-            .orderBy(qLastMessage.createdAt.desc(), qLastMessage.id.desc())
 
         val memberCount = JPAExpressions
             .select(qChat.count())
@@ -87,7 +86,6 @@ class ChatRepository(
             .select(qLastMessage.id.max())
             .from(qLastMessage)
             .where(qLastMessage.room.id.eq(qRoom.id))
-            .orderBy(qLastMessage.createdAt.desc(), qLastMessage.id.desc())
 
         val memberCount = JPAExpressions
             .select(qChat.count())

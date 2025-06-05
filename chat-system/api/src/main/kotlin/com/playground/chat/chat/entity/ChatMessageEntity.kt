@@ -1,5 +1,6 @@
 package com.playground.chat.chat.entity
 
+import com.playground.chat.global.entity.AuditEntity
 import com.playground.chat.global.entity.IdGenerator
 import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.*
@@ -22,7 +23,4 @@ class ChatMessageEntity(
     var sender: UserEntity,
 
     var content: String,
-
-    @Column(name = "created_at")
-    var createdAt: Instant = Instant.now()
-)
+): AuditEntity()

@@ -2,7 +2,6 @@ package com.playground.chat.channel.service
 
 import com.playground.chat.chat.data.event.SendChatMessageEvent
 import com.playground.chat.chat.data.event.ReadChatMessageEvent
-import com.playground.chat.chat.data.event.ViewChatRoomEvent
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -18,7 +17,7 @@ class ChannelService(
         channelPublisher.publishChatMessageSendEvent(event)
     }
 
-    fun readChatMessage(userId: UUID, roomId: UUID, event: ReadChatMessageEvent) {
+    fun readChatMessage(userId: UUID, roomId: UUID, messageId: UUID, event: ReadChatMessageEvent) {
         channelPublisher.publishChatMessageReadEvent(event)
     }
 }

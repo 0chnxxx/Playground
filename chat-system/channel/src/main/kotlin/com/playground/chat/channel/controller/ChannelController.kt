@@ -52,6 +52,6 @@ class ChannelController(
         principal: UserPrincipal,
         event: ReadChatMessageEvent
     ) {
-        channelService.readChatMessage(principal.id, roomId, event)
+        channelService.readChatMessage(principal.id, roomId, messageId, event)
     }
 }

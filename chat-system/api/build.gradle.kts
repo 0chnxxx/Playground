@@ -36,6 +36,7 @@ dependencies {
 
 allOpen {
     annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
 }
 
 val jar: Jar by tasks

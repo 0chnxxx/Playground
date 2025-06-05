@@ -4,7 +4,7 @@ import java.time.Instant
 import java.util.UUID
 
 data class ReadChatMessageEvent(
-    val type: Type = Type.ONE,
+    val type: Type,
     val roomId: UUID,
     val userId: UUID,
     val messageId: UUID,

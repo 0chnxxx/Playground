@@ -1,5 +1,6 @@
 package com.playground.chat.chat.entity
 
+import com.playground.chat.global.entity.AuditEntity
 import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.*
 import java.io.Serializable
@@ -29,7 +30,7 @@ class ChatEntity(
 
     @Column(name = "joined_at")
     var joinedAt: Instant = Instant.now()
-) {
+): AuditEntity() {
     @Embeddable
     data class ChatId(
         val user: UUID,

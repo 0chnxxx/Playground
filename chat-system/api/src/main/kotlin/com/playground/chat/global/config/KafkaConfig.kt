@@ -10,7 +10,7 @@ import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 
 @Configuration
-class KafkaConsumerConfig {
+class KafkaConfig {
     @Value("\${spring.kafka.bootstrap-servers}")
     lateinit var bootstrapServers: String
 

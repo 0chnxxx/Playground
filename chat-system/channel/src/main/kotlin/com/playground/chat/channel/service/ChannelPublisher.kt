@@ -3,7 +3,6 @@ package com.playground.chat.channel.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.playground.chat.chat.data.event.*
 import com.playground.chat.global.log.logger
-import com.playground.chat.global.util.UuidUtil
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
@@ -57,10 +56,10 @@ class ChannelPublisher(
 
     fun publishChatMessageReadEvent(event: ReadChatMessageEvent) {
         try {
-            val json = mapper.writeValueAsString(event)
+            val readEventJson = mapper.writeValueAsString(event)
 
             // Chat 의 LastMessage Update를 위한 Kafka publish
-            kafkaTemplate.send("chat-message-read", event.roomId.toString(), json)
+            kafkaTemplate.send("chat-message-read", event.roomId.toString(), readEventJson)
 
             // Socket 에 BroadCast를 위한 Redis Publish
             redisTemplate.convertAndSend("chat-message-read:${event.roomId}", event)

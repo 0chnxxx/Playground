@@ -1,10 +1,10 @@
 package com.playground.chat.chat.entity
 
+import com.playground.chat.global.entity.AuditEntity
 import com.playground.chat.global.entity.IdGenerator
 import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.*
 import org.hibernate.annotations.UuidGenerator
-import java.time.Instant
 import java.util.UUID
 
 @Entity
@@ -33,7 +33,4 @@ class ChatRoomEntity(
 
     @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     var messages: MutableList<ChatMessageEntity> = mutableListOf(),
-
-    @Column(name = "created_at")
-    var createdAt: Instant = Instant.now()
-)
+): AuditEntity()

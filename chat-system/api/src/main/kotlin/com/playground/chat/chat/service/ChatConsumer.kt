@@ -3,8 +3,9 @@ package com.playground.chat.chat.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.playground.chat.chat.data.event.ReadChatMessageEvent
 import com.playground.chat.chat.data.event.SendChatMessageEvent
-import com.playground.chat.chat.data.event.ViewChatRoomEvent
 import com.playground.chat.chat.entity.ChatMessageEntity
+import com.playground.chat.global.auth.SecurityContext
+import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.global.log.logger
 import com.playground.chat.user.service.UserFinder
 import org.springframework.kafka.annotation.KafkaListener
@@ -62,7 +63,15 @@ class ChatConsumer(
                 content = sendEvent.content
             )
 
-            chatOperator.saveChatMessage(message)
+            val principal = UserPrincipal(user.id!!)
+
+            SecurityContext.setPrincipal(principal)
+
+            try {
+                chatOperator.saveChatMessage(message)
+            } finally {
+                SecurityContext.clear()
+            }
 
             log.info("[📥 Chat Message Send Event Consume] message : {}", event)
         } catch (e: Exception) {
@@ -80,7 +89,22 @@ class ChatConsumer(
         try {
             val message = mapper.readValue(event, ReadChatMessageEvent::class.java)
 
-            chatOperator.readChatMessage(message.roomId, message.userId, message.messageId)
+            val principal = UserPrincipal(message.userId)
+
+            SecurityContext.setPrincipal(principal)
+
+            try {
+                when (message.type) {
+                    ReadChatMessageEvent.Type.ALL -> chatOperator.readLastChatMessage(message.roomId, message.userId)
+                    ReadChatMessageEvent.Type.ONE -> chatOperator.readChatMessage(
+                        message.roomId,
+                        message.userId,
+                        message.messageId
+                    )
+                }
+            } finally {
+                SecurityContext.clear()
+            }
 
             log.info("[📥 Chat Message Read Event Consume] message : {}", event)
         } catch (e: Exception) {
