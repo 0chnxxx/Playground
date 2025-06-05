@@ -38,7 +38,7 @@ class ChatRepository(
             .where(qMember.room.id.eq(qRoom.id))
 
         val lastMessage = JPAExpressions
-            .select(qLastMessage.createdAt.max())
+            .select(qLastMessage.id.max())
             .from(qLastMessage)
             .where(qLastMessage.room.id.eq(qRoom.id))
 
@@ -46,7 +46,7 @@ class ChatRepository(
             .select(qRoom.id.countDistinct())
             .from(qRoom)
             .leftJoin(qMe).on(qMe.room.id.eq(qRoom.id), qMe.user.id.eq(userId))
-            .leftJoin(qLastMessage).on(qLastMessage.createdAt.eq(lastMessage))
+            .leftJoin(qLastMessage).on(qLastMessage.id.eq(lastMessage))
             .fetchOne() ?: 0
 
         val rooms = jpaQueryFactory
@@ -63,10 +63,11 @@ class ChatRepository(
             )
             .from(qRoom)
             .leftJoin(qMe).on(qMe.room.id.eq(qRoom.id), qMe.user.id.eq(userId))
-            .leftJoin(qLastMessage).on(qLastMessage.createdAt.eq(lastMessage))
+            .leftJoin(qLastMessage).on(qLastMessage.id.eq(lastMessage))
             .offset((request.page - 1) * request.size.toLong())
             .limit(request.size.toLong())
             .groupBy(qRoom.id)
+            .orderBy(qLastMessage.id.desc())
             .fetch()
 
         return Pagination.of(
@@ -90,7 +91,7 @@ class ChatRepository(
             .where(qMember.room.id.eq(qRoom.id))
 
         val lastMessage = JPAExpressions
-            .select(qLastMessage.createdAt.max())
+            .select(qLastMessage.id.max())
             .from(qLastMessage)
             .where(qLastMessage.room.eq(qRoom))
 
@@ -113,10 +114,10 @@ class ChatRepository(
             )
             .from(qRoom)
             .leftJoin(qRoom.chats, qChat)
-            .leftJoin(qLastMessage).on(qLastMessage.createdAt.eq(lastMessage))
+            .leftJoin(qLastMessage).on(qLastMessage.id.eq(lastMessage))
             .where(qChat.user.id.eq(userId))
             .groupBy(qRoom.id)
-            .orderBy(qLastMessage.createdAt.desc())
+            .orderBy(qLastMessage.id.desc())
             .fetch()
     }
 
@@ -163,7 +164,7 @@ class ChatRepository(
             .join(qMessage.room, qRoom)
             .join(qMessage.sender, qUser)
             .where(qMessage.room.id.eq(roomId))
-            .orderBy(qMessage.createdAt.desc())
+            .orderBy(qMessage.id.desc())
             .offset((request.page - 1) * request.size.toLong())
             .limit(request.size.toLong())
             .fetch()
@@ -233,7 +234,8 @@ class ChatRepository(
                     .`when`(qRoom.owner.id.eq(qUser.id))
                     .then(1)
                     .otherwise(0)
-                    .desc()
+                    .desc(),
+                qUser.nickname.asc()
             )
             .fetch()
     }

@@ -2,14 +2,16 @@ package com.playground.chat.user.entity
 
 import com.playground.chat.chat.entity.ChatEntity
 import com.playground.chat.chat.entity.ChatRoomEntity
+import com.playground.chat.global.entity.IdGenerator
 import jakarta.persistence.*
+import org.hibernate.annotations.UuidGenerator
 import java.util.UUID
 
 @Entity
 @Table(name = "user")
 class UserEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @UuidGenerator(algorithm = IdGenerator::class)
     var id: UUID? = null,
 
     var email: String,

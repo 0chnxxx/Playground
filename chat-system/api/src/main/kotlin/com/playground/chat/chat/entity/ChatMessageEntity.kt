@@ -1,7 +1,9 @@
 package com.playground.chat.chat.entity
 
+import com.playground.chat.global.entity.IdGenerator
 import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.*
+import org.hibernate.annotations.UuidGenerator
 import java.time.Instant
 import java.util.UUID
 
@@ -9,7 +11,7 @@ import java.util.UUID
 @Table(name = "chat_message")
 class ChatMessageEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @UuidGenerator(algorithm = IdGenerator::class)
     var id: UUID? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
