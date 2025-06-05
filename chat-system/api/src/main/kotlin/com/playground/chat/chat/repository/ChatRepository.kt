@@ -10,10 +10,8 @@ import com.playground.chat.chat.entity.*
 import com.playground.chat.global.data.Pagination
 import com.playground.chat.user.entity.QUserEntity
 import com.playground.chat.user.entity.UserEntity
-import com.querydsl.core.types.ExpressionUtils
 import com.querydsl.core.types.Projections
 import com.querydsl.core.types.dsl.CaseBuilder
-import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
@@ -28,25 +26,26 @@ class ChatRepository(
 ) {
     fun findChatRooms(userId: UUID, request: FindChatRoomsRequest): Pagination<List<ChatRoomDto>> {
         val qRoom = QChatRoomEntity("room")
-        val qMe = QChatEntity("me")
-        val qMember = QChatEntity("member")
+        val qChat = QChatEntity("chat")
+        val qMyChat = QChatEntity("myChat")
         val qLastMessage = QChatMessageEntity("lastMessage")
-
-        val memberCount = JPAExpressions
-            .select(qMember.count())
-            .from(qMember)
-            .where(qMember.room.id.eq(qRoom.id))
 
         val lastMessage = JPAExpressions
             .select(qLastMessage.id.max())
             .from(qLastMessage)
             .where(qLastMessage.room.id.eq(qRoom.id))
+            .orderBy(qLastMessage.createdAt.desc(), qLastMessage.id.desc())
+
+        val memberCount = JPAExpressions
+            .select(qChat.count())
+            .from(qChat)
+            .where(qChat.room.id.eq(qRoom.id))
 
         val totalRoomCount = jpaQueryFactory
             .select(qRoom.id.countDistinct())
             .from(qRoom)
-            .leftJoin(qMe).on(qMe.room.id.eq(qRoom.id), qMe.user.id.eq(userId))
-            .leftJoin(qLastMessage).on(qLastMessage.id.eq(lastMessage))
+            .leftJoin(qRoom.chats, qMyChat).on(qMyChat.room.id.eq(qRoom.id), qMyChat.user.id.eq(userId))
+            .leftJoin(qRoom.messages, qLastMessage).on(qLastMessage.id.eq(lastMessage))
             .fetchOne() ?: 0
 
         val rooms = jpaQueryFactory
@@ -58,16 +57,16 @@ class ChatRepository(
                     qLastMessage.content,
                     qLastMessage.createdAt,
                     memberCount,
-                    qMe.isNotNull
+                    qMyChat.isNotNull
                 )
             )
             .from(qRoom)
-            .leftJoin(qMe).on(qMe.room.id.eq(qRoom.id), qMe.user.id.eq(userId))
-            .leftJoin(qLastMessage).on(qLastMessage.id.eq(lastMessage))
+            .leftJoin(qRoom.chats, qMyChat).on(qMyChat.room.id.eq(qRoom.id), qMyChat.user.id.eq(userId))
+            .leftJoin(qRoom.messages, qLastMessage).on(qLastMessage.id.eq(lastMessage))
             .offset((request.page - 1) * request.size.toLong())
             .limit(request.size.toLong())
             .groupBy(qRoom.id)
-            .orderBy(qLastMessage.id.desc())
+            .orderBy(qLastMessage.createdAt.desc(), qLastMessage.id.desc())
             .fetch()
 
         return Pagination.of(
@@ -81,19 +80,19 @@ class ChatRepository(
     fun findChatRoomsByUserId(userId: UUID): List<MyChatRoomDto> {
         val qRoom = QChatRoomEntity("room")
         val qChat = QChatEntity("chat")
-        val qMember = QChatEntity("member")
         val qLastMessage = QChatMessageEntity("lastMessage")
         val qUnreadMessage = QChatMessageEntity("unreadMessage")
-
-        val memberCount = JPAExpressions
-            .select(qMember.count())
-            .from(qMember)
-            .where(qMember.room.id.eq(qRoom.id))
 
         val lastMessage = JPAExpressions
             .select(qLastMessage.id.max())
             .from(qLastMessage)
-            .where(qLastMessage.room.eq(qRoom))
+            .where(qLastMessage.room.id.eq(qRoom.id))
+            .orderBy(qLastMessage.createdAt.desc(), qLastMessage.id.desc())
+
+        val memberCount = JPAExpressions
+            .select(qChat.count())
+            .from(qChat)
+            .where(qChat.room.id.eq(qRoom.id))
 
         val unreadCount = JPAExpressions
             .select(qUnreadMessage.id.count())
@@ -107,17 +106,17 @@ class ChatRepository(
                     qRoom.id,
                     qRoom.name,
                     qLastMessage.content,
-                    unreadCount,
                     qLastMessage.createdAt,
-                    memberCount
+                    memberCount,
+                    unreadCount
                 )
             )
             .from(qRoom)
             .leftJoin(qRoom.chats, qChat)
-            .leftJoin(qLastMessage).on(qLastMessage.id.eq(lastMessage))
+            .leftJoin(qRoom.messages, qLastMessage).on(qLastMessage.id.eq(lastMessage))
             .where(qChat.user.id.eq(userId))
             .groupBy(qRoom.id)
-            .orderBy(qLastMessage.id.desc())
+            .orderBy(qLastMessage.createdAt.desc(), qLastMessage.id.desc())
             .fetch()
     }
 
@@ -164,7 +163,7 @@ class ChatRepository(
             .join(qMessage.room, qRoom)
             .join(qMessage.sender, qUser)
             .where(qMessage.room.id.eq(roomId))
-            .orderBy(qMessage.id.desc())
+            .orderBy(qMessage.createdAt.desc(), qMessage.id.desc())
             .offset((request.page - 1) * request.size.toLong())
             .limit(request.size.toLong())
             .fetch()

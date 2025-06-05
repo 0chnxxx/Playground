@@ -201,6 +201,39 @@
     // 메시지별 읽지 않은 사용자 추적을 위한 Map 추가
     let messageUnreadUsersMap = new Map(); // messageId -> Set of userIds
 
+    // UUIDv7을 이용한 메시지 정렬 삽입 함수
+    function insertMessageSorted(newMessage) {
+        if (messagesCache.length === 0) {
+            messagesCache.push(newMessage);
+            return;
+        }
+        
+        // UUIDv7은 시간 기반이므로 문자열 비교로 정렬 가능
+        // 또는 타임스탬프 기반 정렬을 fallback으로 사용
+        const insertIndex = messagesCache.findIndex(msg => {
+            // UUIDv7 비교 우선
+            if (isUUIDv7(newMessage.id) && isUUIDv7(msg.id)) {
+                return newMessage.id < msg.id;
+            }
+            // 타임스탬프 비교 fallback
+            return new Date(newMessage.timestamp) < new Date(msg.timestamp);
+        });
+        
+        if (insertIndex === -1) {
+            messagesCache.push(newMessage);
+        } else {
+            messagesCache.splice(insertIndex, 0, newMessage);
+        }
+    }
+    
+    // UUIDv7 형식 검증 함수
+    function isUUIDv7(uuid) {
+        if (!uuid || typeof uuid !== 'string') return false;
+        // UUIDv7 형식: xxxxxxxx-xxxx-7xxx-xxxx-xxxxxxxxxxxx
+        const uuidv7Pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuidv7Pattern.test(uuid);
+    }
+
     function debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -510,9 +543,9 @@
             const messagesDiv = document.getElementById('messages');
             isInitialRender = true;
             
-            // 먼저 채팅방 사용자 목록을 가져온 후 메시지를 로드
+            // 먼저 채팅방 사용자 목록을 가져온 후 첫 페이지만 로드
             fetchRoomUsers(currentRoom.id).then(() => {
-                return loadMessages(currentRoom.id);
+                return loadMessages(currentRoom.id, false); // 첫 페이지만 로드
             }).then(() => {
                 // 읽지 않은 모든 메시지에 대해 읽음 처리
                 const unreadMessages = messagesCache.filter(msg => {
@@ -749,7 +782,8 @@
                                 !cached.isTemporary
                             );
                             if (!recentDuplicate && !messagesCache.some(cached => cached.id === normalizedMsg.id)) {
-                                messagesCache.push(normalizedMsg);
+                                // UUIDv7을 사용한 정렬된 삽입
+                                insertMessageSorted(normalizedMsg);
                                 appendMessage(normalizedMsg, true); // 스크롤 활성화
                             }
                         }
@@ -758,7 +792,8 @@
                             sendReadMessage(roomId, normalizedMsg.id);
                         }
                     } else {
-                        messagesCache.push(normalizedMsg);
+                        // 다른 방의 메시지는 정렬된 삽입으로 처리
+                        insertMessageSorted(normalizedMsg);
                     }
                     updateRoomLastMessage(roomId, normalizedMsg);
                 } catch (error) {
@@ -1141,6 +1176,7 @@
                 messagesCache = [];
                 processedMessageIds.clear();
                 messagesDiv.innerHTML = '';
+                messageUnreadUsersMap.clear();
             }
 
             const messages = Array.isArray(res.data.data) ? res.data.data.map(msg => {
@@ -1171,19 +1207,27 @@
                     isTemporary: false
                 };
             }).filter(msg => msg.id) : [];
+            
             if (messages.length < 30) {
                 hasMoreMessages = false;
             }
 
-            messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            // API 응답이 내림차순(최신순)이므로 뒤집어서 오름차순으로 변환
+            const sortedMessages = [...messages].reverse();
 
             if (append) {
-                messagesCache.unshift(...messages);
+                // 이전 메시지들을 앞쪽에 추가 (기존 메시지들보다 오래된 메시지들)
+                // 중복 체크하면서 추가
+                const newMessages = sortedMessages.filter(newMsg => 
+                    !messagesCache.some(existingMsg => existingMsg.id === newMsg.id)
+                );
+                messagesCache = [...newMessages, ...messagesCache];
             } else {
-                messagesCache.push(...messages);
+                // 첫 로딩이므로 그대로 추가
+                messagesCache = sortedMessages;
             }
 
-            renderMessages(messagesDiv, wasAtBottom, scrollHeightBefore, append, scrollTopBefore, messages);
+            renderMessages(messagesDiv, wasAtBottom, scrollHeightBefore, append, scrollTopBefore, sortedMessages);
 
             if (!append) {
                 // 초기 로딩시 확실한 스크롤 처리
@@ -1200,6 +1244,7 @@
                     requestAnimationFrame(forceScrollToBottom);
                 });
             } else {
+                // 이전 메시지 로딩 시 스크롤 위치 유지
                 messagesDiv.scrollTop = messagesDiv.scrollHeight - scrollHeightBefore + scrollTopBefore;
             }
 
@@ -1213,7 +1258,7 @@
         }
     }
 
-    function renderMessages(messagesDiv, wasAtBottom, scrollHeightBefore, append, scrollTopBefore, messages = []) {
+    function renderMessages(messagesDiv, wasAtBottom, scrollHeightBefore, append, scrollTopBefore, newMessages = []) {
         if (!append) {
             messagesDiv.innerHTML = '';
         }
@@ -1221,14 +1266,31 @@
             messagesDiv.innerHTML = '<p class="text-gray-500 text-center">No messages</p>';
             return;
         }
-        const messagesToRender = append ? messages : messagesCache;
-        messagesToRender.forEach(msg => {
-            appendMessage(msg, false, append);
-        });
         
-        // 초기 로딩시 스크롤을 최하단으로 확실히 이동
-        if (!append) {
-            // 여러 번 시도하여 확실한 스크롤 처리
+        if (append) {
+            // 이전 메시지들을 앞쪽에 추가 (prepend 방식)
+            const fragment = document.createDocumentFragment();
+            newMessages.forEach(msg => {
+                const messageElement = createMessageElement(msg);
+                fragment.appendChild(messageElement);
+            });
+            
+            // 기존 메시지들 앞에 새로운 메시지들 삽입
+            if (messagesDiv.firstChild) {
+                messagesDiv.insertBefore(fragment, messagesDiv.firstChild);
+            } else {
+                messagesDiv.appendChild(fragment);
+            }
+        } else {
+            // 첫 로딩시 전체 메시지 렌더링
+            const fragment = document.createDocumentFragment();
+            messagesCache.forEach(msg => {
+                const messageElement = createMessageElement(msg);
+                fragment.appendChild(messageElement);
+            });
+            messagesDiv.appendChild(fragment);
+            
+            // 초기 로딩시 스크롤을 최하단으로 확실히 이동
             const scrollToBottom = () => {
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             };
@@ -1247,26 +1309,12 @@
             });
         }
     }
-
-    function appendMessage(msg, scrollToBottom = true, prepend = false) {
-        const messagesDiv = document.getElementById('messages');
+    
+    // 메시지 엘리먼트 생성 함수 분리
+    function createMessageElement(msg) {
         if (!msg.id) {
             console.warn('Skipping message with missing id:', msg);
-            return;
-        }
-
-        const tempId = [...tempMessageMap.keys()].find(key => tempMessageMap.get(key) === msg.id || key === msg.id);
-        const existingElement = messagesDiv.querySelector(`[data-message-id="${msg.id}"]`) ||
-            (tempId ? messagesDiv.querySelector(`[data-message-id="${tempId}"]`) : null);
-
-        if (existingElement) {
-            existingElement.setAttribute('data-message-id', msg.id);
-            const contentElement = existingElement.querySelector('p.text-sm');
-            if (contentElement) contentElement.textContent = msg.content;
-            const timestampElement = existingElement.querySelector('.timestamp');
-            if (timestampElement) timestampElement.textContent = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : '';
-            updateUnreadSpan(existingElement, msg.id, msg.unreadCount);
-            return;
+            return document.createElement('div');
         }
 
         const div = document.createElement('div');
@@ -1297,6 +1345,32 @@
             </div>
         `;
 
+        return div;
+    }
+
+    function appendMessage(msg, scrollToBottom = true, prepend = false) {
+        const messagesDiv = document.getElementById('messages');
+        if (!msg.id) {
+            console.warn('Skipping message with missing id:', msg);
+            return;
+        }
+
+        const tempId = [...tempMessageMap.keys()].find(key => tempMessageMap.get(key) === msg.id || key === msg.id);
+        const existingElement = messagesDiv.querySelector(`[data-message-id="${msg.id}"]`) ||
+            (tempId ? messagesDiv.querySelector(`[data-message-id="${tempId}"]`) : null);
+
+        if (existingElement) {
+            existingElement.setAttribute('data-message-id', msg.id);
+            const contentElement = existingElement.querySelector('p.text-sm');
+            if (contentElement) contentElement.textContent = msg.content;
+            const timestampElement = existingElement.querySelector('.timestamp');
+            if (timestampElement) timestampElement.textContent = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : '';
+            updateUnreadSpan(existingElement, msg.id, msg.unreadCount);
+            return;
+        }
+
+        const div = createMessageElement(msg);
+
         try {
             // 스크롤 위치 체크: 사용자가 하단 근처에 있는지 확인
             const wasAtBottom = messagesDiv.scrollTop + messagesDiv.clientHeight >= messagesDiv.scrollHeight - 100;
@@ -1310,6 +1384,7 @@
             // 스크롤 처리 로직 개선
             if (!prepend && scrollToBottom) {
                 // 내 메시지이거나 사용자가 하단 근처에 있으면 자동 스크롤
+                const isMine = msg.isMine || false;
                 if (isMine || wasAtBottom) {
                     // 부드러운 스크롤을 위해 requestAnimationFrame 사용
                     requestAnimationFrame(() => {
@@ -1477,12 +1552,13 @@
         document.getElementById('leave-room-modal').classList.add('hidden');
     });
 
-    document.getElementById('messages').addEventListener('scroll', () => {
+    document.getElementById('messages').addEventListener('scroll', debounce(() => {
         const messagesDiv = document.getElementById('messages');
-        if (messagesDiv.scrollTop < 100 && !isLoadingMessages && hasMoreMessages) {
+        // 위쪽 100px 이내로 스크롤했을 때 이전 메시지 로드
+        if (messagesDiv.scrollTop < 100 && !isLoadingMessages && hasMoreMessages && currentRoomId) {
             loadMessages(currentRoomId, true);
         }
-    });
+    }, 200));
 
     if (accessToken && refreshToken) {
         fetchCurrentUser().then(() => {

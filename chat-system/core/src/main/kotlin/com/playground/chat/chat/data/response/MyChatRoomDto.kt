@@ -7,7 +7,7 @@ data class MyChatRoomDto(
     val id: UUID,
     val name: String,
     val lastMessage: String? = null,
-    val unreadCount: Long,
     val lastSentAt: Instant? = null,
-    val memberCount: Long
+    val memberCount: Long,
+    val unreadCount: Long
 )
