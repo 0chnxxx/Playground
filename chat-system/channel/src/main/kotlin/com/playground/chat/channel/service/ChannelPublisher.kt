@@ -15,29 +15,6 @@ class ChannelPublisher(
 ) {
     private val log = logger()
 
-    fun publishChatMessageViewEvent(event: ViewChatRoomEvent) {
-        try {
-            val viewEventJson = mapper.writeValueAsString(event)
-
-            // Chat 의 LastMessage Update를 위한 Kafka publish
-            kafkaTemplate.send("chat-room-view", event.roomId.toString(), viewEventJson)
-
-            val readEvent = ReadChatMessageEvent(
-                type = ReadChatMessageEvent.Type.ALL,
-                roomId = event.roomId,
-                userId = event.userId,
-                messageId = event.messageId!!
-            )
-
-            // Socket 에 BroadCast를 위한 Redis Publish
-            redisTemplate.convertAndSend("chat-message-read:${event.roomId}", readEvent)
-
-            log.info("[✅ Chat Room View Event Publish] {}", event)
-        } catch (e: Exception) {
-            log.error("[❌ Chat Room View Event Publish Fail] {}", e.printStackTrace())
-        }
-    }
-
     fun publishChatMessageSendEvent(event: SendChatMessageEvent) {
         try {
             val sendEventJson = mapper.writeValueAsString(event)

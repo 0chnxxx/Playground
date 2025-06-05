@@ -9,10 +9,6 @@ import java.util.UUID
 class ChannelService(
     private val channelPublisher: ChannelPublisher
 ) {
-    fun viewChatRoom(userId: UUID, roomId: UUID, event: ViewChatRoomEvent) {
-        channelPublisher.publishChatMessageViewEvent(event)
-    }
-
     fun sendChatMessage(userId: UUID, roomId: UUID, event: SendChatMessageEvent) {
         channelPublisher.publishChatMessageSendEvent(event)
     }

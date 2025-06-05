@@ -3,7 +3,6 @@ package com.playground.chat.channel.controller
 import com.playground.chat.channel.service.ChannelService
 import com.playground.chat.chat.data.event.SendChatMessageEvent
 import com.playground.chat.chat.data.event.ReadChatMessageEvent
-import com.playground.chat.chat.data.event.ViewChatRoomEvent
 import com.playground.chat.global.auth.UserPrincipal
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
@@ -14,19 +13,6 @@ import java.util.UUID
 class ChannelController(
     private val channelService: ChannelService
 ) {
-    /**
-     * 채팅방 접속
-     */
-    @MessageMapping("/chat/rooms/{roomId}/view")
-    fun viewChatRoom(
-        @DestinationVariable
-        roomId: UUID,
-        principal: UserPrincipal,
-        event: ViewChatRoomEvent
-    ) {
-        channelService.viewChatRoom(principal.id, roomId, event)
-    }
-
     /**
      * 채팅 메시지 전송
      */

@@ -302,7 +302,7 @@
             return;
         }
         
-        const viewPayload = {
+        const readPayload = {
             userId,
             roomId,
             messageId,
@@ -310,10 +310,10 @@
         };
         try {
             await waitForWebSocketConnection();
-            stompClient.send(`/pub/chat/rooms/${roomId}/view`, {}, JSON.stringify(viewPayload));
-            console.log('View message sent:', viewPayload);
+            stompClient.send(`/pub/chat/rooms/${roomId}/messages/${messageId}/read`, {}, JSON.stringify(readPayload));
+            console.log('Read message sent:', readPayload);
         } catch (error) {
-            console.warn('Failed to send view message:', error, viewPayload);
+            console.warn('Failed to send view message:', error, readPayload);
         }
     }
 

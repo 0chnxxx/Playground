@@ -23,28 +23,6 @@ class ChatConsumer(
 
     @Transactional
     @KafkaListener(
-        topics = ["chat-room-view"],
-        groupId = "chat-group",
-        containerFactory = "chatKafkaListenerContainerFactory",
-    )
-    fun consumeChatRoomView(event: String) {
-        try {
-            val message = mapper.readValue(event, ViewChatRoomEvent::class.java)
-
-            val lastMessage = chatFinder.findLastChatMessage(message.roomId, message.userId)
-
-            if (lastMessage != null && lastMessage.id != message.messageId) {
-                chatOperator.readLastChatMessage(message.roomId, message.userId)
-            }
-
-            log.info("[📥 Chat Room View Event Consume] message : {}", event)
-        } catch (e: Exception) {
-            log.error("[❌ Chat Room View Event Consume Fail] {}", e.message)
-        }
-    }
-
-    @Transactional
-    @KafkaListener(
         topics = ["chat-message-send"],
         groupId = "chat-group",
         containerFactory = "chatKafkaListenerContainerFactory",
