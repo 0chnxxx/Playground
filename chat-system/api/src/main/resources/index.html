@@ -1004,7 +1004,7 @@
                             <span class="text-sm text-gray-500">${room.lastMessageTime ? new Date(room.lastMessageTime).toLocaleTimeString() : ''}</span>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <p class="text-gray-600 truncate flex-1">${room.lastMessage || 'No messages'}</p>
+                            <p class="text-gray-600 truncate flex-1">${room.lastMessage || '&nbsp;'}</p>
                             ${room.unreadCount > 0 ? `<div class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">${room.unreadCount}</div>` : ''}
                         </div>
                     </div>
@@ -1261,10 +1261,6 @@
     function renderMessages(messagesDiv, wasAtBottom, scrollHeightBefore, append, scrollTopBefore, newMessages = []) {
         if (!append) {
             messagesDiv.innerHTML = '';
-        }
-        if (messagesCache.length === 0) {
-            messagesDiv.innerHTML = '<p class="text-gray-500 text-center">No messages</p>';
-            return;
         }
         
         if (append) {
