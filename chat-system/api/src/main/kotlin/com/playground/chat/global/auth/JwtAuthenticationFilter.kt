@@ -8,12 +8,14 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.filter.OncePerRequestFilter
 import java.security.Principal
 import java.util.UUID
 
 @Component
 class JwtAuthenticationFilter(
+    private val corsConfig: CorsConfiguration,
     private val tokenProvider: TokenProvider,
     private val userFinder: UserFinder
 ): OncePerRequestFilter() {
@@ -57,6 +59,10 @@ class JwtAuthenticationFilter(
             }
         } else {
             response.status = HttpStatus.UNAUTHORIZED.value()
+            response.setHeader("Access-Control-Allow-Origin", corsConfig.allowedOrigins!!.joinToString(","))
+            response.setHeader("Access-Control-Allow-Headers", corsConfig.allowedHeaders!!.joinToString(","))
+            response.setHeader("Access-Control-Allow-Methods", corsConfig.allowedMethods!!.joinToString(","))
+            response.setHeader("Access-Control-Allow-Credentials", corsConfig.allowCredentials!!.toString())
         }
     }
 }

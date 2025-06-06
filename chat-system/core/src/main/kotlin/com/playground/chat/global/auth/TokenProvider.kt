@@ -1,6 +1,8 @@
 package com.playground.chat.global.auth
 
 import com.playground.chat.global.log.logger
+import io.jsonwebtoken.ExpiredJwtException
+import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
@@ -47,8 +49,8 @@ class TokenProvider(
                 .parseSignedClaims(token)
 
             return true
-        } catch (e: Exception) {
-            log.info("[❌ Fail Jwt Validate] {}", e.message)
+        } catch (e: JwtException) {
+            log.info("[❌ Fail Jwt Validate] {}", e.printStackTrace())
             return false
         }
     }
@@ -60,8 +62,8 @@ class TokenProvider(
                 .build()
                 .parseSignedClaims(token)
                 .payload[key]
-        } catch (e: Exception) {
-            log.info("[❌ Fail Jwt Parse] {}", e.message)
+        } catch (e: JwtException) {
+            log.info("[❌ Fail Jwt Parse] {}", e.printStackTrace())
             return null
         }
     }
