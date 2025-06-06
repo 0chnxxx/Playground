@@ -30,10 +30,21 @@ class ChatRepository(
         val qMyChat = QChatEntity("myChat")
         val qLastMessage = QChatMessageEntity("lastMessage")
 
+        val joinedAt = jpaQueryFactory
+            .select(qChat.joinedAt)
+            .from(qChat)
+            .where(
+                qChat.room.id.eq(qRoom.id),
+                qChat.user.id.eq(userId)
+            )
+
         val lastMessage = JPAExpressions
             .select(qLastMessage.id.max())
             .from(qLastMessage)
-            .where(qLastMessage.room.id.eq(qRoom.id))
+            .where(
+                qLastMessage.room.id.eq(qRoom.id),
+                qLastMessage.createdAt.goe(joinedAt)
+            )
 
         val memberCount = JPAExpressions
             .select(qChat.count())
@@ -83,10 +94,21 @@ class ChatRepository(
         val qLastMessage = QChatMessageEntity("lastMessage")
         val qUnreadMessage = QChatMessageEntity("unreadMessage")
 
+        val joinedAt = jpaQueryFactory
+            .select(qChat.joinedAt)
+            .from(qChat)
+            .where(
+                qChat.room.id.eq(qRoom.id),
+                qChat.user.id.eq(userId)
+            )
+
         val lastMessage = JPAExpressions
             .select(qLastMessage.id.max())
             .from(qLastMessage)
-            .where(qLastMessage.room.id.eq(qRoom.id))
+            .where(
+                qLastMessage.room.id.eq(qRoom.id),
+                qLastMessage.createdAt.goe(joinedAt)
+            )
 
         val memberCount = JPAExpressions
             .select(qChat.count())
@@ -135,9 +157,18 @@ class ChatRepository(
         request: FindChatMessagesRequest
     ): Pagination<List<ChatMessageDto>> {
         val qUser = QUserEntity("user")
+        val qChat = QChatEntity("chat")
         val qUnreadChat = QChatEntity("unreadChat")
         val qRoom = QChatRoomEntity("room")
         val qMessage = QChatMessageEntity("message")
+
+        val joinedAt = jpaQueryFactory
+            .select(qChat.joinedAt)
+            .from(qChat)
+            .where(
+                qChat.room.id.eq(roomId),
+                qChat.user.id.eq(userId)
+            )
 
         val totalCount = jpaQueryFactory
             .select(qMessage.id.count())
@@ -164,7 +195,10 @@ class ChatRepository(
             .from(qMessage)
             .leftJoin(qMessage.room, qRoom)
             .leftJoin(qMessage.sender, qUser)
-            .where(qMessage.room.id.eq(roomId))
+            .where(
+                qMessage.room.id.eq(roomId),
+                qMessage.createdAt.goe(joinedAt)
+            )
             .orderBy(qMessage.createdAt.desc(), qMessage.id.desc())
             .offset((request.page - 1) * request.size.toLong())
             .limit(request.size.toLong())
