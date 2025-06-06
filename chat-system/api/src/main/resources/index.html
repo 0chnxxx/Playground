@@ -707,6 +707,7 @@
                         id: messageId,
                         roomId: roomId,
                         isMine: msg.userId == userId,
+                        type: msg.type || 'TALK',
                         content: msg.content || msg.message || 'No content',
                         nickname: msg.nickname || 'Unknown',
                         timestamp: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString(),
@@ -1437,6 +1438,7 @@
                 roomId: currentRoom.id,
                 userId: userId,
                 nickname: nickname,
+                type: 'TALK',
                 content: content
             }));
             document.getElementById('message-input').value = '';

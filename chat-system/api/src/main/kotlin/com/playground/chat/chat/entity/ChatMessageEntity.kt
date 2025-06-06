@@ -19,8 +19,11 @@ class ChatMessageEntity(
     var room: ChatRoomEntity,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
-    var sender: UserEntity,
+    @JoinColumn(name = "sender_id", nullable = true)
+    var sender: UserEntity?,
+
+    @Enumerated(EnumType.STRING)
+    var type: ChatMessageType,
 
     var content: String,
 ): AuditEntity()

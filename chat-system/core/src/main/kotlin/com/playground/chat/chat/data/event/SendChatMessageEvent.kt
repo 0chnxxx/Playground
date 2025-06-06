@@ -6,9 +6,10 @@ import java.util.UUID
 
 data class SendChatMessageEvent(
     val roomId: UUID,
-    val userId: UUID,
+    val userId: UUID? = null,
     val nickname: String,
     val messageId: UUID = UuidUtil.generateUuidV7(),
+    val type: String,
     val content: String,
     val timestamp: Instant = Instant.now()
 )

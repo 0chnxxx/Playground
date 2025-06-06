@@ -5,6 +5,7 @@ import java.util.UUID
 data class ChatRoomEvent(
     val type: Type,
     val userId: UUID,
+    val nickname: String,
     val roomId: UUID,
     val roomName: String
 ) {

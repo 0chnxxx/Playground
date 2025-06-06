@@ -35,7 +35,8 @@ DROP TABLE IF EXISTS chat_message;
 CREATE TABLE chat_message (
     id           BINARY(16)     PRIMARY KEY,
     room_id      BINARY(16)     NOT NULL,
-    sender_id    BINARY(16)     NOT NULL,
+    sender_id    BINARY(16)     NULL,
+    type         VARCHAR(255)   NOT NULL,
     content      TEXT           NOT NULL,
     created_at   TIMESTAMP      NOT NULL,
     created_by   VARCHAR(255)   NOT NULL,

@@ -35,10 +35,6 @@ class ChatFinder(
         return chatRepository.findChatMessagesByRoomId(user.id!!, room.id!!, request)
     }
 
-    fun findLastChatMessage(roomId: UUID, userId: UUID): ChatMessageEntity? {
-        return chatRepository.findLastChatMessageByRoomIdAndUserId(roomId, userId)
-    }
-
     fun findChatUsers(user: UserEntity, room: ChatRoomEntity): List<ChatUserDto> {
         return chatRepository.findChatUsersByRoomId(user.id!!, room.id!!)
     }

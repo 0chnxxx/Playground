@@ -37,7 +37,6 @@ class ChatService(
 
     fun createChatRoom(principal: UserPrincipal, request: CreateChatRoomRequest): ChatRoomDto {
         val user = userFinder.findUser(principal.id)
-
         val room = chatOperator.createChatRoom(user, request)
 
         chatPublisher.publishChatRoomEvent(
@@ -45,6 +44,7 @@ class ChatService(
                 type = ChatRoomEvent.Type.CREATE,
                 roomId = room.id,
                 userId = principal.id,
+                nickname = user.nickname,
                 roomName = room.name
             )
         )
@@ -63,6 +63,7 @@ class ChatService(
                 type = ChatRoomEvent.Type.JOIN,
                 roomId = room.id!!,
                 userId = user.id!!,
+                nickname = user.nickname,
                 roomName = room.name
             )
         )
@@ -79,6 +80,7 @@ class ChatService(
                 type = ChatRoomEvent.Type.LEAVE,
                 roomId = room.id!!,
                 userId = user.id!!,
+                nickname = user.nickname,
                 roomName = room.name
             )
         )
@@ -99,6 +101,7 @@ class ChatService(
                 type = ChatRoomEvent.Type.DELETE,
                 userId = user.id!!,
                 roomId = room.id!!,
+                nickname = user.nickname,
                 roomName = room.name
             )
         )

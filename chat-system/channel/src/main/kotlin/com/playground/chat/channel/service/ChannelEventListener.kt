@@ -1,7 +1,6 @@
 package com.playground.chat.channel.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.playground.chat.chat.data.event.ChatRoomEvent
 import com.playground.chat.global.log.logger
 import org.springframework.context.ApplicationEventPublisher
@@ -18,13 +17,13 @@ class ChannelEventListener(
 
     override fun onMessage(message: Message, pattern: ByteArray?) {
         try {
-            log.info("[🛬 Chat Event Receive] event : {}", message)
+            log.info("[🛬 Chat Room Event Receive] event : {}", message)
 
             val event = mapper.readValue(message.toString(), ChatRoomEvent::class.java)
 
             eventPublisher.publishEvent(event)
         } catch (e: Exception) {
-            log.error("[❌ Chat Event Receive Fail] {}", e.printStackTrace())
+            log.error("[❌ Chat Room Event Receive Fail] {}", e.printStackTrace())
         }
     }
 }

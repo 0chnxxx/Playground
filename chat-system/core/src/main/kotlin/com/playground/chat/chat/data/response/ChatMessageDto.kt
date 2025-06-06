@@ -5,8 +5,9 @@ import java.util.UUID
 
 data class ChatMessageDto(
     val messageId: UUID,
-    val userId: UUID,
+    val userId: UUID?,
     val nickname: String,
+    val type: String,
     val content: String,
     val unreadUserIds: List<UUID> = emptyList(),
     val isMine: Boolean,
@@ -14,15 +15,17 @@ data class ChatMessageDto(
 ) {
     constructor(
         messageId: UUID,
-        userId: UUID,
-        nickname: String,
+        userId: UUID?,
+        nickname: String?,
+        type: String,
         content: String,
         isMine: Boolean,
         timestamp: Instant? = Instant.now()
     ) : this(
         messageId = messageId,
         userId = userId,
-        nickname = nickname,
+        nickname = nickname ?: "SYSTEM",
+        type = type,
         content = content,
         unreadUserIds = emptyList(),
         isMine = isMine,
