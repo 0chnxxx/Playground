@@ -60,6 +60,27 @@
             object-fit: cover;
             border-radius: 9999px;
         }
+        
+        /* 채팅방 목록 메시지 텍스트 말줄임표 처리 */
+        .room-last-message {
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            max-width: 300px !important;
+            min-width: 0 !important;
+            flex-shrink: 1 !important;
+        }
+        
+        /* 채팅방 목록 컨테이너 개선 */
+        .room-content-wrapper {
+            min-width: 0;
+            flex: 1;
+        }
+        
+        .room-message-container {
+            min-width: 0;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans flex items-center justify-center min-h-screen">
@@ -1019,14 +1040,14 @@
             div.innerHTML = `
                 <div class="flex items-center space-x-3">
                     <img src="${imageSrc}" class="room-image" alt="Room image">
-                    <div class="flex-1">
-                        <div class="flex justify-between">
-                            <h2 class="font-bold">${room.name || 'Unnamed Room'} <span class="text-gray-500 text-sm">(${room.memberCount || 0})</span></h2>
-                            <span class="text-sm text-gray-500">${room.lastMessageTime ? new Date(room.lastMessageTime).toLocaleTimeString() : ''}</span>
+                    <div class="room-content-wrapper">
+                        <div class="flex justify-between items-start">
+                            <h2 class="font-bold truncate">${room.name || 'Unnamed Room'} <span class="text-gray-500 text-sm">(${room.memberCount || 0})</span></h2>
+                            <span class="text-sm text-gray-500 flex-shrink-0 ml-2">${room.lastMessageTime ? new Date(room.lastMessageTime).toLocaleTimeString() : ''}</span>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <p class="text-gray-600 truncate flex-1">${room.lastMessage || '&nbsp;'}</p>
-                            ${room.unreadCount > 0 ? `<div class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">${room.unreadCount}</div>` : ''}
+                        <div class="flex items-center justify-between room-message-container">
+                            <p class="text-gray-600 room-last-message">${room.lastMessage || '&nbsp;'}</p>
+                            ${room.unreadCount > 0 ? `<div class="bg-red-500 text-white text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2">${room.unreadCount}</div>` : ''}
                         </div>
                     </div>
                 </div>
