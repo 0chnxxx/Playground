@@ -12,6 +12,7 @@ import java.util.UUID
 
 @Component
 class ChatOperator(
+    private val chatFinder: ChatFinder,
     private val chatRepository: ChatRepository
 ) {
     fun createChatRoom(user: UserEntity, request: CreateChatRoomRequest): ChatRoomDto {
@@ -61,10 +62,15 @@ class ChatOperator(
     }
 
     fun readLastChatMessage(roomId: UUID, userId: UUID) {
-        chatRepository.updateChatForLastMessage(roomId, userId)
+        val chat = chatFinder.findChat(roomId, userId)
+        val lastChatMessage = chatFinder.findLastChatMessageByRoom(roomId)
+
+        chat.read(lastChatMessage.id)
     }
 
     fun readChatMessage(roomId: UUID, userId: UUID, messageId: UUID) {
-        chatRepository.updateChatForMessage(roomId, userId, messageId)
+        val chat = chatFinder.findChat(roomId, userId)
+
+        chat.read(messageId)
     }
 }

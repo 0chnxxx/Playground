@@ -5,6 +5,7 @@ import com.playground.chat.channel.client.UserApiClient
 import com.playground.chat.chat.data.event.*
 import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.global.log.logger
+import com.playground.chat.global.util.UuidUtil
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
@@ -21,26 +22,28 @@ class ChannelPublisher(
 
     fun publishChatMessageSendEvent(principal: UserPrincipal?, event: SendChatMessageEvent) {
         try {
+            var sendEvent = event.setMessageId(UuidUtil.generateUuidV7())
+
             if (principal != null) {
                 val response = userApiClient.findMe(principal.getBearerPassport())
                 val user = response.data
 
-                event.setSender(
+                sendEvent = sendEvent.setSender(
                     userId = user.id,
                     image = user.image,
                     nickname = user.nickname,
                 )
             }
 
-            val sendEventJson = mapper.writeValueAsString(event)
+            val sendEventJson = mapper.writeValueAsString(sendEvent)
 
             // ChatMessage Insert를 위한 Kafka publish
-            kafkaTemplate.send("chat-message-send", event.roomId.toString(), sendEventJson)
+            kafkaTemplate.send("chat-message-send", sendEvent.roomId.toString(), sendEventJson)
 
             // Socket 에 BroadCast를 위한 Redis Publish
-            redisTemplate.convertAndSend("chat-message-send:${event.roomId}", event)
+            redisTemplate.convertAndSend("chat-message-send:${sendEvent.roomId}", sendEvent)
 
-            log.info("[🛫 Chat Message Send Event Publish] {}", event)
+            log.info("[🛫 Chat Message Send Event Publish] {}", sendEvent)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Send Event Publish Fail] {}", e.printStackTrace())
         }

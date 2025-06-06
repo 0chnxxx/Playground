@@ -5,7 +5,7 @@ import com.playground.chat.chat.data.event.ReadChatMessageEvent
 import com.playground.chat.chat.data.event.SendChatMessageEvent
 import com.playground.chat.chat.entity.ChatMessageEntity
 import com.playground.chat.chat.entity.ChatMessageType
-import com.playground.chat.global.auth.SecurityContext
+import com.playground.chat.global.auth.PrincipalContext
 import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.global.log.logger
 import com.playground.chat.user.service.UserFinder
@@ -28,7 +28,7 @@ class ChatConsumer(
         groupId = "chat-group",
         containerFactory = "chatKafkaListenerContainerFactory",
     )
-    fun consumeChatMessageSend(event: String) {
+    fun consumeSendChatMessageEvent(event: String) {
         try {
             val sendEvent = mapper.readValue(event, SendChatMessageEvent::class.java)
 
@@ -36,26 +36,24 @@ class ChatConsumer(
             val user = sendEvent.userId?.let { userFinder.findUser(it) }
 
             val message = ChatMessageEntity(
-                id = sendEvent.messageId,
+                id = sendEvent.messageId!!,
                 room = room,
                 sender = user,
                 type = ChatMessageType.valueOf(sendEvent.type),
                 content = sendEvent.content
             )
 
-            try {
-                if (user != null) {
-                    val principal = UserPrincipal(user.id!!)
+            if (user != null) {
+                val principal = UserPrincipal(user.id!!)
 
-                    SecurityContext.setPrincipal(principal)
+                PrincipalContext.operate(principal) {
+                    chatOperator.saveChatMessage(message)
                 }
-
+            } else {
                 chatOperator.saveChatMessage(message)
-            } finally {
-                SecurityContext.clear()
             }
 
-            log.info("[📨 Chat Message Send Event Consume] message : {}", event)
+            log.info("[📨 Chat Message Send Event Consume] {}", event)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Send Event Consume Fail] {}", e.printStackTrace())
         }
@@ -67,31 +65,28 @@ class ChatConsumer(
         groupId = "chat-group",
         containerFactory = "chatKafkaListenerContainerFactory",
     )
-    fun consumeChatMessageRead(event: String) {
+    fun consumeReadChatMessageEvent(event: String) {
         try {
-            val message = mapper.readValue(event, ReadChatMessageEvent::class.java)
+            val readEvent = mapper.readValue(event, ReadChatMessageEvent::class.java)
 
-            try {
-                val principal = UserPrincipal(message.userId)
+            val principal = UserPrincipal(readEvent.userId)
 
-                SecurityContext.setPrincipal(principal)
-
-                when (message.type) {
+            PrincipalContext.operate(principal) {
+                when (readEvent.type) {
                     ReadChatMessageEvent.Type.ALL -> chatOperator.readLastChatMessage(
-                        roomId = message.roomId,
-                        userId = message.userId
+                        roomId = readEvent.roomId,
+                        userId = readEvent.userId
                     )
+
                     ReadChatMessageEvent.Type.ONE -> chatOperator.readChatMessage(
-                        roomId = message.roomId,
-                        userId = message.userId,
-                        messageId = message.messageId
+                        roomId = readEvent.roomId,
+                        userId = readEvent.userId,
+                        messageId = readEvent.messageId
                     )
                 }
-            } finally {
-                SecurityContext.clear()
             }
 
-            log.info("[📨 Chat Message Read Event Consume] message : {}", event)
+            log.info("[📨 Chat Message Read Event Consume] {}", event)
         } catch (e: Exception) {
             log.error("[❌ Chat Message Read Event Consume Fail] {}", e.printStackTrace())
         }

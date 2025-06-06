@@ -24,6 +24,18 @@ class ChatRepository(
     private val entityManager: EntityManager,
     private val jpaQueryFactory: JPAQueryFactory
 ) {
+    fun findChat(roomId: UUID, userId: UUID): ChatEntity? {
+        val qChat = QChatEntity("chat")
+
+        return jpaQueryFactory
+            .selectFrom(qChat)
+            .where(
+                qChat.room.id.eq(roomId),
+                qChat.user.id.eq(userId)
+            )
+            .fetchOne()
+    }
+
     fun findChatRooms(userId: UUID, request: FindChatRoomsRequest): Pagination<List<ChatRoomDto>> {
         val qRoom = QChatRoomEntity("room")
         val qChat = QChatEntity("chat")
@@ -148,6 +160,17 @@ class ChatRepository(
         return jpaQueryFactory
             .selectFrom(qRoom)
             .where(qRoom.id.eq(roomId))
+            .fetchOne()
+    }
+
+    fun findLastChatMessageByRoomId(roomId: UUID): ChatMessageEntity? {
+        val qMessage = QChatMessageEntity("message")
+
+        return jpaQueryFactory
+            .selectFrom(qMessage)
+            .where(qMessage.room.id.eq(roomId))
+            .orderBy(qMessage.createdAt.desc(), qMessage.id.desc())
+            .limit(1)
             .fetchOne()
     }
 
@@ -279,40 +302,6 @@ class ChatRepository(
 
     fun saveChatMessage(message: ChatMessageEntity) {
         entityManager.persist(message)
-    }
-
-    fun updateChatForMessage(roomId: UUID, userId: UUID, messageId: UUID) {
-        val qChat = QChatEntity("chat")
-
-        jpaQueryFactory
-            .update(qChat)
-            .set(qChat.lastMessageId, messageId)
-            .set(qChat.lastReadAt, Instant.now())
-            .where(
-                qChat.room.id.eq(roomId),
-                qChat.user.id.eq(userId)
-            )
-            .execute()
-    }
-
-    fun updateChatForLastMessage(roomId: UUID, userId: UUID) {
-        val qChat = QChatEntity("chat")
-        val qLastMessage = QChatMessageEntity("lastMessage")
-
-        val lastMessage = JPAExpressions
-            .select(qLastMessage.id.max())
-            .from(qLastMessage)
-            .where(qLastMessage.room.id.eq(roomId))
-
-        jpaQueryFactory
-            .update(qChat)
-            .set(qChat.lastMessageId, lastMessage)
-            .set(qChat.lastReadAt, Instant.now())
-            .where(
-                qChat.room.id.eq(roomId),
-                qChat.user.id.eq(userId)
-            )
-            .execute()
     }
 
     fun deleteChatRoom(room: ChatRoomEntity) {

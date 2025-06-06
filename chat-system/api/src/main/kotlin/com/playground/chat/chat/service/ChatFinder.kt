@@ -6,6 +6,7 @@ import com.playground.chat.chat.data.response.ChatMessageDto
 import com.playground.chat.chat.data.response.ChatRoomDto
 import com.playground.chat.chat.data.response.ChatUserDto
 import com.playground.chat.chat.data.response.MyChatRoomDto
+import com.playground.chat.chat.entity.ChatEntity
 import com.playground.chat.chat.entity.ChatMessageEntity
 import com.playground.chat.chat.entity.ChatRoomEntity
 import com.playground.chat.chat.repository.ChatRepository
@@ -18,6 +19,11 @@ import java.util.UUID
 class ChatFinder(
     private val chatRepository: ChatRepository
 ) {
+    fun findChat(roomId: UUID, userId: UUID): ChatEntity {
+        return chatRepository.findChat(roomId, userId)
+            ?: throw Exception("Chat Not Found")
+    }
+
     fun findChatRoom(roomId: UUID): ChatRoomEntity {
         return chatRepository.findChatRoomByRoomId(roomId)
             ?: throw Exception("Chat Room Not Found")
@@ -29,6 +35,11 @@ class ChatFinder(
 
     fun findChatRooms(user: UserEntity, request: FindChatRoomsRequest): Pagination<List<ChatRoomDto>> {
         return chatRepository.findChatRooms(user.id!!, request)
+    }
+
+    fun findLastChatMessageByRoom(roomId: UUID): ChatMessageEntity {
+        return chatRepository.findLastChatMessageByRoomId(roomId)
+            ?: throw Exception("Chat Message Not Found")
     }
 
     fun findChatMessagesByRoom(user: UserEntity, room: ChatRoomEntity, request: FindChatMessagesRequest): Pagination<List<ChatMessageDto>> {

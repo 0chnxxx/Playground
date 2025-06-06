@@ -46,4 +46,9 @@ class ChatEntity(
             return 31 * user.hashCode() + room.hashCode()
         }
     }
+
+    fun read(messageId: UUID) {
+        this.lastMessageId = messageId
+        this.lastReadAt = Instant.now()
+    }
 }

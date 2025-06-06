@@ -46,16 +46,12 @@ class JwtAuthenticationFilter(
 
             val principal = UserPrincipal(user.id!!)
 
-            SecurityContext.setPrincipal(principal)
+            PrincipalContext.operate(principal) {
+                val wrappedRequest = object : HttpServletRequestWrapper(request) {
+                    override fun getUserPrincipal(): Principal = principal
+                }
 
-            val wrappedRequest = object : HttpServletRequestWrapper(request) {
-                override fun getUserPrincipal(): Principal = principal
-            }
-
-            try {
                 filterChain.doFilter(wrappedRequest, response)
-            } finally {
-                SecurityContext.clear()
             }
         } else {
             response.status = HttpStatus.UNAUTHORIZED.value()

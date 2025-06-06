@@ -1,6 +1,6 @@
 package com.playground.chat.global.entity
 
-import com.playground.chat.global.auth.SecurityContext
+import com.playground.chat.global.auth.PrincipalContext
 import jakarta.persistence.PrePersist
 import jakarta.persistence.PreUpdate
 import java.time.Instant
@@ -9,18 +9,18 @@ class AuditEntityListener {
     @PrePersist
     fun prePersist(entity: AuditEntity) {
         entity.createdAt = Instant.now()
-        entity.createdBy = getCurrentUser()
+        entity.createdBy = getCurrentPrincipal()
     }
 
     @PreUpdate
     fun preUpdate(entity: AuditEntity) {
         entity.updatedAt = Instant.now()
-        entity.updatedBy = getCurrentUser()
+        entity.updatedBy = getCurrentPrincipal()
     }
 
-    private fun getCurrentUser(): String {
-        val principal = SecurityContext.getPrincipal()
+    private fun getCurrentPrincipal(): String {
+        val principal = PrincipalContext.getPrincipal()
 
-        return principal?.id.let { it?.toString() ?: "system" }
+        return principal?.id?.toString() ?: "system"
     }
 }
