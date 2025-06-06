@@ -715,27 +715,33 @@
                         isTemporary: false
                     };
                     
-                    // 새 메시지의 경우 읽지 않은 사용자 목록 초기화
+                    // 새 메시지의 경우 읽지 않은 사용자 목록 초기화 (SYSTEM 메시지는 제외)
                     if (!messageUnreadUsersMap.has(messageId)) {
-                        // 채팅방의 모든 사용자를 읽지 않은 사용자로 초기화
-                        const unreadUsers = new Set();
-                        
-                        // roomUsersCache가 있으면 사용, 없으면 멤버 수 기반으로 초기화
-                        if (roomUsersCache.length > 0) {
-                            roomUsersCache.forEach(user => {
-                                if (String(user.id) !== String(msg.userId)) {
-                                    unreadUsers.add(String(user.id));
+                        if (normalizedMsg.type !== 'SYSTEM') {
+                            // 채팅방의 모든 사용자를 읽지 않은 사용자로 초기화
+                            const unreadUsers = new Set();
+                            
+                            // roomUsersCache가 있으면 사용, 없으면 멤버 수 기반으로 초기화
+                            if (roomUsersCache.length > 0) {
+                                roomUsersCache.forEach(user => {
+                                    if (String(user.id) !== String(msg.userId)) {
+                                        unreadUsers.add(String(user.id));
+                                    }
+                                });
+                            } else {
+                                // 채팅방 멤버 수 기반으로 초기화 (자신 제외)
+                                for (let i = 0; i < memberCount - 1; i++) {
+                                    unreadUsers.add(`unknown-${i}`);
                                 }
-                            });
-                        } else {
-                            // 채팅방 멤버 수 기반으로 초기화 (자신 제외)
-                            for (let i = 0; i < memberCount - 1; i++) {
-                                unreadUsers.add(`unknown-${i}`);
                             }
+                            
+                            messageUnreadUsersMap.set(messageId, unreadUsers);
+                            normalizedMsg.unreadCount = unreadUsers.size;
+                        } else {
+                            // SYSTEM 메시지는 읽지 않은 사용자 추적하지 않음
+                            messageUnreadUsersMap.set(messageId, new Set());
+                            normalizedMsg.unreadCount = 0;
                         }
-                        
-                        messageUnreadUsersMap.set(messageId, unreadUsers);
-                        normalizedMsg.unreadCount = unreadUsers.size;
                     } else {
                         // 이미 있는 경우 현재 크기로 설정
                         const unreadUsers = messageUnreadUsersMap.get(messageId);
@@ -788,8 +794,8 @@
                                 appendMessage(normalizedMsg, true); // 스크롤 활성화
                             }
                         }
-                        if (!processedReadIds.has(normalizedMsg.id)) {
-                            // 현재 채팅방에 있을 때만 자동으로 읽음 처리
+                        if (!processedReadIds.has(normalizedMsg.id) && normalizedMsg.type !== 'SYSTEM') {
+                            // 현재 채팅방에 있을 때만 자동으로 읽음 처리 (SYSTEM 메시지는 제외)
                             sendReadMessage(roomId, normalizedMsg.id);
                         }
                     } else {
@@ -1316,11 +1322,23 @@
 
         const div = document.createElement('div');
         div.setAttribute('data-message-id', msg.id);
+        const messageType = msg.type || 'TALK';
         const isMine = msg.isMine || false;
         const nickname = msg.nickname || 'Unknown';
         const content = msg.content || 'No content';
         const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : '';
         const unread = msg.unreadCount > 0 ? `<span class="unread-count text-gray-500 text-xs">${msg.unreadCount}</span>` : '';
+
+        // SYSTEM 타입 메시지는 가운데 회색 말풍선으로 처리
+        if (messageType === 'SYSTEM') {
+            div.className = 'flex justify-center mb-2';
+            div.innerHTML = `
+                <div class="px-3 py-2 bg-gray-400 text-white text-sm rounded-full max-w-xs text-center">
+                    ${content}
+                </div>
+            `;
+            return div;
+        }
 
         const infoBlock = `
             <div class="flex flex-col ${isMine ? 'items-end ml-1' : 'items-start mr-1'} text-gray-500 text-xs leading-tight">
