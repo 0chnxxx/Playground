@@ -18,12 +18,12 @@ class ChannelController(
      */
     @MessageMapping("/chat/rooms/{roomId}/messages/send")
     fun sendChatMessage(
+        principal: UserPrincipal,
         @DestinationVariable
         roomId: UUID,
-        principal: UserPrincipal,
         event: SendChatMessageEvent
     ) {
-        channelService.sendChatMessage(principal.id, roomId, event)
+        channelService.sendChatMessage(principal, roomId, event)
     }
 
     /**
@@ -31,13 +31,13 @@ class ChannelController(
      */
     @MessageMapping("/chat/rooms/{roomId}/messages/{messageId}/read")
     fun readChatMessage(
+        principal: UserPrincipal,
         @DestinationVariable
         roomId: UUID,
         @DestinationVariable
         messageId: UUID,
-        principal: UserPrincipal,
         event: ReadChatMessageEvent
     ) {
-        channelService.readChatMessage(principal.id, roomId, messageId, event)
+        channelService.readChatMessage(principal, roomId, messageId, event)
     }
 }

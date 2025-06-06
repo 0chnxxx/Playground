@@ -1,22 +1,37 @@
 package com.playground.chat.channel.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.playground.chat.channel.client.UserApiClient
 import com.playground.chat.chat.data.event.*
+import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.global.log.logger
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.stereotype.Component
 
 @Component
 class ChannelPublisher(
     private val mapper: ObjectMapper,
     private val redisTemplate: RedisTemplate<String, String>,
-    private val kafkaTemplate: KafkaTemplate<String, String>
+    private val kafkaTemplate: KafkaTemplate<String, String>,
+    private val userApiClient: UserApiClient
 ) {
     private val log = logger()
 
-    fun publishChatMessageSendEvent(event: SendChatMessageEvent) {
+    fun publishChatMessageSendEvent(principal: UserPrincipal?, event: SendChatMessageEvent) {
         try {
+            if (principal != null) {
+                val response = userApiClient.findMe(principal.getBearerPassport())
+                val user = response.data
+
+                event.setSender(
+                    userId = user.id,
+                    image = user.image,
+                    nickname = user.nickname,
+                )
+            }
+
             val sendEventJson = mapper.writeValueAsString(event)
 
             // ChatMessage Insert를 위한 Kafka publish
@@ -31,7 +46,7 @@ class ChannelPublisher(
         }
     }
 
-    fun publishChatMessageReadEvent(event: ReadChatMessageEvent) {
+    fun publishChatMessageReadEvent(principal: UserPrincipal?, event: ReadChatMessageEvent) {
         try {
             val readEventJson = mapper.writeValueAsString(event)
 

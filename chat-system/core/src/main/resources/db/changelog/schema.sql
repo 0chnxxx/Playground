@@ -8,6 +8,7 @@ CREATE TABLE `user` (
     id           BINARY(16)     PRIMARY KEY,
     email        VARCHAR(255)   NOT NULL,
     password     VARCHAR(255)   NOT NULL,
+    image        TEXT           NULL,
     nickname     VARCHAR(255)   NOT NULL,
     created_at   TIMESTAMP      NOT NULL,
     created_by   VARCHAR(255)   NOT NULL,
@@ -20,6 +21,7 @@ DROP TABLE IF EXISTS chat_room;
 CREATE TABLE chat_room (
     id           BINARY(16)     PRIMARY KEY,
     owner_id     BINARY(16)     NOT NULL,
+    image        TEXT           NULL,
     name         VARCHAR(255)   NOT NULL,
     created_at   TIMESTAMP      NOT NULL,
     created_by   VARCHAR(255)   NOT NULL,

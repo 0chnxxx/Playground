@@ -6,6 +6,7 @@ import java.util.UUID
 data class ChatMessageDto(
     val messageId: UUID,
     val userId: UUID?,
+    val image: String? = null,
     val nickname: String,
     val type: String,
     val content: String,
@@ -16,6 +17,7 @@ data class ChatMessageDto(
     constructor(
         messageId: UUID,
         userId: UUID?,
+        image: String?,
         nickname: String?,
         type: String,
         content: String,
@@ -24,6 +26,7 @@ data class ChatMessageDto(
     ) : this(
         messageId = messageId,
         userId = userId,
+        image = image,
         nickname = nickname ?: "SYSTEM",
         type = type,
         content = content,

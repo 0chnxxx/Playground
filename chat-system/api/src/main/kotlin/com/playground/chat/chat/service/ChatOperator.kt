@@ -17,6 +17,7 @@ class ChatOperator(
     fun createChatRoom(user: UserEntity, request: CreateChatRoomRequest): ChatRoomDto {
         val room = ChatRoomEntity(
             owner = user,
+            image = null,
             name = request.name
         )
 

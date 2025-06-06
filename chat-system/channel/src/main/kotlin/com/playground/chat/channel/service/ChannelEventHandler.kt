@@ -14,9 +14,9 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent
 
 @Component
 class ChannelEventHandler(
-    private val chatApiClient: ChatApiClient,
     private val channelPublisher: ChannelPublisher,
-    private val channelSubscriber: ChannelSubscriber
+    private val channelSubscriber: ChannelSubscriber,
+    private val chatApiClient: ChatApiClient
 ) {
     private val log = logger()
 
@@ -75,48 +75,44 @@ class ChannelEventHandler(
 
                 val sendEvent = SendChatMessageEvent(
                     roomId = event.roomId,
-                    nickname = "SYSTEM",
                     type = "SYSTEM",
                     content = "채팅방이 개설되었습니다."
                 )
 
-                channelPublisher.publishChatMessageSendEvent(sendEvent)
+                channelPublisher.publishChatMessageSendEvent(null, sendEvent)
             }
             ChatRoomEvent.Type.JOIN -> {
                 channelSubscriber.subscribeToRoom(event.userId, event.roomId)
 
                 val sendEvent = SendChatMessageEvent(
                     roomId = event.roomId,
-                    nickname = "SYSTEM",
                     type = "SYSTEM",
                     content = event.nickname + "님이 들어왔습니다."
                 )
 
-                channelPublisher.publishChatMessageSendEvent(sendEvent)
+                channelPublisher.publishChatMessageSendEvent(null, sendEvent)
             }
             ChatRoomEvent.Type.LEAVE -> {
                 channelSubscriber.unsubscribeToUserRoom(event.userId, event.roomId)
 
                 val sendEvent = SendChatMessageEvent(
                     roomId = event.roomId,
-                    nickname = "SYSTEM",
                     type = "SYSTEM",
                     content = event.nickname + "님이 나갔습니다."
                 )
 
-                channelPublisher.publishChatMessageSendEvent(sendEvent)
+                channelPublisher.publishChatMessageSendEvent(null, sendEvent)
             }
             ChatRoomEvent.Type.DELETE -> {
                 channelSubscriber.unsubscribeToRoom(event.roomId)
 
                 val sendEvent = SendChatMessageEvent(
                     roomId = event.roomId,
-                    nickname = "SYSTEM",
                     type = "SYSTEM",
                     content = "채팅방이 삭제되었습니다."
                 )
 
-                channelPublisher.publishChatMessageSendEvent(sendEvent)
+                channelPublisher.publishChatMessageSendEvent(null, sendEvent)
             }
         }
     }

@@ -19,6 +19,8 @@ class UserEntity(
 
     var password: String,
 
+    var image: String? = null,
+
     var nickname: String,
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)

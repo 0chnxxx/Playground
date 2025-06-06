@@ -5,6 +5,7 @@ import java.util.UUID
 
 data class ChatRoomDto(
     val id: UUID,
+    val image: String? = null,
     val name: String,
     val lastMessage: String? = null,
     val lastSentAt: Instant? = null,

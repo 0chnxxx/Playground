@@ -52,6 +52,7 @@ class ChatRepository(
                 Projections.constructor(
                     ChatRoomDto::class.java,
                     qRoom.id,
+                    qRoom.image,
                     qRoom.name,
                     qLastMessage.content,
                     qLastMessage.createdAt,
@@ -102,6 +103,7 @@ class ChatRepository(
                 Projections.constructor(
                     MyChatRoomDto::class.java,
                     qRoom.id,
+                    qRoom.image,
                     qRoom.name,
                     qLastMessage.content,
                     qLastMessage.createdAt,
@@ -151,6 +153,7 @@ class ChatRepository(
                     ChatMessageDto::class.java,
                     qMessage.id,
                     qMessage.sender.id,
+                    qMessage.sender.image,
                     qMessage.sender.nickname,
                     qMessage.type.stringValue(),
                     qMessage.content,
@@ -212,6 +215,7 @@ class ChatRepository(
                 Projections.constructor(
                     ChatUserDto::class.java,
                     qUser.id,
+                    qUser.image,
                     qUser.nickname,
                     qRoom.owner.id.eq(qUser.id)
                 )

@@ -18,6 +18,8 @@ class ChatRoomEntity(
     @JoinColumn(name = "owner_id")
     var owner: UserEntity,
 
+    var image: String? = null,
+
     var name: String,
 
     @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])

@@ -54,6 +54,12 @@
             object-fit: cover;
             border-radius: 9999px;
         }
+        .profile-image {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 9999px;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans flex items-center justify-center min-h-screen">
@@ -174,6 +180,7 @@
     let accessToken = localStorage.getItem('accessToken') || null;
     let refreshToken = localStorage.getItem('refreshToken') || null;
     let userId = localStorage.getItem('userId') || null;
+    let image = localStorage.getItem('image') || null;
     let nickname = localStorage.getItem('nickname') || null;
     let stompClient = null;
     let currentRoom = null;
@@ -311,7 +318,6 @@
         try {
             await waitForWebSocketConnection();
             stompClient.send(`/pub/chat/rooms/${roomId}/messages/${messageId}/read`, {}, JSON.stringify(readPayload));
-            console.log('Read message sent:', readPayload);
         } catch (error) {
             console.warn('Failed to send view message:', error, readPayload);
         }
@@ -706,12 +712,13 @@
                         ...msg,
                         id: messageId,
                         roomId: roomId,
-                        isMine: msg.userId == userId,
                         type: msg.type || 'TALK',
+                        image: msg.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E',
                         content: msg.content || msg.message || 'No content',
                         nickname: msg.nickname || 'Unknown',
-                        timestamp: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString(),
                         unreadCount: 0, // 초기값은 0으로 설정
+                        timestamp: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString(),
+                        isMine: msg.userId == userId,
                         isTemporary: false
                     };
                     
@@ -778,7 +785,14 @@
                                 const contentElement = messageElement.querySelector('p.text-sm');
                                 if (contentElement) contentElement.textContent = normalizedMsg.content;
                                 const timestampElement = messageElement.querySelector('.timestamp');
-                                if (timestampElement) timestampElement.textContent = new Date(normalizedMsg.timestamp).toLocaleTimeString();
+                                if (timestampElement && normalizedMsg.timestamp) {
+                                    const date = new Date(normalizedMsg.timestamp);
+                                    timestampElement.textContent = date.toLocaleTimeString('ko-KR', {
+                                        hour12: true,
+                                        hour: 'numeric',
+                                        minute: '2-digit'
+                                    });
+                                }
                             }
                             tempMessageMap.delete(tempId);
                         } else {
@@ -825,7 +839,7 @@
             const messageContent = messageElement.querySelector('.flex.items-end') || messageElement.querySelector('.flex.items-end.flex-row-reverse');
             if (messageContent) {
                 infoBlock = document.createElement('div');
-                infoBlock.className = `flex flex-col ${messageElement.classList.contains('justify-end') ? 'items-end ml-1' : 'items-start mr-1'} text-gray-500 text-xs leading-tight`;
+                infoBlock.className = `flex flex-col ${messageElement.classList.contains('justify-end') ? 'items-end ml-3' : 'items-start mr-3'} text-gray-500 text-xs leading-tight`;
                 messageContent.appendChild(infoBlock);
             } else {
                 console.error('Cannot create infoBlock: no suitable parent found', { messageId, elementHTML: messageElement.outerHTML });
@@ -1067,8 +1081,10 @@
         try {
             const res = await api.get('/users/me');
             userId = res.data.data.id;
+            image = res.data.data.image;
             nickname = res.data.data.nickname;
             localStorage.setItem('userId', userId);
+            localStorage.setItem('image', image);
             localStorage.setItem('nickname', nickname);
         } catch (error) {
             console.error('Failed to fetch user:', error);
@@ -1208,6 +1224,7 @@
                     roomId,
                     isMine: msg.userId == userId,
                     content: msg.content || 'No content',
+                    image: msg.image || msg.senderImage || msg.userImage || msg.profileImage || msg.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E',
                     nickname: msg.nickname || 'Unknown',
                     timestamp: msg.timestamp || new Date().toISOString(),
                     unreadCount: unreadUsers.size,
@@ -1324,16 +1341,28 @@
         div.setAttribute('data-message-id', msg.id);
         const messageType = msg.type || 'TALK';
         const isMine = msg.isMine || false;
+        const image = msg.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E';
         const nickname = msg.nickname || 'Unknown';
         const content = msg.content || 'No content';
-        const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : '';
+        
+        // 시간 형식을 '오전/오후 시간:분'으로 변경
+        let timestamp = '';
+        if (msg.timestamp) {
+            const date = new Date(msg.timestamp);
+            timestamp = date.toLocaleTimeString('ko-KR', {
+                hour12: true,
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+        }
+        
         const unread = msg.unreadCount > 0 ? `<span class="unread-count text-gray-500 text-xs">${msg.unreadCount}</span>` : '';
 
         // SYSTEM 타입 메시지는 가운데 회색 말풍선으로 처리
         if (messageType === 'SYSTEM') {
-            div.className = 'flex justify-center mb-2';
+            div.className = 'flex justify-center mb-3';
             div.innerHTML = `
-                <div class="px-3 py-2 bg-gray-400 text-white text-sm rounded-full max-w-xs text-center">
+                <div class="px-3 py-2 bg-gray-400 text-white text-sm rounded-full max-w-lg text-center">
                     ${content}
                 </div>
             `;
@@ -1341,24 +1370,47 @@
         }
 
         const infoBlock = `
-            <div class="flex flex-col ${isMine ? 'items-end ml-1' : 'items-start mr-1'} text-gray-500 text-xs leading-tight">
+            <div class="flex flex-col ${isMine ? 'items-end' : 'items-start'} text-gray-500 text-xs leading-tight">
                 ${unread}
-                ${timestamp ? `<span class="timestamp ${isMine ? 'mt-1' : ''} text-gray-500 text-xs">${timestamp}</span>` : ''}
+                ${timestamp ? `<span class="timestamp text-gray-500 text-xs whitespace-nowrap">${timestamp}</span>` : ''}
             </div>
         `;
 
-        div.className = `flex items-start mb-2 ${isMine ? 'justify-end' : 'justify-start'}`;
-        div.innerHTML = `
-            <div class="flex flex-col max-w-xs">
-                <p class="text-xs text-gray-600 mb-1 ${isMine ? 'text-right' : 'text-left'}">${nickname}</p>
-                <div class="flex items-end ${isMine ? 'flex-row-reverse' : 'flex-row'}">
-                    <div class="p-3 rounded-lg ${isMine ? 'bg-blue-500 text-white ml-1' : 'bg-gray-200 text-gray-800 mr-1'}">
-                        <p class="text-sm">${content}</p>
+        div.className = `flex mb-3 ${isMine ? 'justify-end' : 'justify-start'}`;
+        
+        if (isMine) {
+            // 내 메시지: 오른쪽 정렬
+            div.innerHTML = `
+                <div class="flex items-start flex-row-reverse max-w-lg">
+                    <img src="${image}" class="profile-image ml-2" alt="Profile image">
+                    <div class="flex flex-col flex-1">
+                        <p class="text-xs text-gray-600 mb-1 text-right mr-1">${nickname}</p>
+                        <div class="flex items-end flex-row-reverse gap-2">
+                            <div class="p-3 rounded-lg bg-blue-500 text-white max-w-full break-words">
+                                <p class="text-sm">${content}</p>
+                            </div>
+                            ${infoBlock}
+                        </div>
                     </div>
-                    ${infoBlock}
                 </div>
-            </div>
-        `;
+            `;
+        } else {
+            // 상대방 메시지: 왼쪽 정렬
+            div.innerHTML = `
+                <div class="flex items-start max-w-lg">
+                    <img src="${image}" class="profile-image mr-2" alt="Profile image">
+                    <div class="flex flex-col flex-1">
+                        <p class="text-xs text-gray-600 mb-1 text-left ml-1">${nickname}</p>
+                        <div class="flex items-end flex-row gap-2">
+                            <div class="p-3 rounded-lg bg-gray-200 text-gray-800 max-w-full break-words">
+                                <p class="text-sm">${content}</p>
+                            </div>
+                            ${infoBlock}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
         return div;
     }
@@ -1379,7 +1431,14 @@
             const contentElement = existingElement.querySelector('p.text-sm');
             if (contentElement) contentElement.textContent = msg.content;
             const timestampElement = existingElement.querySelector('.timestamp');
-            if (timestampElement) timestampElement.textContent = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : '';
+            if (timestampElement && msg.timestamp) {
+                const date = new Date(msg.timestamp);
+                timestampElement.textContent = date.toLocaleTimeString('ko-KR', {
+                    hour12: true,
+                    hour: 'numeric',
+                    minute: '2-digit'
+                });
+            }
             updateUnreadSpan(existingElement, msg.id, msg.unreadCount);
             return;
         }
@@ -1442,6 +1501,7 @@
                 id: tempId,
                 roomId: currentRoom.id,
                 userId: userId,
+                image: image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E', // 기본 프로필 이미지
                 nickname: nickname,
                 content: content,
                 isMine: true,
@@ -1455,7 +1515,6 @@
             stompClient.send(`/pub/chat/rooms/${currentRoom.id}/messages/send`, {}, JSON.stringify({
                 roomId: currentRoom.id,
                 userId: userId,
-                nickname: nickname,
                 type: 'TALK',
                 content: content
             }));

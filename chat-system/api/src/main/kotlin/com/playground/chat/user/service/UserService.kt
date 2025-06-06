@@ -64,6 +64,7 @@ class UserService(
 
         return UserDto(
             id = user.id!!,
+            image = user.image,
             nickname = user.nickname
         )
     }
