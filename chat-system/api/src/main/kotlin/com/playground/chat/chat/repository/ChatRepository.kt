@@ -286,7 +286,7 @@ class ChatRepository(
 
         jpaQueryFactory
             .update(qChat)
-            .set(qChat.lastMessage.id, messageId)
+            .set(qChat.lastMessageId, messageId)
             .set(qChat.lastReadAt, Instant.now())
             .where(
                 qChat.room.id.eq(roomId),
@@ -306,7 +306,7 @@ class ChatRepository(
 
         jpaQueryFactory
             .update(qChat)
-            .set(qChat.lastMessage.id, lastMessage)
+            .set(qChat.lastMessageId, lastMessage)
             .set(qChat.lastReadAt, Instant.now())
             .where(
                 qChat.room.id.eq(roomId),

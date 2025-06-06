@@ -69,9 +69,6 @@ CREATE TABLE chat (
     updated_by      VARCHAR(255)   NULL,
     is_deleted      TINYINT(1)     NOT NULL,
     PRIMARY KEY (user_id, room_id),
-    CONSTRAINT chat_chat_message_id_fk
-        FOREIGN KEY (last_message_id) REFERENCES chat_message (id)
-            ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT chat_user_user_id_fk
         FOREIGN KEY (user_id) REFERENCES `user` (id)
             ON DELETE CASCADE,

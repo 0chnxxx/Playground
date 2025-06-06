@@ -21,9 +21,8 @@ class ChatEntity(
     @JoinColumn(name = "room_id")
     var room: ChatRoomEntity,
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
-    @JoinColumn(name = "last_message_id")
-    var lastMessage: ChatMessageEntity? = null,
+    @Column(name = "last_message_id")
+    var lastMessageId: UUID? = null,
 
     @Column(name = "last_read_at")
     var lastReadAt: Instant? = null,
