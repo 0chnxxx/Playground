@@ -1,5 +1,9 @@
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
+plugins {
+    kotlin("plugin.allopen")
+}
+
 dependencies {
     implementation(project(":core"))
 
@@ -18,6 +22,10 @@ dependencies {
     // ObjectMapper
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+}
+
+allOpen {
+    annotation("org.springframework.cloud.openfeign.FeignClient")
 }
 
 val jar: Jar by tasks
