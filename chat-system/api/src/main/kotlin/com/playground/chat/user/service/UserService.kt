@@ -19,6 +19,10 @@ class UserService(
 ) {
     @Transactional
     fun register(request: RegisterUserRequest): UserTokenDto {
+        if (userFinder.existsUser(request.email)) {
+            throw Exception("User Email Duplicate")
+        }
+
         val user = userOperator.createUser(request)
 
         val accessToken = tokenProvider.generate(TokenType.ACESS, user.id!!)
