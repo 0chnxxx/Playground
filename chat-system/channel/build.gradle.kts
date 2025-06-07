@@ -1,7 +1,18 @@
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
+val jar: Jar by tasks
+val bootJar: BootJar by tasks
+
+bootJar.enabled = true
+jar.enabled = true
+
+
 plugins {
     kotlin("plugin.allopen")
+}
+
+allOpen {
+    annotation("org.springframework.cloud.openfeign.FeignClient")
 }
 
 dependencies {
@@ -23,13 +34,3 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }
-
-allOpen {
-    annotation("org.springframework.cloud.openfeign.FeignClient")
-}
-
-val jar: Jar by tasks
-val bootJar: BootJar by tasks
-
-bootJar.enabled = true
-jar.enabled = true

@@ -1,8 +1,3 @@
-SET GLOBAL SQL_MODE = '';
-SET GLOBAL TIME_ZONE = '+00:00';
-
-SET FOREIGN_KEY_CHECKS = 0;
-
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user`
 (
@@ -83,5 +78,3 @@ CREATE TABLE chat
 );
 
 CREATE INDEX chat_room_id_idx ON chat (room_id);
-
-SET FOREIGN_KEY_CHECKS = 1;

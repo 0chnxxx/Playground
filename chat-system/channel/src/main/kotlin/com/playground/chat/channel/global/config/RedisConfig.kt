@@ -9,7 +9,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.listener.RedisMessageListenerContainer
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
-import org.springframework.data.redis.serializer.RedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 
 @Configuration
@@ -56,7 +55,7 @@ class RedisConfig(
     ): RedisMessageListenerContainer {
         val container = RedisMessageListenerContainer()
 
-        container.connectionFactory = redisConnectionFactory
+        container.setConnectionFactory(redisConnectionFactory)
 
         return container
     }

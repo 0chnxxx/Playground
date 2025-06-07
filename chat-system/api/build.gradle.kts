@@ -1,9 +1,22 @@
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
+val queryDslVersion: String by project
+
+val jar: Jar by tasks
+val bootJar: BootJar by tasks
+
+bootJar.enabled = true
+jar.enabled = true
+
 plugins {
     kotlin("kapt")
+    kotlin("plugin.jpa")
     kotlin("plugin.allopen")
-    kotlin("plugin.jpa") version "1.9.25"
+}
+
+allOpen {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
 }
 
 dependencies {
@@ -25,22 +38,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
     // QueryDSL
-    implementation("io.github.openfeign.querydsl:querydsl-core:6.10.1")
-    implementation("io.github.openfeign.querydsl:querydsl-jpa:6.10.1")
-    kapt("io.github.openfeign.querydsl:querydsl-apt:6.10.1:jpa")
+    implementation("io.github.openfeign.querydsl:querydsl-core:$queryDslVersion")
+    implementation("io.github.openfeign.querydsl:querydsl-jpa:$queryDslVersion")
+    kapt("io.github.openfeign.querydsl:querydsl-apt:$queryDslVersion:jpa")
 
     // ObjectMapper
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }
-
-allOpen {
-    annotation("jakarta.persistence.Entity")
-    annotation("jakarta.persistence.MappedSuperclass")
-}
-
-val jar: Jar by tasks
-val bootJar: BootJar by tasks
-
-bootJar.enabled = true
-jar.enabled = true

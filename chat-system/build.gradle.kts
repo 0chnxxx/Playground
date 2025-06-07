@@ -1,13 +1,26 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+val projectGroup: String by project
+val projectVersion: String by project
+val javaVersion: String by project
+val jvmVersion: String by project
+val springCloudVersion: String by project
+
 plugins {
-    kotlin("jvm") version "1.9.25"
-    kotlin("plugin.spring") version "1.9.25"
-    id("org.springframework.boot") version "3.4.0"
-    id("io.spring.dependency-management") version "1.1.6"
+    kotlin("jvm")
+    kotlin("plugin.spring")
+    id("org.springframework.boot")
+    id("io.spring.dependency-management")
 }
 
 allprojects {
-    group = "com.playground.chat"
-    version = "1.0"
+    group = projectGroup
+    version = projectVersion
+
+    repositories {
+        mavenCentral()
+    }
 
     apply(plugin = "java")
     apply(plugin = "org.jetbrains.kotlin.jvm")
@@ -15,13 +28,17 @@ allprojects {
     apply(plugin = "org.springframework.boot")
     apply(plugin = "io.spring.dependency-management")
 
-    repositories {
-        mavenCentral()
+    java {
+        sourceCompatibility = JavaVersion.valueOf(javaVersion)
+        targetCompatibility = JavaVersion.valueOf(javaVersion)
     }
 
-    java {
-        toolchain {
-            languageVersion.set(JavaLanguageVersion.of(17))
+    tasks.withType<KotlinCompile> {
+        kotlin {
+            compilerOptions {
+                jvmTarget.set(JvmTarget.valueOf(jvmVersion))
+                freeCompilerArgs.add("-Xjsr305=strict")
+            }
         }
     }
 
@@ -39,7 +56,7 @@ allprojects {
 subprojects {
     dependencyManagement {
         imports {
-            mavenBom("org.springframework.cloud:spring-cloud-dependencies:2024.0.1")
+            mavenBom("org.springframework.cloud:spring-cloud-dependencies:$springCloudVersion")
         }
     }
 
