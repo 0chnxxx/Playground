@@ -1,10 +1,10 @@
 package com.playground.chat.global.util
 
-import com.fasterxml.uuid.Generators
-import java.util.UUID
+import com.github.f4b6a3.uuid.UuidCreator
+import java.util.*
 
 object UuidUtil {
     fun generateUuidV7(): UUID {
-        return Generators.timeBasedGenerator().generate()
+        return UuidCreator.getTimeOrderedEpoch()
     }
 }

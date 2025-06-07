@@ -8,7 +8,7 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt:0.12.6")
 
     // Java UUID Generator (UUIDv7)
-    implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
+    implementation("com.github.f4b6a3:uuid-creator:6.1.1")
 
     // Liquibase
     implementation("org.liquibase:liquibase-core")

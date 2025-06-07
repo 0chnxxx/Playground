@@ -52,7 +52,7 @@ class ChatRepository(
         val qMessage = QChatMessageEntity("message")
         val qLastMessage = QChatMessageEntity("lastMessage")
 
-        val joinedAt = jpaQueryFactory
+        val joinedAt = JPAExpressions
             .select(qFirstChat.joinedAt)
             .from(qFirstChat)
             .where(
@@ -128,7 +128,7 @@ class ChatRepository(
         val qLastMessage = QChatMessageEntity("lastMessage")
         val qUnreadMessage = QChatMessageEntity("unreadMessage")
 
-        val joinedAt = jpaQueryFactory
+        val joinedAt = JPAExpressions
             .select(qFirstChat.joinedAt)
             .from(qFirstChat)
             .where(
@@ -202,7 +202,7 @@ class ChatRepository(
         val qRoom = QChatRoomEntity("room")
         val qMessage = QChatMessageEntity("message")
 
-        val joinedAt = jpaQueryFactory
+        val joinedAt = JPAExpressions
             .select(qFirstChat.joinedAt)
             .from(qFirstChat)
             .where(
