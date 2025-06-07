@@ -287,7 +287,8 @@ class ChatRepository(
                     qUser.id,
                     qUser.image,
                     qUser.nickname,
-                    qRoom.owner.id.eq(qUser.id)
+                    qRoom.owner.id.eq(qUser.id),
+                    qUser.id.eq(userId)
                 )
             )
             .from(qChat)

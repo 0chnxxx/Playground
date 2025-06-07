@@ -15,16 +15,17 @@
             flex-direction: column;
         }
         #drawer {
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             transform: translateX(100%);
             display: none;
             position: absolute;
             right: 0;
-            width: 66.666667%;
+            width: 65%;
             height: 100%;
+            backdrop-filter: blur(10px);
         }
         #drawer-overlay {
-            transition: opacity 0.3s ease-in-out;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             opacity: 0;
             pointer-events: none;
             position: absolute;
@@ -154,16 +155,23 @@
             </div>
         </div>
         <div id="drawer-overlay" class="hidden bg-black bg-opacity-50 z-10"></div>
-        <div id="drawer" class="bg-white shadow-lg z-20 flex flex-col">
-            <div class="p-6 bg-blue-500 text-white flex items-center justify-between shrink-0">
-                <h2 class="text-lg font-bold">채팅방 유저</h2>
-                <button id="drawer-close-btn" class="text-white hover:text-gray-200">
+        <div id="drawer" class="bg-white shadow-2xl z-20 flex flex-col">
+            <div class="p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white flex items-center justify-between shrink-0">
+                <div class="flex items-center space-x-2">
+                    <h2 class="text-lg font-bold">채팅방 유저</h2>
+                </div>
+                <button id="drawer-close-btn" class="text-white hover:text-gray-200 p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-all duration-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
-            <div id="room-users-list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
-            <div class="p-4 border-t shrink-0">
-                <button id="leave-room-btn" class="w-full p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">채팅방 나가기</button>
+            <div id="room-users-list" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50"></div>
+            <div class="p-4 border-t border-gray-200 bg-white shrink-0">
+                <button id="leave-room-btn" class="w-full p-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    <div class="flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                        <span>채팅방 나가기</span>
+                    </div>
+                </button>
             </div>
         </div>
     </div>
@@ -440,10 +448,34 @@
         }
         roomUsersCache.forEach(user => {
             const div = document.createElement('div');
-            div.className = 'p-2 bg-gray-100 rounded-lg flex items-center space-x-2';
+            div.className = 'p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-200 flex items-center space-x-3';
+            const userImage = user.image || user.profileImage || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E';
+            
+            // 진짜 왕관 아이콘과 "나" 뱃지 설정
+            let crownIcon = '';
+            let badge = '';
+            
+            if (user.isOwner) {
+                // 진짜 왕관 아이콘
+                crownIcon = '<div class="absolute -top-2 -left-2 w-6 h-6 bg-gradient-to-r from-white-400 to-white-600 rounded-full flex items-center justify-center shadow-lg text-[14px] leading-none">👑</div>';
+            }
+            
+            if (user.isMe) {
+                // "나" 뱃지 (파란색)
+                badge = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 ring-1 ring-blue-300">나</span>';
+            }
+            
             div.innerHTML = `
-                <span class="text-gray-800">${user.nickname}</span>
-                ${user.isOwner ? '<svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3 6h6l-3 6 3 6h-6l-3-6-3 6H3l3-6-3-6h6l3-6z" /></svg>' : ''}
+                <div class="relative">
+                    <img src="${userImage}" class="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200" alt="Profile image">
+                    ${crownIcon}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-gray-900 font-medium truncate">${user.nickname}</span>
+                        ${badge}
+                    </div>
+                </div>
             `;
             usersList.appendChild(div);
         });
@@ -734,9 +766,9 @@
                         id: messageId,
                         roomId: roomId,
                         type: msg.type || 'TALK',
-                        image: msg.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E',
+                        image: msg.image || msg.userImage || msg.profileImage || msg.senderImage || msg.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E',
                         content: msg.content || msg.message || 'No content',
-                        nickname: msg.nickname || 'Unknown',
+                        nickname: msg.nickname || msg.senderNickname || msg.userName || 'Unknown',
                         unreadCount: 0, // 초기값은 0으로 설정
                         timestamp: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString(),
                         isMine: msg.userId == userId,
@@ -1246,7 +1278,7 @@
                     isMine: msg.userId == userId,
                     content: msg.content || 'No content',
                     image: msg.image || msg.senderImage || msg.userImage || msg.profileImage || msg.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E',
-                    nickname: msg.nickname || 'Unknown',
+                    nickname: msg.nickname || msg.senderNickname || msg.userName || 'Unknown',
                     timestamp: msg.timestamp || new Date().toISOString(),
                     unreadCount: unreadUsers.size,
                     isTemporary: false
@@ -1362,8 +1394,9 @@
         div.setAttribute('data-message-id', msg.id);
         const messageType = msg.type || 'TALK';
         const isMine = msg.isMine || false;
-        const image = msg.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E';
-        const nickname = msg.nickname || 'Unknown';
+        // 프로필 이미지 설정 개선 - 여러 필드 체크
+        const image = msg.image || msg.userImage || msg.profileImage || msg.senderImage || msg.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E';
+        const nickname = msg.nickname || msg.senderNickname || msg.userName || 'Unknown';
         const content = msg.content || 'No content';
         
         // 시간 형식을 '오전/오후 시간:분'으로 변경
@@ -1403,7 +1436,7 @@
             // 내 메시지: 오른쪽 정렬
             div.innerHTML = `
                 <div class="flex items-start flex-row-reverse max-w-lg">
-                    <img src="${image}" class="profile-image ml-2" alt="Profile image">
+                    <img src="${image}" class="w-10 h-10 rounded-full object-cover ring-2 ring-blue-200 ml-2" alt="Profile image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E'">
                     <div class="flex flex-col flex-1">
                         <p class="text-xs text-gray-600 mb-1 text-right mr-1">${nickname}</p>
                         <div class="flex items-end flex-row-reverse gap-2">
@@ -1419,7 +1452,7 @@
             // 상대방 메시지: 왼쪽 정렬
             div.innerHTML = `
                 <div class="flex items-start max-w-lg">
-                    <img src="${image}" class="profile-image mr-2" alt="Profile image">
+                    <img src="${image}" class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 mr-2" alt="Profile image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E'">
                     <div class="flex flex-col flex-1">
                         <p class="text-xs text-gray-600 mb-1 text-left ml-1">${nickname}</p>
                         <div class="flex items-end flex-row gap-2">
@@ -1522,8 +1555,8 @@
                 id: tempId,
                 roomId: currentRoom.id,
                 userId: userId,
-                image: image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E', // 기본 프로필 이미지
-                nickname: nickname,
+                image: image || localStorage.getItem('image') || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E',
+                nickname: nickname || localStorage.getItem('nickname') || 'Unknown',
                 content: content,
                 isMine: true,
                 timestamp: new Date().toISOString(),
