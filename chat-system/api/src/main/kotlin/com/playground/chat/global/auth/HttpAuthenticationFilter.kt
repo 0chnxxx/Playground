@@ -23,7 +23,7 @@ class HttpAuthenticationFilter(
     private val tokenProvider: TokenProvider,
     private val userFinder: UserFinder
 ): OncePerRequestFilter() {
-    private val excludedPaths = listOf("/users/login", "/users/register")
+    private val excludedPaths = listOf("/", "/users/login", "/users/register")
 
     override fun doFilterInternal(
         request: HttpServletRequest,
