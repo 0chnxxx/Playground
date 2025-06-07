@@ -449,7 +449,7 @@
         roomUsersCache.forEach(user => {
             const div = document.createElement('div');
             div.className = 'p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-200 flex items-center space-x-3';
-            const userImage = user.image || user.profileImage || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E';
+            const userImage = user.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E';
             
             // 진짜 왕관 아이콘과 "나" 뱃지 설정
             let crownIcon = '';
@@ -766,7 +766,7 @@
                         id: messageId,
                         roomId: roomId,
                         type: msg.type || 'TALK',
-                        image: msg.image || msg.userImage || msg.profileImage || msg.senderImage || msg.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E',
+                        image: msg.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E',
                         content: msg.content || msg.message || 'No content',
                         nickname: msg.nickname || msg.senderNickname || msg.userName || 'Unknown',
                         unreadCount: 0, // 초기값은 0으로 설정
@@ -1277,7 +1277,7 @@
                     roomId,
                     isMine: msg.userId == userId,
                     content: msg.content || 'No content',
-                    image: msg.image || msg.senderImage || msg.userImage || msg.profileImage || msg.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E',
+                    image: msg.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E',
                     nickname: msg.nickname || msg.senderNickname || msg.userName || 'Unknown',
                     timestamp: msg.timestamp || new Date().toISOString(),
                     unreadCount: unreadUsers.size,
@@ -1395,7 +1395,7 @@
         const messageType = msg.type || 'TALK';
         const isMine = msg.isMine || false;
         // 프로필 이미지 설정 개선 - 여러 필드 체크
-        const image = msg.image || msg.userImage || msg.profileImage || msg.senderImage || msg.avatar || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E';
+        const image = msg.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E';
         const nickname = msg.nickname || msg.senderNickname || msg.userName || 'Unknown';
         const content = msg.content || 'No content';
         
@@ -1436,7 +1436,7 @@
             // 내 메시지: 오른쪽 정렬
             div.innerHTML = `
                 <div class="flex items-start flex-row-reverse max-w-lg">
-                    <img src="${image}" class="w-10 h-10 rounded-full object-cover ring-2 ring-blue-200 ml-2" alt="Profile image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E'">
+                    <img src="${image}" class="w-10 h-10 rounded-full object-cover ml-2" alt="Profile image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E'">
                     <div class="flex flex-col flex-1">
                         <p class="text-xs text-gray-600 mb-1 text-right mr-1">${nickname}</p>
                         <div class="flex items-end flex-row-reverse gap-2">
@@ -1452,7 +1452,7 @@
             // 상대방 메시지: 왼쪽 정렬
             div.innerHTML = `
                 <div class="flex items-start max-w-lg">
-                    <img src="${image}" class="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 mr-2" alt="Profile image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E'">
+                    <img src="${image}" class="w-10 h-10 rounded-full object-cover mr-2" alt="Profile image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23e5e7eb%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2212%22/%3E%3C/svg%3E'">
                     <div class="flex flex-col flex-1">
                         <p class="text-xs text-gray-600 mb-1 text-left ml-1">${nickname}</p>
                         <div class="flex items-end flex-row gap-2">
