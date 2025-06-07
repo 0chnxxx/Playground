@@ -35,18 +35,29 @@ class ChatRepository(
             .fetchOne()
     }
 
+    fun findChatRoomByRoomId(roomId: UUID): ChatRoomEntity? {
+        val qRoom = QChatRoomEntity("room")
+
+        return jpaQueryFactory
+            .selectFrom(qRoom)
+            .where(qRoom.id.eq(roomId))
+            .fetchOne()
+    }
+
     fun findChatRooms(userId: UUID, request: FindChatRoomsRequest): Pagination<List<ChatRoomDto>> {
         val qRoom = QChatRoomEntity("room")
         val qChat = QChatEntity("chat")
         val qMyChat = QChatEntity("myChat")
+        val qFirstChat = QChatEntity("firstChat")
+        val qMessage = QChatMessageEntity("message")
         val qLastMessage = QChatMessageEntity("lastMessage")
 
         val joinedAt = jpaQueryFactory
-            .select(qChat.joinedAt)
-            .from(qChat)
+            .select(qFirstChat.joinedAt)
+            .from(qFirstChat)
             .where(
-                qChat.room.id.eq(qRoom.id),
-                qChat.user.id.eq(userId)
+                qFirstChat.room.id.eq(qRoom.id),
+                qFirstChat.user.id.eq(userId)
             )
 
         val lastMessage = JPAExpressions
@@ -81,8 +92,8 @@ class ChatRepository(
                     qRoom.id,
                     qRoom.image,
                     qRoom.name,
-                    qLastMessage.content,
-                    qLastMessage.createdAt,
+                    qMessage.content,
+                    qMessage.createdAt,
                     memberCount,
                     qMyChat.isNotNull
                 )
@@ -93,12 +104,12 @@ class ChatRepository(
                 qMyChat.room.id.eq(qRoom.id),
                 qMyChat.user.id.eq(userId)
             )
-            .leftJoin(qRoom.messages, qLastMessage)
-            .on(qLastMessage.id.eq(lastMessage))
+            .leftJoin(qRoom.messages, qMessage)
+            .on(qMessage.id.eq(lastMessage))
             .offset((request.page - 1) * request.size.toLong())
             .limit(request.size.toLong())
             .groupBy(qRoom.id)
-            .orderBy(qLastMessage.createdAt.desc(), qLastMessage.id.desc())
+            .orderBy(qMessage.createdAt.desc(), qMessage.id.desc())
             .fetch()
 
         return Pagination.of(
@@ -112,15 +123,17 @@ class ChatRepository(
     fun findChatRoomsByUserId(userId: UUID): List<MyChatRoomDto> {
         val qRoom = QChatRoomEntity("room")
         val qChat = QChatEntity("chat")
+        val qFirstChat = QChatEntity("firstChat")
+        val qMessage = QChatMessageEntity("message")
         val qLastMessage = QChatMessageEntity("lastMessage")
         val qUnreadMessage = QChatMessageEntity("unreadMessage")
 
         val joinedAt = jpaQueryFactory
-            .select(qChat.joinedAt)
-            .from(qChat)
+            .select(qFirstChat.joinedAt)
+            .from(qFirstChat)
             .where(
-                qChat.room.id.eq(qRoom.id),
-                qChat.user.id.eq(userId)
+                qFirstChat.room.id.eq(qRoom.id),
+                qFirstChat.user.id.eq(userId)
             )
 
         val lastMessage = JPAExpressions
@@ -151,29 +164,20 @@ class ChatRepository(
                     qRoom.id,
                     qRoom.image,
                     qRoom.name,
-                    qLastMessage.content,
-                    qLastMessage.createdAt,
+                    qMessage.content,
+                    qMessage.createdAt,
                     memberCount,
                     unreadCount
                 )
             )
             .from(qRoom)
             .leftJoin(qRoom.chats, qChat)
-            .leftJoin(qRoom.messages, qLastMessage)
-            .on(qLastMessage.id.eq(lastMessage))
+            .leftJoin(qRoom.messages, qMessage)
+            .on(qMessage.id.eq(lastMessage))
             .where(qChat.user.id.eq(userId))
             .groupBy(qRoom.id)
-            .orderBy(qLastMessage.createdAt.desc(), qLastMessage.id.desc())
+            .orderBy(qMessage.createdAt.desc(), qMessage.id.desc())
             .fetch()
-    }
-
-    fun findChatRoomByRoomId(roomId: UUID): ChatRoomEntity? {
-        val qRoom = QChatRoomEntity("room")
-
-        return jpaQueryFactory
-            .selectFrom(qRoom)
-            .where(qRoom.id.eq(roomId))
-            .fetchOne()
     }
 
     fun findLastChatMessageByRoomId(roomId: UUID): ChatMessageEntity? {
@@ -193,17 +197,17 @@ class ChatRepository(
         request: FindChatMessagesRequest
     ): Pagination<List<ChatMessageDto>> {
         val qUser = QUserEntity("user")
-        val qChat = QChatEntity("chat")
+        val qFirstChat = QChatEntity("firstChat")
         val qUnreadChat = QChatEntity("unreadChat")
         val qRoom = QChatRoomEntity("room")
         val qMessage = QChatMessageEntity("message")
 
         val joinedAt = jpaQueryFactory
-            .select(qChat.joinedAt)
-            .from(qChat)
+            .select(qFirstChat.joinedAt)
+            .from(qFirstChat)
             .where(
-                qChat.room.id.eq(roomId),
-                qChat.user.id.eq(userId)
+                qFirstChat.room.id.eq(qRoom.id),
+                qFirstChat.user.id.eq(userId)
             )
 
         val totalCount = jpaQueryFactory
