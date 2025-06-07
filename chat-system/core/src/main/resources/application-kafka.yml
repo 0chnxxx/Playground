@@ -1,8 +1,8 @@
 spring:
   kafka:
+    group-id: chat-group
     bootstrap-servers: kafka:9092
     consumer:
-      group-id: chat-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:

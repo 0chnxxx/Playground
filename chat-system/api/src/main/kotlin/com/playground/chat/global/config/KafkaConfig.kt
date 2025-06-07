@@ -11,12 +11,16 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 
 @Configuration
 class KafkaConfig {
+    @Value("\${spring.kafka.group-id}")
+    lateinit var groupId: String
+
     @Value("\${spring.kafka.bootstrap-servers}")
     lateinit var bootstrapServers: String
 
     @Bean
     fun consumerFactory(): ConsumerFactory<String, String> {
         val props = mapOf(
+            ConsumerConfig.GROUP_ID_CONFIG to groupId,
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapServers,
             ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java,
             ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to StringDeserializer::class.java
@@ -26,7 +30,7 @@ class KafkaConfig {
     }
 
     @Bean
-    fun chatKafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, String> {
+    fun kafkaListenerContainerFactory(): ConcurrentKafkaListenerContainerFactory<String, String> {
         val factory = ConcurrentKafkaListenerContainerFactory<String, String>()
 
         factory.consumerFactory = consumerFactory()

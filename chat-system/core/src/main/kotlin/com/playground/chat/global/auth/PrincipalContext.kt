@@ -1,15 +1,18 @@
 package com.playground.chat.global.auth
 
+import com.playground.chat.global.log.logger
+
 object PrincipalContext {
+    val log = logger()
     private val currentPrincipal = ThreadLocal<CustomPrincipal>()
 
-    fun <T> operate(principal: CustomPrincipal?, function: () -> T): T {
+    fun <T> operate(principal: CustomPrincipal?, function: () -> T, after: (() -> Unit)): T {
         try {
             this.setPrincipal(principal)
 
             return function()
         } finally {
-            this.clear()
+            after.invoke()
         }
     }
 
@@ -21,7 +24,7 @@ object PrincipalContext {
         currentPrincipal.set(principal)
     }
 
-    private fun clear() {
+    fun clear() {
         currentPrincipal.remove()
     }
 }

@@ -12,12 +12,12 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-@Transactional
 class UserService(
     private val tokenProvider: TokenProvider,
     private val userFinder: UserFinder,
     private val userOperator: UserOperator
 ) {
+    @Transactional
     fun register(request: RegisterUserRequest): UserTokenDto {
         val user = userOperator.createUser(request)
 
@@ -30,6 +30,7 @@ class UserService(
         )
     }
 
+    @Transactional(readOnly = true)
     fun login(request: LoginUserRequest): UserTokenDto {
         val user = userFinder.findUser(request.email)
 
@@ -46,6 +47,7 @@ class UserService(
         )
     }
 
+    @Transactional(readOnly = true)
     fun refresh(principal: CustomPrincipal): UserTokenDto {
         val user = userFinder.findUser(principal.id)
 
@@ -58,6 +60,7 @@ class UserService(
         )
     }
 
+    @Transactional(readOnly = true)
     fun findMe(principal: CustomPrincipal): UserDto {
         val user = userFinder.findUser(principal.id)
 
