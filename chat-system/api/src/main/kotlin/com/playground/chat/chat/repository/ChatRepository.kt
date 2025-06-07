@@ -154,7 +154,8 @@ class ChatRepository(
             .from(qUnreadMessage)
             .where(
                 qUnreadMessage.room.id.eq(qRoom.id),
-                qUnreadMessage.createdAt.gt(qChat.lastReadAt)
+                qUnreadMessage.createdAt.gt(qChat.lastReadAt),
+                qUnreadMessage.sender.id.ne(userId)
             )
 
         return jpaQueryFactory
@@ -261,14 +262,15 @@ class ChatRepository(
                 .leftJoin(qUnreadChat.user, qUser)
                 .where(qMessage.id.`in`(messageIds))
                 .fetch()
-                .filter { it.get(qUnreadChat.user) != null }
-                .groupBy({ it.get(qMessage.id)!! }, { it.get(qUnreadChat.user.id)!! })
+                .groupBy({ it.get(qMessage.id) }, { it.get(qUnreadChat.user.id) })
         } else {
             emptyMap()
         }
 
         val finalMessages = messages.map { message ->
-            message.copy(unreadUserIds = unreadUsers[message.messageId] ?: emptyList())
+            val userIds = unreadUsers[message.messageId]?.filter { it != null }?.map { it as UUID }
+
+            message.copy(unreadUserIds = userIds ?: emptyList())
         }
 
         return Pagination.of(
