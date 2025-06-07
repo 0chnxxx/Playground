@@ -1,6 +1,7 @@
 package com.playground.chat.channel.global.auth
 
-import com.playground.chat.global.auth.UserPrincipal
+import com.playground.chat.global.auth.CustomPrincipal
+import com.playground.chat.global.auth.PrincipalRole
 import com.playground.chat.global.auth.TokenProvider
 import com.playground.chat.global.auth.TokenType
 import org.springframework.http.server.ServerHttpRequest
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.socket.WebSocketHandler
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler
 import java.security.Principal
-import java.util.UUID
+import java.util.*
 
 @Component
 class AuthenticationHandshakeHandler(
@@ -30,8 +31,9 @@ class AuthenticationHandshakeHandler(
             val userId = UUID.fromString(tokenProvider.parse(token, "userId").toString())
             val passport = tokenProvider.generate(TokenType.PASSPORT, userId)
 
-            return UserPrincipal(
+            return CustomPrincipal(
                 id = userId,
+                role = PrincipalRole.USER,
                 passport = passport
             )
         } else {

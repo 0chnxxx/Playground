@@ -1,10 +1,10 @@
 package com.playground.chat.channel.service
 
-import com.playground.chat.global.log.logger
-import com.playground.chat.global.auth.UserPrincipal
 import com.playground.chat.channel.client.ChatApiClient
 import com.playground.chat.chat.data.event.ChatRoomEvent
 import com.playground.chat.chat.data.event.SendChatMessageEvent
+import com.playground.chat.global.auth.CustomPrincipal
+import com.playground.chat.global.log.logger
 import org.springframework.context.event.EventListener
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.stereotype.Component
@@ -28,7 +28,7 @@ class ChannelEventHandler(
     @EventListener
     fun handleChatConnect(event: SessionConnectEvent) {
         val accessor = StompHeaderAccessor.wrap(event.message)
-        val principal = accessor.user!! as UserPrincipal
+        val principal = accessor.user!! as CustomPrincipal
         val sessionId = accessor.sessionId!!
         val userId = principal.id
 
@@ -44,7 +44,7 @@ class ChannelEventHandler(
     @EventListener
     fun handleChatConnected(event: SessionConnectedEvent) {
         val accessor = StompHeaderAccessor.wrap(event.message)
-        val principal = accessor.user!! as UserPrincipal
+        val principal = accessor.user!! as CustomPrincipal
         val sessionId = accessor.sessionId!!
         val userId = principal.id
 
@@ -58,7 +58,7 @@ class ChannelEventHandler(
     @EventListener
     fun handleChatDisconnect(event: SessionDisconnectEvent) {
         val accessor = StompHeaderAccessor.wrap(event.message)
-        val principal = accessor.user!! as UserPrincipal
+        val principal = accessor.user!! as CustomPrincipal
         val sessionId = accessor.sessionId!!
         val userId = principal.id
 
@@ -81,6 +81,7 @@ class ChannelEventHandler(
 
                 channelPublisher.publishChatMessageSendEvent(null, sendEvent)
             }
+
             ChatRoomEvent.Type.JOIN -> {
                 channelSubscriber.subscribeToRoom(event.userId, event.roomId)
 
@@ -92,6 +93,7 @@ class ChannelEventHandler(
 
                 channelPublisher.publishChatMessageSendEvent(null, sendEvent)
             }
+
             ChatRoomEvent.Type.LEAVE -> {
                 channelSubscriber.unsubscribeToUserRoom(event.userId, event.roomId)
 
@@ -103,6 +105,7 @@ class ChannelEventHandler(
 
                 channelPublisher.publishChatMessageSendEvent(null, sendEvent)
             }
+
             ChatRoomEvent.Type.DELETE -> {
                 channelSubscriber.unsubscribeToRoom(event.roomId)
 

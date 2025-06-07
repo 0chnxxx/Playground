@@ -4,11 +4,15 @@ import com.playground.chat.global.entity.AuditEntity
 import com.playground.chat.global.entity.IdGenerator
 import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.*
+import org.hibernate.annotations.Filter
+import org.hibernate.annotations.SQLDelete
 import org.hibernate.annotations.UuidGenerator
-import java.util.UUID
+import java.util.*
 
 @Entity
 @Table(name = "chat_room")
+@Filter(name = "softDeleteFilter", condition = "is_deleted = :isDeleted")
+@SQLDelete(sql = "UPDATE chat_room r SET r.is_deleted = true WHERE r.id = ?")
 class ChatRoomEntity(
     @Id
     @UuidGenerator(algorithm = IdGenerator::class)

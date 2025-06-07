@@ -1,16 +1,15 @@
 package com.playground.chat.user.service
 
-import com.playground.chat.user.data.response.UserTokenDto
-import com.playground.chat.global.util.PasswordUtil
+import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.auth.TokenProvider
 import com.playground.chat.global.auth.TokenType
-import com.playground.chat.global.auth.UserPrincipal
+import com.playground.chat.global.util.PasswordUtil
 import com.playground.chat.user.data.request.LoginUserRequest
 import com.playground.chat.user.data.request.RegisterUserRequest
 import com.playground.chat.user.data.response.UserDto
+import com.playground.chat.user.data.response.UserTokenDto
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.security.Principal
 
 @Service
 @Transactional
@@ -47,7 +46,7 @@ class UserService(
         )
     }
 
-    fun refresh(principal: UserPrincipal): UserTokenDto {
+    fun refresh(principal: CustomPrincipal): UserTokenDto {
         val user = userFinder.findUser(principal.id)
 
         val accessToken = tokenProvider.generate(TokenType.ACESS, user.id!!)
@@ -59,7 +58,7 @@ class UserService(
         )
     }
 
-    fun findMe(principal: UserPrincipal): UserDto {
+    fun findMe(principal: CustomPrincipal): UserDto {
         val user = userFinder.findUser(principal.id)
 
         return UserDto(

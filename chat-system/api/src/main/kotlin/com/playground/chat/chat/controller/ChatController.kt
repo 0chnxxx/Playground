@@ -9,12 +9,12 @@ import com.playground.chat.chat.data.response.ChatUserDto
 import com.playground.chat.chat.data.response.MyChatRoomDto
 import com.playground.chat.chat.service.ChatService
 import com.playground.chat.global.auth.AuthenticatedPrincipal
-import com.playground.chat.global.auth.UserPrincipal
+import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.data.Response
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
+import java.util.*
 
 @RestController
 @RequestMapping("/chat/rooms")
@@ -27,7 +27,7 @@ class ChatController(
     @GetMapping
     fun findChatRooms(
         @AuthenticatedPrincipal
-        principal: UserPrincipal,
+        principal: CustomPrincipal,
         request: FindChatRoomsRequest
     ): ResponseEntity<Response<List<ChatRoomDto>>> {
         val rooms = chatService.findChatRooms(principal, request)
@@ -42,7 +42,7 @@ class ChatController(
     @GetMapping("/me")
     fun findMyChatRooms(
         @AuthenticatedPrincipal
-        principal: UserPrincipal
+        principal: CustomPrincipal
     ): ResponseEntity<Response<List<MyChatRoomDto>>> {
         val rooms = chatService.findMyChatRooms(principal)
         val response = Response.of(rooms)
@@ -56,7 +56,7 @@ class ChatController(
     @PostMapping
     fun createChatRoom(
         @AuthenticatedPrincipal
-        principal: UserPrincipal,
+        principal: CustomPrincipal,
         @RequestBody
         request: CreateChatRoomRequest
     ): ResponseEntity<Response<ChatRoomDto>> {
@@ -72,7 +72,7 @@ class ChatController(
     @PostMapping("/{roomId}/join")
     fun joinChatRoom(
         @AuthenticatedPrincipal
-        principal: UserPrincipal,
+        principal: CustomPrincipal,
         @PathVariable
         roomId: UUID
     ): ResponseEntity<Unit> {
@@ -87,7 +87,7 @@ class ChatController(
     @PostMapping("/{roomId}/leave")
     fun leaveChatRoom(
         @AuthenticatedPrincipal
-        principal: UserPrincipal,
+        principal: CustomPrincipal,
         @PathVariable
         roomId: UUID
     ): ResponseEntity<Unit> {
@@ -102,7 +102,7 @@ class ChatController(
     @DeleteMapping("/{roomId}")
     fun deleteChatRoom(
         @AuthenticatedPrincipal
-        principal: UserPrincipal,
+        principal: CustomPrincipal,
         @PathVariable
         roomId: UUID
     ): ResponseEntity<Unit> {
@@ -117,7 +117,7 @@ class ChatController(
     @GetMapping("/{roomId}/messages")
     fun findChatMessages(
         @AuthenticatedPrincipal
-        principal: UserPrincipal,
+        principal: CustomPrincipal,
         @PathVariable
         roomId: UUID,
         request: FindChatMessagesRequest
@@ -134,7 +134,7 @@ class ChatController(
     @GetMapping("/{roomId}/users")
     fun findChatUsers(
         @AuthenticatedPrincipal
-        principal: UserPrincipal,
+        principal: CustomPrincipal,
         @PathVariable
         roomId: UUID
     ): ResponseEntity<Response<List<ChatUserDto>>> {

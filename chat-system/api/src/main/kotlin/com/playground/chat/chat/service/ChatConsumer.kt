@@ -5,8 +5,9 @@ import com.playground.chat.chat.data.event.ReadChatMessageEvent
 import com.playground.chat.chat.data.event.SendChatMessageEvent
 import com.playground.chat.chat.entity.ChatMessageEntity
 import com.playground.chat.chat.entity.ChatMessageType
+import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.auth.PrincipalContext
-import com.playground.chat.global.auth.UserPrincipal
+import com.playground.chat.global.auth.PrincipalRole
 import com.playground.chat.global.log.logger
 import com.playground.chat.user.service.UserFinder
 import org.springframework.kafka.annotation.KafkaListener
@@ -44,7 +45,7 @@ class ChatConsumer(
             )
 
             if (user != null) {
-                val principal = UserPrincipal(user.id!!)
+                val principal = CustomPrincipal(user.id!!, PrincipalRole.USER)
 
                 PrincipalContext.operate(principal) {
                     chatOperator.saveChatMessage(message)
@@ -69,7 +70,7 @@ class ChatConsumer(
         try {
             val readEvent = mapper.readValue(event, ReadChatMessageEvent::class.java)
 
-            val principal = UserPrincipal(readEvent.userId)
+            val principal = CustomPrincipal(readEvent.userId, PrincipalRole.USER)
 
             PrincipalContext.operate(principal) {
                 when (readEvent.type) {

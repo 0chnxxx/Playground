@@ -3,13 +3,17 @@ package com.playground.chat.chat.entity
 import com.playground.chat.global.entity.AuditEntity
 import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.*
+import org.hibernate.annotations.Filter
+import org.hibernate.annotations.SQLDelete
 import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Entity
 @Table(name = "chat")
 @IdClass(ChatEntity.ChatId::class)
+@Filter(name = "softDeleteFilter", condition = "is_deleted = :isDeleted")
+@SQLDelete(sql = "UPDATE chat c SET c.is_deleted = true WHERE c.room_id = ? AND c.user_id = ?")
 class ChatEntity(
     @Id
     @ManyToOne(fetch = FetchType.LAZY, cascade = [CascadeType.ALL])

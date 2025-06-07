@@ -1,9 +1,9 @@
 package com.playground.chat.global.auth
 
 object PrincipalContext {
-    private val currentPrincipal = ThreadLocal<UserPrincipal>()
+    private val currentPrincipal = ThreadLocal<CustomPrincipal>()
 
-    fun <T> operate(principal: UserPrincipal?, function: () -> T): T {
+    fun <T> operate(principal: CustomPrincipal?, function: () -> T): T {
         try {
             this.setPrincipal(principal)
 
@@ -13,11 +13,11 @@ object PrincipalContext {
         }
     }
 
-    fun getPrincipal(): UserPrincipal? {
+    fun getPrincipal(): CustomPrincipal? {
         return currentPrincipal.get()
     }
 
-    fun setPrincipal(principal: UserPrincipal?) {
+    fun setPrincipal(principal: CustomPrincipal?) {
         currentPrincipal.set(principal)
     }
 

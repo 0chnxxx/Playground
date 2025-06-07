@@ -8,7 +8,7 @@ import com.playground.chat.chat.entity.ChatRoomEntity
 import com.playground.chat.chat.repository.ChatRepository
 import com.playground.chat.user.entity.UserEntity
 import org.springframework.stereotype.Component
-import java.util.UUID
+import java.util.*
 
 @Component
 class ChatOperator(

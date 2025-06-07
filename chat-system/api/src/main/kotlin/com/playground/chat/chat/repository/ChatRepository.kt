@@ -16,8 +16,7 @@ import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Repository
-import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Repository
 class ChatRepository(
@@ -66,8 +65,13 @@ class ChatRepository(
         val totalRoomCount = jpaQueryFactory
             .select(qRoom.id.countDistinct())
             .from(qRoom)
-            .leftJoin(qRoom.chats, qMyChat).on(qMyChat.room.id.eq(qRoom.id), qMyChat.user.id.eq(userId))
-            .leftJoin(qRoom.messages, qLastMessage).on(qLastMessage.id.eq(lastMessage))
+            .leftJoin(qRoom.chats, qMyChat)
+            .on(
+                qMyChat.room.id.eq(qRoom.id),
+                qMyChat.user.id.eq(userId)
+            )
+            .leftJoin(qRoom.messages, qLastMessage)
+            .on(qLastMessage.id.eq(lastMessage))
             .fetchOne() ?: 0
 
         val rooms = jpaQueryFactory
@@ -84,8 +88,13 @@ class ChatRepository(
                 )
             )
             .from(qRoom)
-            .leftJoin(qRoom.chats, qMyChat).on(qMyChat.room.id.eq(qRoom.id), qMyChat.user.id.eq(userId))
-            .leftJoin(qRoom.messages, qLastMessage).on(qLastMessage.id.eq(lastMessage))
+            .leftJoin(qRoom.chats, qMyChat)
+            .on(
+                qMyChat.room.id.eq(qRoom.id),
+                qMyChat.user.id.eq(userId)
+            )
+            .leftJoin(qRoom.messages, qLastMessage)
+            .on(qLastMessage.id.eq(lastMessage))
             .offset((request.page - 1) * request.size.toLong())
             .limit(request.size.toLong())
             .groupBy(qRoom.id)
@@ -130,7 +139,10 @@ class ChatRepository(
         val unreadCount = JPAExpressions
             .select(qUnreadMessage.id.count())
             .from(qUnreadMessage)
-            .where(qUnreadMessage.room.id.eq(qRoom.id), qUnreadMessage.createdAt.gt(qChat.lastReadAt))
+            .where(
+                qUnreadMessage.room.id.eq(qRoom.id),
+                qUnreadMessage.createdAt.gt(qChat.lastReadAt)
+            )
 
         return jpaQueryFactory
             .select(
@@ -147,7 +159,8 @@ class ChatRepository(
             )
             .from(qRoom)
             .leftJoin(qRoom.chats, qChat)
-            .leftJoin(qRoom.messages, qLastMessage).on(qLastMessage.id.eq(lastMessage))
+            .leftJoin(qRoom.messages, qLastMessage)
+            .on(qLastMessage.id.eq(lastMessage))
             .where(qChat.user.id.eq(userId))
             .groupBy(qRoom.id)
             .orderBy(qLastMessage.createdAt.desc(), qLastMessage.id.desc())
@@ -308,7 +321,8 @@ class ChatRepository(
         val qRoom = QChatRoomEntity("room")
 
         jpaQueryFactory
-            .delete(qRoom)
+            .update(qRoom)
+            .set(qRoom.isDeleted, true)
             .where(qRoom.id.eq(room.id))
             .execute()
     }
@@ -317,7 +331,8 @@ class ChatRepository(
         val qChat = QChatEntity("chat")
 
         jpaQueryFactory
-            .delete(qChat)
+            .update(qChat)
+            .set(qChat.isDeleted, true)
             .where(qChat.room.id.eq(room.id))
             .execute()
     }
@@ -326,8 +341,12 @@ class ChatRepository(
         val qChat = QChatEntity("chat")
 
         jpaQueryFactory
-            .delete(qChat)
-            .where(qChat.room.id.eq(room.id).and(qChat.user.id.eq(user.id)))
+            .update(qChat)
+            .set(qChat.isDeleted, true)
+            .where(
+                qChat.room.id.eq(room.id),
+                qChat.user.id.eq(user.id)
+            )
             .execute()
     }
 }

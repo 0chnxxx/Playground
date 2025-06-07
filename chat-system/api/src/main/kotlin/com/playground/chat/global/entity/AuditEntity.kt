@@ -3,6 +3,8 @@ package com.playground.chat.global.entity
 import jakarta.persistence.Column
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.MappedSuperclass
+import org.hibernate.annotations.FilterDef
+import org.hibernate.annotations.ParamDef
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
@@ -11,6 +13,7 @@ import java.time.Instant
 
 @MappedSuperclass
 @EntityListeners(AuditEntityListener::class)
+@FilterDef(name = "softDeleteFilter", parameters = [ParamDef(name = "isDeleted", type = Boolean::class)])
 abstract class AuditEntity {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

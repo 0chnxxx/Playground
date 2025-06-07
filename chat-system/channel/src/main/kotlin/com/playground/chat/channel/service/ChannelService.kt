@@ -1,20 +1,20 @@
 package com.playground.chat.channel.service
 
-import com.playground.chat.chat.data.event.SendChatMessageEvent
 import com.playground.chat.chat.data.event.ReadChatMessageEvent
-import com.playground.chat.global.auth.UserPrincipal
+import com.playground.chat.chat.data.event.SendChatMessageEvent
+import com.playground.chat.global.auth.CustomPrincipal
 import org.springframework.stereotype.Service
-import java.util.UUID
+import java.util.*
 
 @Service
 class ChannelService(
     private val channelPublisher: ChannelPublisher
 ) {
-    fun sendChatMessage(principal: UserPrincipal, roomId: UUID, event: SendChatMessageEvent) {
+    fun sendChatMessage(principal: CustomPrincipal, roomId: UUID, event: SendChatMessageEvent) {
         channelPublisher.publishChatMessageSendEvent(principal, event)
     }
 
-    fun readChatMessage(principal: UserPrincipal, roomId: UUID, messageId: UUID, event: ReadChatMessageEvent) {
+    fun readChatMessage(principal: CustomPrincipal, roomId: UUID, messageId: UUID, event: ReadChatMessageEvent) {
         channelPublisher.publishChatMessageReadEvent(principal, event)
     }
 }

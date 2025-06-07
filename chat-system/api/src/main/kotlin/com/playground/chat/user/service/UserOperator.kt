@@ -1,5 +1,6 @@
 package com.playground.chat.user.service
 
+import com.playground.chat.global.auth.PrincipalRole
 import com.playground.chat.global.util.PasswordUtil
 import com.playground.chat.user.data.request.RegisterUserRequest
 import com.playground.chat.user.entity.UserEntity
@@ -14,7 +15,8 @@ class UserOperator(
         val user = UserEntity(
             email = registerUserRequest.email,
             password = PasswordUtil.encode(registerUserRequest.password),
-            nickname = registerUserRequest.nickname
+            nickname = registerUserRequest.nickname,
+            role = PrincipalRole.USER
         )
 
         userRepository.saveUser(user)

@@ -1,17 +1,19 @@
 package com.playground.chat.user.controller
 
 import com.playground.chat.global.auth.AuthenticatedPrincipal
-import com.playground.chat.global.auth.UserPrincipal
+import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.data.Response
-import com.playground.chat.user.data.response.UserTokenDto
 import com.playground.chat.user.data.request.LoginUserRequest
 import com.playground.chat.user.data.request.RegisterUserRequest
 import com.playground.chat.user.data.response.UserDto
+import com.playground.chat.user.data.response.UserTokenDto
 import com.playground.chat.user.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
-import java.security.Principal
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class UserController(
@@ -42,7 +44,7 @@ class UserController(
     @PostMapping("/users/refresh")
     fun refresh(
         @AuthenticatedPrincipal
-        principal: UserPrincipal
+        principal: CustomPrincipal
     ): ResponseEntity<Response<UserTokenDto>> {
         val token = userService.refresh(principal)
         val response = Response.of(token)
@@ -53,7 +55,7 @@ class UserController(
     @GetMapping("/users/me")
     fun findMe(
         @AuthenticatedPrincipal
-        principal: UserPrincipal
+        principal: CustomPrincipal
     ): ResponseEntity<Response<UserDto>> {
         val user = userService.findMe(principal)
         val response = Response.of(user)

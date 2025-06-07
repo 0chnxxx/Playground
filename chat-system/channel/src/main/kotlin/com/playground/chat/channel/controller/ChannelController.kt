@@ -1,13 +1,13 @@
 package com.playground.chat.channel.controller
 
 import com.playground.chat.channel.service.ChannelService
-import com.playground.chat.chat.data.event.SendChatMessageEvent
 import com.playground.chat.chat.data.event.ReadChatMessageEvent
-import com.playground.chat.global.auth.UserPrincipal
+import com.playground.chat.chat.data.event.SendChatMessageEvent
+import com.playground.chat.global.auth.CustomPrincipal
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
+import java.util.*
 
 @RestController
 class ChannelController(
@@ -18,7 +18,7 @@ class ChannelController(
      */
     @MessageMapping("/chat/rooms/{roomId}/messages/send")
     fun sendChatMessage(
-        principal: UserPrincipal,
+        principal: CustomPrincipal,
         @DestinationVariable
         roomId: UUID,
         event: SendChatMessageEvent
@@ -31,7 +31,7 @@ class ChannelController(
      */
     @MessageMapping("/chat/rooms/{roomId}/messages/{messageId}/read")
     fun readChatMessage(
-        principal: UserPrincipal,
+        principal: CustomPrincipal,
         @DestinationVariable
         roomId: UUID,
         @DestinationVariable

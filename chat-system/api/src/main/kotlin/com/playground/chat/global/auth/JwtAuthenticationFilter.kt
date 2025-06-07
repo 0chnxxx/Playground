@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.filter.OncePerRequestFilter
 import java.security.Principal
-import java.util.UUID
+import java.util.*
 
 @Component
 class JwtAuthenticationFilter(
@@ -44,10 +44,10 @@ class JwtAuthenticationFilter(
             val userId = UUID.fromString(tokenProvider.parse(token, "userId").toString())
             val user = userFinder.findUser(userId)
 
-            val principal = UserPrincipal(user.id!!)
+            val principal = CustomPrincipal(user.id!!, user.role)
 
             PrincipalContext.operate(principal) {
-                val wrappedRequest = object : HttpServletRequestWrapper(request) {
+                val wrappedRequest = object: HttpServletRequestWrapper(request) {
                     override fun getUserPrincipal(): Principal = principal
                 }
 
