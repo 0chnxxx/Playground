@@ -1,14 +1,12 @@
-package com.playground.chat.global.auth
+package com.playground.chat.global.jwt
 
 import com.playground.chat.global.log.logger
-import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.util.Date
-import java.util.UUID
+import java.util.*
 import javax.crypto.SecretKey
 
 @Component
@@ -30,7 +28,7 @@ class TokenProvider(
         }
 
         return Jwts.builder()
-            .claim("userId", userId)
+            .claim(TokenKey.ID.key, userId)
             .issuedAt(Date(now))
             .expiration(Date(now + expiration))
             .signWith(signingKey)
@@ -43,10 +41,12 @@ class TokenProvider(
         }
 
         try {
+            val pureToken = extractPureToken(token)
+
             Jwts.parser()
                 .verifyWith(signingKey)
                 .build()
-                .parseSignedClaims(token)
+                .parseSignedClaims(pureToken)
 
             return true
         } catch (e: JwtException) {
@@ -55,16 +55,26 @@ class TokenProvider(
         }
     }
 
-    fun parse(token: String, key: String): Any? {
+    fun parse(token: String, key: TokenKey): Any? {
         try {
+            val pureToken = extractPureToken(token)
+
             return Jwts.parser()
                 .verifyWith(signingKey)
                 .build()
-                .parseSignedClaims(token)
-                .payload[key]
+                .parseSignedClaims(pureToken)
+                .payload[key.key]
         } catch (e: JwtException) {
             log.info("[❌ Fail Jwt Parse] {}", e.printStackTrace())
             return null
+        }
+    }
+
+    private fun extractPureToken(token: String): String {
+        return if (token.startsWith("Bearer ")) {
+            token.substring(7)
+        } else {
+            token
         }
     }
 }

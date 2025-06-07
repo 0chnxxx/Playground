@@ -1,9 +1,6 @@
 package com.playground.chat.global.auth
 
-import com.playground.chat.global.log.logger
-
 object PrincipalContext {
-    val log = logger()
     private val currentPrincipal = ThreadLocal<CustomPrincipal>()
 
     fun <T> operate(principal: CustomPrincipal?, function: () -> T, after: (() -> Unit)): T {

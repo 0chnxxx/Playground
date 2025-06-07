@@ -1,6 +1,7 @@
 package com.playground.chat.chat.service
 
-import com.playground.chat.chat.data.event.*
+import com.playground.chat.chat.data.event.ChatEventTopic
+import com.playground.chat.chat.data.event.ChatRoomEvent
 import com.playground.chat.global.log.logger
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
@@ -13,7 +14,7 @@ class ChatPublisher(
 
     fun publishChatRoomEvent(event: ChatRoomEvent) {
         try {
-            redisTemplate.convertAndSend("chat-room-event", event)
+            redisTemplate.convertAndSend(ChatEventTopic.CHAT_ROOM_EVENT.topic, event)
 
             log.info("[✅ Chat Room Event Publish] {}", event)
         } catch (e: Exception) {

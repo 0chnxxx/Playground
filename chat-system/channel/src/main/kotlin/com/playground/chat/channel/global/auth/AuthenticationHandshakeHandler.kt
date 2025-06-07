@@ -2,8 +2,9 @@ package com.playground.chat.channel.global.auth
 
 import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.auth.PrincipalRole
-import com.playground.chat.global.auth.TokenProvider
-import com.playground.chat.global.auth.TokenType
+import com.playground.chat.global.jwt.TokenKey
+import com.playground.chat.global.jwt.TokenProvider
+import com.playground.chat.global.jwt.TokenType
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.WebSocketHandler
@@ -15,6 +16,8 @@ import java.util.*
 class AuthenticationHandshakeHandler(
     private val tokenProvider: TokenProvider
 ): DefaultHandshakeHandler() {
+    private val tokenAttribute = "token"
+
     /**
      * [JWT 토큰 후처리 핸들러]
      * - 인터셉터에 의해 attribute에 저장된 토큰을 꺼내어 검증
@@ -25,10 +28,10 @@ class AuthenticationHandshakeHandler(
         wsHandler: WebSocketHandler,
         attributes: MutableMap<String, Any>
     ): Principal? {
-        val token = attributes["token"] as String?
+        val token = attributes[tokenAttribute] as String?
 
         if (token != null && tokenProvider.validate(token)) {
-            val userId = UUID.fromString(tokenProvider.parse(token, "userId").toString())
+            val userId = UUID.fromString(tokenProvider.parse(token, TokenKey.ID).toString())
             val passport = tokenProvider.generate(TokenType.PASSPORT, userId)
 
             return CustomPrincipal(

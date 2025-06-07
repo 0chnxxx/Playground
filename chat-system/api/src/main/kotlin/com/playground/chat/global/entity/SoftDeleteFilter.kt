@@ -16,9 +16,9 @@ class SoftDeleteFilter(
     private val entityManager: EntityManager
 ) {
     @Pointcut("execution(* com.playground.chat..*Service.*(..))")
-    fun methods() {}
+    fun services() {}
 
-    @Around("methods()")
+    @Around("services()")
     fun applyFilter(joinPoint: ProceedingJoinPoint): Any? {
         val principal = PrincipalContext.getPrincipal()
         val session = entityManager.unwrap(Session::class.java)

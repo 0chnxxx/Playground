@@ -9,6 +9,8 @@ import org.springframework.web.socket.server.HandshakeInterceptor
 
 @Component
 class AuthenticationHandshakeInterceptor: HandshakeInterceptor {
+    private val tokenAttribute = "token"
+
     /**
      * [JWT 토큰 전처리 인터셉터]
      * WebSocket 연결 요청의 token 쿼리 파라미터를 꺼내어 attribute에 저장
@@ -20,10 +22,10 @@ class AuthenticationHandshakeInterceptor: HandshakeInterceptor {
         attributes: MutableMap<String, Any>
     ): Boolean {
         val servletRequest = (request as? ServletServerHttpRequest)?.servletRequest
-        val token = servletRequest?.getParameter("token")
+        val token = servletRequest?.getParameter(tokenAttribute)
 
         if (!token.isNullOrEmpty()) {
-            attributes["token"] = token
+            attributes[tokenAttribute] = token
         }
 
         return true

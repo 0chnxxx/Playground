@@ -1,6 +1,5 @@
 package com.playground.chat.channel.global.log
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.playground.chat.global.log.logger
 import org.springframework.messaging.Message
 import org.springframework.messaging.MessageChannel
@@ -12,9 +11,7 @@ import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
 
 @Component
-class AccessLogInterceptor(
-    private val mapper: ObjectMapper,
-): ChannelInterceptor {
+class AccessLogInterceptor(): ChannelInterceptor {
     private val log = logger()
 
     override fun preSend(message: Message<*>, channel: MessageChannel): Message<*>? {

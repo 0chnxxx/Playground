@@ -1,5 +1,7 @@
 package com.playground.chat.global.auth
 
+import com.playground.chat.global.jwt.TokenKey
+import com.playground.chat.global.jwt.TokenProvider
 import com.playground.chat.user.service.UserFinder
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -16,7 +18,7 @@ import java.security.Principal
 import java.util.*
 
 @Component
-class JwtAuthenticationFilter(
+class HttpAuthenticationFilter(
     private val corsConfig: CorsConfiguration,
     private val tokenProvider: TokenProvider,
     private val userFinder: UserFinder
@@ -39,11 +41,9 @@ class JwtAuthenticationFilter(
         }
 
         val token = request.getHeader("Authorization")
-            ?.takeIf { it.startsWith("Bearer ") }
-            ?.substring(7)
 
         if (token != null && tokenProvider.validate(token)) {
-            val userId = UUID.fromString(tokenProvider.parse(token, "userId").toString())
+            val userId = UUID.fromString(tokenProvider.parse(token, TokenKey.ID).toString())
             val user = userFinder.findUser(userId)
 
             val principal = CustomPrincipal(user.id!!, user.role)

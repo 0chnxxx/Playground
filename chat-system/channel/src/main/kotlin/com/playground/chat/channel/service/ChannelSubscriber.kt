@@ -1,12 +1,13 @@
 package com.playground.chat.channel.service
 
+import com.playground.chat.chat.data.event.ChatEventTopic
 import com.playground.chat.global.log.logger
 import jakarta.annotation.PostConstruct
 import org.springframework.data.redis.connection.MessageListener
 import org.springframework.data.redis.listener.ChannelTopic
 import org.springframework.data.redis.listener.RedisMessageListenerContainer
 import org.springframework.stereotype.Component
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -36,7 +37,7 @@ class ChannelSubscriber(
 
     @PostConstruct
     fun init() {
-        container.addMessageListener(channelEventListener, ChannelTopic("chat-room-event"))
+        container.addMessageListener(channelEventListener, ChannelTopic(ChatEventTopic.CHAT_ROOM_EVENT.topic))
     }
 
     /**
@@ -69,8 +70,8 @@ class ChannelSubscriber(
                 listeners
                     .computeIfAbsent(roomId) {
                         listOf(
-                            channelSendListener to ChannelTopic("chat-message-send:${roomId}"),
-                            channelReadListener to ChannelTopic("chat-message-read:${roomId}")
+                            channelSendListener to ChannelTopic(ChatEventTopic.CHAT_MESSAGE_SEND.withChannel(roomId.toString())),
+                            channelReadListener to ChannelTopic(ChatEventTopic.CHAT_MESSAGE_READ.withChannel(roomId.toString()))
                         )
                     }
                     .let { topics ->

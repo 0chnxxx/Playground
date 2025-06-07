@@ -1,21 +1,20 @@
 package com.playground.chat.channel.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.playground.chat.channel.client.UserApiClient
+import com.playground.chat.channel.global.kafka.CustomKafkaTemplate
+import com.playground.chat.chat.data.event.ChatEventTopic
 import com.playground.chat.chat.data.event.ReadChatMessageEvent
 import com.playground.chat.chat.data.event.SendChatMessageEvent
 import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.log.logger
 import com.playground.chat.global.util.UuidUtil
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
 
 @Component
 class ChannelPublisher(
-    private val mapper: ObjectMapper,
+    private val kafkaTemplate: CustomKafkaTemplate,
     private val redisTemplate: RedisTemplate<String, String>,
-    private val kafkaTemplate: KafkaTemplate<String, String>,
     private val userApiClient: UserApiClient
 ) {
     private val log = logger()
@@ -35,13 +34,18 @@ class ChannelPublisher(
                 )
             }
 
-            val sendEventJson = mapper.writeValueAsString(sendEvent)
-
-            // ChatMessage Insert를 위한 Kafka publish
-            kafkaTemplate.send("chat-message-send", sendEvent.roomId.toString(), sendEventJson)
+            // ChatMessage Insert를 위한 Kafka Publish
+            kafkaTemplate.send(
+                principal,
+                ChatEventTopic.CHAT_MESSAGE_SEND.withChannel(sendEvent.roomId.toString()),
+                sendEvent
+            )
 
             // Socket 에 BroadCast를 위한 Redis Publish
-            redisTemplate.convertAndSend("chat-message-send:${sendEvent.roomId}", sendEvent)
+            redisTemplate.convertAndSend(
+                ChatEventTopic.CHAT_MESSAGE_SEND.withChannel(sendEvent.roomId.toString()),
+                sendEvent
+            )
 
             log.info("[🛫 Chat Message Send Event Publish] {}", sendEvent)
         } catch (e: Exception) {
@@ -51,13 +55,18 @@ class ChannelPublisher(
 
     fun publishChatMessageReadEvent(principal: CustomPrincipal?, event: ReadChatMessageEvent) {
         try {
-            val readEventJson = mapper.writeValueAsString(event)
-
-            // Chat 의 LastMessage Update를 위한 Kafka publish
-            kafkaTemplate.send("chat-message-read", event.roomId.toString(), readEventJson)
+            // Chat 의 LastMessage Update를 위한 Kafka Publish
+            kafkaTemplate.send(
+                principal,
+                ChatEventTopic.CHAT_MESSAGE_READ.withChannel(event.roomId.toString()),
+                event
+            )
 
             // Socket 에 BroadCast를 위한 Redis Publish
-            redisTemplate.convertAndSend("chat-message-read:${event.roomId}", event)
+            redisTemplate.convertAndSend(
+                ChatEventTopic.CHAT_MESSAGE_READ.withChannel(event.roomId.toString()),
+                event
+            )
 
             log.info("[🛫 Chat Message Read Event Publish] {}", event)
         } catch (e: Exception) {

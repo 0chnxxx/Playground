@@ -1,8 +1,8 @@
 package com.playground.chat.user.service
 
 import com.playground.chat.global.auth.CustomPrincipal
-import com.playground.chat.global.auth.TokenProvider
-import com.playground.chat.global.auth.TokenType
+import com.playground.chat.global.jwt.TokenProvider
+import com.playground.chat.global.jwt.TokenType
 import com.playground.chat.global.util.PasswordUtil
 import com.playground.chat.user.data.request.LoginUserRequest
 import com.playground.chat.user.data.request.RegisterUserRequest
