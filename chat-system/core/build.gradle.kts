@@ -19,9 +19,6 @@ dependencies {
     // Java UUID Generator (UUIDv7)
     implementation("com.github.f4b6a3:uuid-creator:$uuidCreatorVersion")
 
-    // Liquibase
-    implementation("org.liquibase:liquibase-core")
-
     // Logging
     implementation("org.slf4j:slf4j-api")
     implementation("ch.qos.logback:logback-classic")

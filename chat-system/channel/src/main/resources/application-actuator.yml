@@ -1,0 +1,13 @@
+management:
+  server:
+    port: 8091
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health, info, metrics, prometheus
+        exclude: threaddump, heapdump
+  prometheus:
+    metrics:
+      export:
+        enabled: true

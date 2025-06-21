@@ -9,13 +9,30 @@ services:
       MYSQL_DATABASE: chat_system
       MYSQL_ROOT_HOST: '%'
       MYSQL_ROOT_PASSWORD: root
-      TZ: 'UTC'
+    command: [
+      "--sql-mode=",
+      "--default-time-zone=+00:00"
+    ]
     ports:
       - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - local
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD']
+      timeout: 10s
+      retries: 3
+
+  mysql-exporter:
+    image: prom/mysqld-exporter
+    container_name: mysqld-exporter
+    restart: always
+    environment:
+      - DATA_SOURCE_NAME=root:root@tcp(mysql:3306)/
+    command:
+      - "--mysqld.username=root:root"
+      - "--mysqld.address=mysql:3306"
+    ports:
+      - "9104:9104"
+    depends_on:
+      - mysql
 
   redis:
     container_name: redis
@@ -23,10 +40,21 @@ services:
     restart: always
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - local
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 10s
+      retries: 3
+
+  redis-exporter:
+    container_name: redis-exporter
+    image: oliver006/redis_exporter
+    restart: always
+    environment:
+      REDIS_ADDR: "redis:6379"
+    ports:
+      - "9121:9121"
+    depends_on:
+      - redis
 
   zookeeper:
     container_name: zookeeper
@@ -34,8 +62,6 @@ services:
     restart: always
     ports:
       - "2181:2181"
-    networks:
-      - local
 
   kafka:
     container_name: kafka
@@ -50,8 +76,21 @@ services:
       KAFKA_ADVERTISED_PORT: 9092
       KAFKA_CREATE_TOPICS: "chat-message:1:1"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-    networks:
-      - local
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo > /dev/tcp/localhost/9092"]
+      timeout: 10s
+      retries: 3
+
+  kafka-exporter:
+    container_name: kafka-exporter
+    image: danielqsj/kafka-exporter
+    restart: always
+    command:
+      - "--kafka.server=kafka:9092"
+    ports:
+      - "9308:9308"
+    depends_on:
+      - kafka
 
   api-server:
     container_name: api-server
@@ -60,18 +99,20 @@ services:
       dockerfile: api/Dockerfile
     ports:
       - "8080:8080"
+      - "8081:8081"
     environment:
-      DATABASE_URL: jdbc:mysql://mysql:3306/chat_system?serverTimezone=UTC
+      DATABASE_URL: jdbc:mysql://mysql:3306/chat_system
       DATABASE_USERNAME: "root"
       DATABASE_PASSWORD: "root"
       REDIS_HOST: redis
       REDIS_PORT: 6379
     depends_on:
-      - mysql
-      - redis
-      - kafka
-    networks:
-      - local
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
 
   channel-server:
     container_name: channel-server
@@ -79,24 +120,43 @@ services:
       context: .
       dockerfile: channel/Dockerfile
     ports:
-      - "8081:8080"
+      - "8090:8090"
+      - "8091:8091"
     environment:
-      DATABASE_URL: jdbc:mysql://mysql:3306/chat_system?serverTimezone=UTC
+      DATABASE_URL: jdbc:mysql://mysql:3306/chat_system
       DATABASE_USERNAME: "root"
       DATABASE_PASSWORD: "root"
       REDIS_HOST: redis
       REDIS_PORT: 6379
     depends_on:
-      - mysql
-      - redis
-      - kafka
-    networks:
-      - local
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
 
-volumes:
-  mysql_data:
-  redis_data:
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
 
-networks:
-  local:
-    driver: bridge
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    restart: always
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning

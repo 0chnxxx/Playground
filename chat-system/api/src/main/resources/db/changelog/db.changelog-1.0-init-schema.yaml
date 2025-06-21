@@ -1,13 +1,9 @@
 databaseChangeLog:
   - changeSet:
-     id: 1.0
+     id: 1.1
      author: chat-system
      runAlways: true
      changes:
-       - sql: |
-          SET GLOBAL SQL_MODE = '';
-          SET GLOBAL TIME_ZONE = '+00:00';
-
        - sqlFile:
           dbms: mysql
           encoding: UTF-8

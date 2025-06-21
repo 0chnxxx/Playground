@@ -731,7 +731,7 @@
             if (stompClient && stompClient.connected) {
                 stompClient.disconnect();
             }
-            const socket = new SockJS(`http://localhost:8081/ws?token=${accessToken}`);
+            const socket = new SockJS(`http://localhost:8090/ws?token=${accessToken}`);
             stompClient = Stomp.over(socket);
             stompClient.connect({}, () => {
                 roomsCache.forEach(room => ensureRoomSubscriptions(room.id));

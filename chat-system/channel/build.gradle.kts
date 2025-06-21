@@ -21,6 +21,12 @@ dependencies {
     // WebSocket
     implementation("org.springframework.boot:spring-boot-starter-websocket")
 
+    // Spring Actuator
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Micrometer (Prometheus)
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
     // Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 

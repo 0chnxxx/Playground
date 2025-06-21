@@ -25,6 +25,12 @@ dependencies {
     // Spring Web
     implementation("org.springframework.boot:spring-boot-starter-web")
 
+    // Spring Actuator
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // Micrometer (Prometheus)
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
     // Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
@@ -41,6 +47,9 @@ dependencies {
     implementation("io.github.openfeign.querydsl:querydsl-core:$queryDslVersion")
     implementation("io.github.openfeign.querydsl:querydsl-jpa:$queryDslVersion")
     kapt("io.github.openfeign.querydsl:querydsl-apt:$queryDslVersion:jpa")
+
+    // Liquibase
+    implementation("org.liquibase:liquibase-core")
 
     // ObjectMapper
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

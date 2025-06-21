@@ -1,3 +1,6 @@
+server:
+  port: 8090
+
 spring:
   profiles:
     include:
@@ -5,6 +8,7 @@ spring:
       - jwt
       - redis
       - kafka
+      - actuator
 
 servers:
   api:
