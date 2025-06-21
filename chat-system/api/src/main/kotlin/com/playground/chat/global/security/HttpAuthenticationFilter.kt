@@ -1,4 +1,4 @@
-package com.playground.chat.global.auth
+package com.playground.chat.global.security
 
 import com.playground.chat.global.token.TokenClaim
 import com.playground.chat.global.token.TokenProvider

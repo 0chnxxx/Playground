@@ -1,6 +1,6 @@
 package com.playground.chat.user.data.request
 
-import com.playground.chat.global.auth.PrincipalRole
+import com.playground.chat.global.security.PrincipalRole
 import com.playground.chat.user.domain.User
 
 data class RegisterUserRequest(

@@ -2,9 +2,9 @@ package com.playground.chat.user.entity
 
 import com.playground.chat.chat.entity.ChatEntity
 import com.playground.chat.chat.entity.ChatRoomEntity
-import com.playground.chat.global.auth.PrincipalRole
 import com.playground.chat.global.entity.AuditEntity
 import com.playground.chat.global.entity.IdGenerator
+import com.playground.chat.global.security.PrincipalRole
 import com.playground.chat.user.domain.User
 import jakarta.persistence.*
 import org.hibernate.Hibernate

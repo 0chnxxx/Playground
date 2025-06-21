@@ -2,7 +2,7 @@ package com.playground.chat.channel.service
 
 import com.playground.chat.chat.data.event.ReadChatMessageEvent
 import com.playground.chat.chat.data.event.SendChatMessageEvent
-import com.playground.chat.global.auth.CustomPrincipal
+import com.playground.chat.global.security.CustomPrincipal
 import org.springframework.stereotype.Service
 import java.util.*
 

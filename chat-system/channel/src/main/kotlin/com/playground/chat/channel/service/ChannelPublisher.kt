@@ -5,8 +5,8 @@ import com.playground.chat.channel.global.kafka.CustomKafkaTemplate
 import com.playground.chat.chat.data.event.ChatEventTopic
 import com.playground.chat.chat.data.event.ReadChatMessageEvent
 import com.playground.chat.chat.data.event.SendChatMessageEvent
-import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.log.logger
+import com.playground.chat.global.security.CustomPrincipal
 import com.playground.chat.global.util.IdUtil
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component

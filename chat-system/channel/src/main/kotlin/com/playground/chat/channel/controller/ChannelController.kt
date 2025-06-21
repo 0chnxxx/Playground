@@ -3,7 +3,7 @@ package com.playground.chat.channel.controller
 import com.playground.chat.channel.service.ChannelService
 import com.playground.chat.chat.data.event.ReadChatMessageEvent
 import com.playground.chat.chat.data.event.SendChatMessageEvent
-import com.playground.chat.global.auth.CustomPrincipal
+import com.playground.chat.global.security.CustomPrincipal
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.web.bind.annotation.RestController

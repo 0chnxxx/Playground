@@ -1,7 +1,7 @@
-package com.playground.chat.channel.global.auth
+package com.playground.chat.channel.global.security
 
-import com.playground.chat.global.auth.CustomPrincipal
-import com.playground.chat.global.auth.PrincipalRole
+import com.playground.chat.global.security.CustomPrincipal
+import com.playground.chat.global.security.PrincipalRole
 import com.playground.chat.global.token.TokenClaim
 import com.playground.chat.global.token.TokenProvider
 import com.playground.chat.global.token.TokenType
@@ -39,8 +39,8 @@ class AuthenticationHandshakeHandler(
                 role = PrincipalRole.USER,
                 passport = passport
             )
-        } else {
-            throw Exception("Unauthorized")
         }
+
+        return null
     }
 }

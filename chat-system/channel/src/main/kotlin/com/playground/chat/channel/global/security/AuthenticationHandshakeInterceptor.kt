@@ -1,4 +1,4 @@
-package com.playground.chat.channel.global.auth
+package com.playground.chat.channel.global.security
 
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse
@@ -36,5 +36,7 @@ class AuthenticationHandshakeInterceptor: HandshakeInterceptor {
         response: ServerHttpResponse,
         wsHandler: WebSocketHandler,
         exception: Exception?
-    ) {}
+    ) {
+        return
+    }
 }

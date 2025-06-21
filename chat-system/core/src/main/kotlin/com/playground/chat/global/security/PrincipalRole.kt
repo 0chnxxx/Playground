@@ -1,4 +1,4 @@
-package com.playground.chat.global.auth
+package com.playground.chat.global.security
 
 enum class PrincipalRole {
     USER,

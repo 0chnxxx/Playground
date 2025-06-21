@@ -1,4 +1,4 @@
-package com.playground.chat.global.auth
+package com.playground.chat.global.security
 
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.core.MethodParameter
@@ -23,6 +23,6 @@ class PrincipalArgumentResolver: HandlerMethodArgumentResolver {
         binderFactory: WebDataBinderFactory?
     ): Any? {
         val request = webRequest.nativeRequest as HttpServletRequest
-        return request.userPrincipal ?: throw Exception("Unauthorized")
+        return request.userPrincipal ?: throw SecurityException(SecurityErrorMessage.UNAUTHORIZED)
     }
 }

@@ -1,7 +1,7 @@
 package com.playground.chat.user.domain
 
 import com.playground.chat.chat.domain.ChatRoom
-import com.playground.chat.global.auth.PrincipalRole
+import com.playground.chat.global.security.PrincipalRole
 import java.util.*
 
 class User(

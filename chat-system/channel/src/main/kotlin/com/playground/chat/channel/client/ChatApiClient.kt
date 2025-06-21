@@ -12,5 +12,5 @@ fun interface ChatApiClient {
     fun findMyChatRooms(
         @RequestHeader("Authorization")
         token: String
-    ): Response<List<ChatRoomDto>>
+    ): Response.Success<List<ChatRoomDto>>
 }

@@ -11,8 +11,4 @@ class ChatRoom(
     var chats: MutableList<Chat> = mutableListOf(),
     var users: MutableList<User> = mutableListOf(),
     var messages: MutableList<ChatMessage> = mutableListOf(),
-) {
-    fun isOwner(userId: UUID): Boolean {
-        return owner.id == userId
-    }
-}
+)

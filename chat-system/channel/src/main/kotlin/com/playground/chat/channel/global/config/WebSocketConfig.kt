@@ -1,8 +1,8 @@
 package com.playground.chat.channel.global.config
 
-import com.playground.chat.channel.global.auth.AuthenticationHandshakeHandler
-import com.playground.chat.channel.global.auth.AuthenticationHandshakeInterceptor
 import com.playground.chat.channel.global.log.AccessLogInterceptor
+import com.playground.chat.channel.global.security.AuthenticationHandshakeHandler
+import com.playground.chat.channel.global.security.AuthenticationHandshakeInterceptor
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.simp.config.ChannelRegistration
 import org.springframework.messaging.simp.config.MessageBrokerRegistry

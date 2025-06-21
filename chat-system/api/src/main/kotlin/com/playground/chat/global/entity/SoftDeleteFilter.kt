@@ -1,7 +1,7 @@
 package com.playground.chat.global.entity
 
-import com.playground.chat.global.auth.PrincipalContext
-import com.playground.chat.global.auth.PrincipalRole
+import com.playground.chat.global.security.PrincipalContext
+import com.playground.chat.global.security.PrincipalRole
 import jakarta.persistence.EntityManager
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around

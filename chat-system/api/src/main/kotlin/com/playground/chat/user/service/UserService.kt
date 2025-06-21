@@ -1,9 +1,8 @@
 package com.playground.chat.user.service
 
-import com.playground.chat.global.auth.CustomPrincipal
+import com.playground.chat.global.security.CustomPrincipal
 import com.playground.chat.global.token.TokenProvider
 import com.playground.chat.global.token.TokenType
-import com.playground.chat.global.util.PasswordUtil
 import com.playground.chat.user.data.request.LoginUserRequest
 import com.playground.chat.user.data.request.RegisterUserRequest
 import com.playground.chat.user.data.response.UserDto
@@ -15,13 +14,12 @@ import org.springframework.transaction.annotation.Transactional
 class UserService(
     private val tokenProvider: TokenProvider,
     private val userFinder: UserFinder,
-    private val userOperator: UserOperator
+    private val userOperator: UserOperator,
+    private val userValidator: UserValidator
 ) {
     @Transactional
     fun register(request: RegisterUserRequest): UserTokenDto {
-        if (userFinder.existsUser(request.email)) {
-            throw Exception("User Email Duplicate")
-        }
+        userValidator.checkDuplicatedUser(request.email)
 
         val user = userOperator.createUser(request.toUser())
 
@@ -38,9 +36,7 @@ class UserService(
     fun login(request: LoginUserRequest): UserTokenDto {
         val user = userFinder.findUser(request.email)
 
-        if (!PasswordUtil.match(request.password, user.password)) {
-            throw Exception("User Wrong Password")
-        }
+        userValidator.validPassword(request.password, user.password)
 
         val accessToken = tokenProvider.generate(TokenType.ACESS, user.id!!)
         val refreshToken = tokenProvider.generate(TokenType.REFRESH, user.id!!)

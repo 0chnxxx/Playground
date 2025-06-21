@@ -1,7 +1,7 @@
 package com.playground.chat.channel.global.kafka
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.playground.chat.global.auth.CustomPrincipal
+import com.playground.chat.global.security.CustomPrincipal
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component

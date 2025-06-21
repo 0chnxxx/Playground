@@ -12,5 +12,5 @@ fun interface UserApiClient {
     fun findMe(
         @RequestHeader("Authorization")
         token: String
-    ): Response<UserDto>
+    ): Response.Success<UserDto>
 }

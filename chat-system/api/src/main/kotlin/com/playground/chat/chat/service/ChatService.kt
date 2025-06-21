@@ -8,8 +8,8 @@ import com.playground.chat.chat.data.response.ChatMessageDto
 import com.playground.chat.chat.data.response.ChatRoomDto
 import com.playground.chat.chat.data.response.ChatUserDto
 import com.playground.chat.chat.data.response.MyChatRoomDto
-import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.data.Page
+import com.playground.chat.global.security.CustomPrincipal
 import com.playground.chat.user.service.UserFinder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -20,6 +20,7 @@ class ChatService(
     private val userFinder: UserFinder,
     private val chatFinder: ChatFinder,
     private val chatOperator: ChatOperator,
+    private val chatValidator: ChatValidator,
     private val chatPublisher: ChatPublisher
 ) {
     @Transactional(readOnly = true)
@@ -95,10 +96,7 @@ class ChatService(
         val user = userFinder.findUser(principal.id)
         val room = chatFinder.findChatRoom(roomId)
 
-        if (!room.isOwner(user.id!!)) {
-            throw Exception("This User is Not Owner")
-        }
-
+        chatValidator.checkRoomOwner(room, user)
         chatOperator.deleteChatRoom(room)
 
         chatPublisher.publishChatRoomEvent(

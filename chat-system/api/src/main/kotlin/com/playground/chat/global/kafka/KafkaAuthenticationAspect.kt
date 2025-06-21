@@ -1,8 +1,8 @@
 package com.playground.chat.global.kafka
 
-import com.playground.chat.global.auth.CustomPrincipal
-import com.playground.chat.global.auth.PrincipalContext
-import com.playground.chat.global.auth.PrincipalRole
+import com.playground.chat.global.security.CustomPrincipal
+import com.playground.chat.global.security.PrincipalContext
+import com.playground.chat.global.security.PrincipalRole
 import com.playground.chat.global.token.TokenClaim
 import com.playground.chat.global.token.TokenProvider
 import org.apache.kafka.clients.consumer.ConsumerRecord

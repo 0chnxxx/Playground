@@ -117,7 +117,7 @@ class ChatRepository(
             totalCount = totalRoomCount,
             page = request.page,
             size = request.size,
-            data = rooms
+            content = rooms
         )
     }
 
@@ -180,6 +180,16 @@ class ChatRepository(
             .groupBy(qRoom.id)
             .orderBy(qMessage.createdAt.desc(), qMessage.id.desc())
             .fetch()
+    }
+
+    fun findChatRoomOwner(roomId: UUID): UserEntity? {
+        val qRoom = QChatRoomEntity("room")
+
+        return jpaQueryFactory
+            .select(qRoom.owner)
+            .from(qRoom)
+            .where(qRoom.id.eq(roomId))
+            .fetchOne()
     }
 
     fun findLastChatMessageByRoomId(roomId: UUID): ChatMessageEntity? {
@@ -278,7 +288,7 @@ class ChatRepository(
             totalCount = totalCount,
             page = request.page,
             size = request.size,
-            data = finalMessages
+            content = finalMessages
         )
     }
 

@@ -3,8 +3,8 @@ package com.playground.chat.channel.service
 import com.playground.chat.channel.client.ChatApiClient
 import com.playground.chat.chat.data.event.ChatRoomEvent
 import com.playground.chat.chat.data.event.SendChatMessageEvent
-import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.log.logger
+import com.playground.chat.global.security.CustomPrincipal
 import org.springframework.context.event.EventListener
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.stereotype.Component

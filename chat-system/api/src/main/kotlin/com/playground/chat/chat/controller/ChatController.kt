@@ -8,9 +8,10 @@ import com.playground.chat.chat.data.response.ChatRoomDto
 import com.playground.chat.chat.data.response.ChatUserDto
 import com.playground.chat.chat.data.response.MyChatRoomDto
 import com.playground.chat.chat.service.ChatService
-import com.playground.chat.global.auth.AuthenticatedPrincipal
-import com.playground.chat.global.auth.CustomPrincipal
+import com.playground.chat.global.data.Page
 import com.playground.chat.global.data.Response
+import com.playground.chat.global.security.AuthenticatedPrincipal
+import com.playground.chat.global.security.CustomPrincipal
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -29,9 +30,9 @@ class ChatController(
         @AuthenticatedPrincipal
         principal: CustomPrincipal,
         request: FindChatRoomsRequest
-    ): ResponseEntity<Response<List<ChatRoomDto>>> {
+    ): ResponseEntity<Response<Page<List<ChatRoomDto>>>> {
         val rooms = chatService.findChatRooms(principal, request)
-        val response = Response.of(rooms)
+        val response = Response.success(rooms)
 
         return ResponseEntity(response, HttpStatus.OK)
     }
@@ -45,7 +46,7 @@ class ChatController(
         principal: CustomPrincipal
     ): ResponseEntity<Response<List<MyChatRoomDto>>> {
         val rooms = chatService.findMyChatRooms(principal)
-        val response = Response.of(rooms)
+        val response = Response.success(rooms)
 
         return ResponseEntity(response, HttpStatus.OK)
     }
@@ -61,7 +62,7 @@ class ChatController(
         request: CreateChatRoomRequest
     ): ResponseEntity<Response<ChatRoomDto>> {
         val room = chatService.createChatRoom(principal, request)
-        val response = Response.of(room)
+        val response = Response.success(room)
 
         return ResponseEntity(response, HttpStatus.OK)
     }
@@ -121,9 +122,9 @@ class ChatController(
         @PathVariable
         roomId: UUID,
         request: FindChatMessagesRequest
-    ): ResponseEntity<Response<List<ChatMessageDto>>> {
+    ): ResponseEntity<Response<Page<List<ChatMessageDto>>>> {
         val messages = chatService.findChatMessages(principal, roomId, request)
-        val response = Response.of(messages)
+        val response = Response.success(messages)
 
         return ResponseEntity(response, HttpStatus.OK)
     }
@@ -139,7 +140,7 @@ class ChatController(
         roomId: UUID
     ): ResponseEntity<Response<List<ChatUserDto>>> {
         val messages = chatService.findChatUsers(principal, roomId)
-        val response = Response.of(messages)
+        val response = Response.success(messages)
 
         return ResponseEntity(response, HttpStatus.OK)
     }

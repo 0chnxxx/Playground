@@ -1,6 +1,6 @@
 package com.playground.chat.global.config
 
-import com.playground.chat.global.auth.PrincipalArgumentResolver
+import com.playground.chat.global.security.PrincipalArgumentResolver
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.cors.CorsConfiguration

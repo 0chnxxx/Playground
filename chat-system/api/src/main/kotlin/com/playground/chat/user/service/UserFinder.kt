@@ -1,5 +1,7 @@
 package com.playground.chat.user.service
 
+import com.playground.chat.user.data.exception.UserErrorMessage
+import com.playground.chat.user.data.exception.UserException
 import com.playground.chat.user.domain.User
 import com.playground.chat.user.repository.UserRepository
 import org.springframework.stereotype.Component
@@ -11,15 +13,11 @@ class UserFinder(
 ) {
     fun findUser(userId: UUID): User {
         return userRepository.findUserById(userId)?.toUser()
-            ?: throw Exception("User Not Found")
+            ?: throw UserException(UserErrorMessage.NOT_FOUND_USER)
     }
 
     fun findUser(email: String): User {
         return userRepository.findUserByEmail(email)?.toUser()
-            ?: throw Exception("User Not Found")
-    }
-
-    fun existsUser(email: String): Boolean {
-        return userRepository.findUserByEmail(email) != null
+            ?: throw UserException(UserErrorMessage.NOT_FOUND_USER)
     }
 }

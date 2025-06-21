@@ -1,6 +1,6 @@
 package com.playground.chat.global.entity
 
-import com.playground.chat.global.auth.PrincipalContext
+import com.playground.chat.global.security.PrincipalContext
 import jakarta.persistence.PrePersist
 import jakarta.persistence.PreUpdate
 import java.time.Instant

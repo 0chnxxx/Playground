@@ -1,8 +1,8 @@
 package com.playground.chat.user.controller
 
-import com.playground.chat.global.auth.AuthenticatedPrincipal
-import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.data.Response
+import com.playground.chat.global.security.AuthenticatedPrincipal
+import com.playground.chat.global.security.CustomPrincipal
 import com.playground.chat.user.data.request.LoginUserRequest
 import com.playground.chat.user.data.request.RegisterUserRequest
 import com.playground.chat.user.data.response.UserDto
@@ -28,7 +28,7 @@ class UserController(
         registerUserRequest: RegisterUserRequest
     ): ResponseEntity<Response<UserTokenDto>> {
         val token = userService.register(registerUserRequest)
-        val response = Response.of(token)
+        val response = Response.success(token)
 
         return ResponseEntity(response, HttpStatus.OK)
     }
@@ -42,7 +42,7 @@ class UserController(
         loginUserRequest: LoginUserRequest
     ): ResponseEntity<Response<UserTokenDto>> {
         val token = userService.login(loginUserRequest)
-        val response = Response.of(token)
+        val response = Response.success(token)
 
         return ResponseEntity(response, HttpStatus.OK)
     }
@@ -56,7 +56,7 @@ class UserController(
         principal: CustomPrincipal
     ): ResponseEntity<Response<UserTokenDto>> {
         val token = userService.refresh(principal)
-        val response = Response.of(token)
+        val response = Response.success(token)
 
         return ResponseEntity(response, HttpStatus.OK)
     }
@@ -70,7 +70,7 @@ class UserController(
         principal: CustomPrincipal
     ): ResponseEntity<Response<UserDto>> {
         val user = userService.findMe(principal)
-        val response = Response.of(user)
+        val response = Response.success(user)
 
         return ResponseEntity(response, HttpStatus.OK)
     }
