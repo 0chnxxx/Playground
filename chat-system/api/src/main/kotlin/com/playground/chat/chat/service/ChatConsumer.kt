@@ -3,8 +3,8 @@ package com.playground.chat.chat.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.playground.chat.chat.data.event.ReadChatMessageEvent
 import com.playground.chat.chat.data.event.SendChatMessageEvent
-import com.playground.chat.chat.entity.ChatMessageEntity
-import com.playground.chat.chat.entity.ChatMessageType
+import com.playground.chat.chat.domain.ChatMessage
+import com.playground.chat.chat.domain.ChatMessageType
 import com.playground.chat.global.log.logger
 import com.playground.chat.user.service.UserFinder
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -30,7 +30,7 @@ class ChatConsumer(
             val room = chatFinder.findChatRoom(sendEvent.roomId)
             val user = sendEvent.userId?.let { userFinder.findUser(it) }
 
-            val message = ChatMessageEntity(
+            val message = ChatMessage(
                 id = sendEvent.messageId!!,
                 room = room,
                 sender = user,

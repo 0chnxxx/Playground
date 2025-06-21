@@ -1,4 +1,4 @@
-package com.playground.chat.global.jwt
+package com.playground.chat.global.token
 
 import com.playground.chat.global.log.logger
 import io.jsonwebtoken.JwtException
@@ -28,7 +28,7 @@ class TokenProvider(
         }
 
         return Jwts.builder()
-            .claim(TokenKey.ID.key, userId)
+            .claim(TokenClaim.ID.key, userId)
             .issuedAt(Date(now))
             .expiration(Date(now + expiration))
             .signWith(signingKey)
@@ -55,7 +55,7 @@ class TokenProvider(
         }
     }
 
-    fun parse(token: String, key: TokenKey): Any? {
+    fun parse(token: String, key: TokenClaim): Any? {
         try {
             val pureToken = extractPureToken(token)
 

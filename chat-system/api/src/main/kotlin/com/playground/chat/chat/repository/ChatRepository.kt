@@ -7,7 +7,7 @@ import com.playground.chat.chat.data.response.ChatRoomDto
 import com.playground.chat.chat.data.response.ChatUserDto
 import com.playground.chat.chat.data.response.MyChatRoomDto
 import com.playground.chat.chat.entity.*
-import com.playground.chat.global.data.Pagination
+import com.playground.chat.global.data.Page
 import com.playground.chat.user.entity.QUserEntity
 import com.playground.chat.user.entity.UserEntity
 import com.querydsl.core.types.Projections
@@ -16,6 +16,7 @@ import com.querydsl.jpa.JPAExpressions
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Repository
+import java.time.Instant
 import java.util.*
 
 @Repository
@@ -44,7 +45,7 @@ class ChatRepository(
             .fetchOne()
     }
 
-    fun findChatRooms(userId: UUID, request: FindChatRoomsRequest): Pagination<List<ChatRoomDto>> {
+    fun findChatRooms(userId: UUID, request: FindChatRoomsRequest): Page<List<ChatRoomDto>> {
         val qRoom = QChatRoomEntity("room")
         val qChat = QChatEntity("chat")
         val qMyChat = QChatEntity("myChat")
@@ -112,7 +113,7 @@ class ChatRepository(
             .orderBy(qMessage.createdAt.desc(), qMessage.id.desc())
             .fetch()
 
-        return Pagination.of(
+        return Page.of(
             totalCount = totalRoomCount,
             page = request.page,
             size = request.size,
@@ -196,7 +197,7 @@ class ChatRepository(
         userId: UUID,
         roomId: UUID,
         request: FindChatMessagesRequest
-    ): Pagination<List<ChatMessageDto>> {
+    ): Page<List<ChatMessageDto>> {
         val qUser = QUserEntity("user")
         val qFirstChat = QChatEntity("firstChat")
         val qUnreadChat = QChatEntity("unreadChat")
@@ -273,7 +274,7 @@ class ChatRepository(
             message.copy(unreadUserIds = userIds ?: emptyList())
         }
 
-        return Pagination.of(
+        return Page.of(
             totalCount = totalCount,
             page = request.page,
             size = request.size,
@@ -314,6 +315,20 @@ class ChatRepository(
 
     fun saveChat(chat: ChatEntity) {
         entityManager.persist(chat)
+    }
+
+    fun updateChatForLastMessage(roomId: UUID, userId: UUID, messageId: UUID) {
+        val qChat = QChatEntity("chat")
+
+        jpaQueryFactory
+            .update(qChat)
+            .set(qChat.lastMessageId, messageId)
+            .set(qChat.lastReadAt, Instant.now())
+            .where(
+                qChat.room.id.eq(roomId),
+                qChat.user.id.eq(userId),
+            )
+            .execute()
     }
 
     fun saveChatRoom(room: ChatRoomEntity) {

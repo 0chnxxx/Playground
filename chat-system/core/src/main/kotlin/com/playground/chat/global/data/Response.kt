@@ -24,18 +24,18 @@ data class Response<T>(
             )
         }
 
-        fun <T>of(pagination: Pagination<T>): Response<T> {
+        fun <T>of(data: Page<T>): Response<T> {
             return Response(
                 serverTime = Instant.now(),
                 pageResult = PageResult(
-                    page = pagination.page,
-                    size = pagination.size,
-                    totalPages = pagination.totalPages,
-                    totalElements = pagination.totalElements,
-                    isFirst = pagination.isFirst,
-                    isLast = pagination.isLast
+                    page = data.page,
+                    size = data.size,
+                    totalPages = data.totalPages,
+                    totalElements = data.totalElements,
+                    isFirst = data.isFirst,
+                    isLast = data.isLast
                 ),
-                data = pagination.data
+                data = data.data
             )
         }
     }

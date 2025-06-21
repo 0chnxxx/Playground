@@ -7,7 +7,7 @@ import com.playground.chat.chat.data.event.ReadChatMessageEvent
 import com.playground.chat.chat.data.event.SendChatMessageEvent
 import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.log.logger
-import com.playground.chat.global.util.UuidUtil
+import com.playground.chat.global.util.IdUtil
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 
@@ -21,7 +21,7 @@ class ChannelPublisher(
 
     fun publishChatMessageSendEvent(principal: CustomPrincipal?, event: SendChatMessageEvent) {
         try {
-            var sendEvent = event.setMessageId(UuidUtil.generateUuidV7())
+            var sendEvent = event.setMessageId(IdUtil.generateUuidV7())
 
             if (principal != null) {
                 val response = userApiClient.findMe(principal.getBearerPassport())

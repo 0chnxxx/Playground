@@ -1,4 +1,4 @@
-package com.playground.chat.global.jwt
+package com.playground.chat.global.token
 
 enum class TokenType {
     ACESS, REFRESH, PASSPORT

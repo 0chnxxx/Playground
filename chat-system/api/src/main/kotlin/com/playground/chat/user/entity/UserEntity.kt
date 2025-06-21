@@ -5,7 +5,9 @@ import com.playground.chat.chat.entity.ChatRoomEntity
 import com.playground.chat.global.auth.PrincipalRole
 import com.playground.chat.global.entity.AuditEntity
 import com.playground.chat.global.entity.IdGenerator
+import com.playground.chat.user.domain.User
 import jakarta.persistence.*
+import org.hibernate.Hibernate
 import org.hibernate.annotations.Filter
 import org.hibernate.annotations.SQLDelete
 import org.hibernate.annotations.UuidGenerator
@@ -42,7 +44,37 @@ class UserEntity(
     )
     var rooms: MutableList<ChatRoomEntity> = mutableListOf()
 ): AuditEntity() {
-    fun isOwner(room: ChatRoomEntity): Boolean {
-        return this.rooms.any { it == room && it.owner == this }
+    companion object {
+        fun fromUser(user: User): UserEntity {
+            return UserEntity(
+                id = user.id,
+                email = user.email,
+                password = user.password,
+                image = user.image,
+                nickname = user.nickname,
+                role = user.role,
+                rooms = if (user.rooms.isNotEmpty()) {
+                    user.rooms.map { ChatRoomEntity.fromRoom(it) }.toMutableList()
+                } else {
+                    mutableListOf()
+                }
+            )
+        }
+    }
+
+    fun toUser(): User {
+        return User(
+            id = id,
+            email = email,
+            password = password,
+            image = image,
+            nickname = nickname,
+            role = role,
+            rooms = if (Hibernate.isInitialized(rooms)) {
+                rooms.map { it.toRoom() }.toMutableList()
+            } else {
+                mutableListOf()
+            }
+        )
     }
 }

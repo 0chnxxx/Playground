@@ -1,4 +1,4 @@
-package com.playground.chat.chat.entity
+package com.playground.chat.chat.domain
 
 enum class ChatMessageType {
     TALK,

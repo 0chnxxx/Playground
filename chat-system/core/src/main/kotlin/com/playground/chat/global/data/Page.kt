@@ -2,7 +2,7 @@ package com.playground.chat.global.data
 
 import kotlin.math.ceil
 
-data class Pagination<T>(
+data class Page<T>(
     val page: Int,
     val size: Int,
     val totalPages: Int,
@@ -12,8 +12,8 @@ data class Pagination<T>(
     val data: T
 ) {
     companion object {
-        fun <T>of(totalCount: Long, page: Int, size: Int, data: T): Pagination<T> {
-            return Pagination(
+        fun <T>of(totalCount: Long, page: Int, size: Int, data: T): Page<T> {
+            return Page(
                 page = page,
                 size = size,
                 totalPages = ceil(totalCount.toDouble() / size).toInt(),

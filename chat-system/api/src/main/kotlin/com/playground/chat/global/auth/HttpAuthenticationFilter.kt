@@ -1,7 +1,7 @@
 package com.playground.chat.global.auth
 
-import com.playground.chat.global.jwt.TokenKey
-import com.playground.chat.global.jwt.TokenProvider
+import com.playground.chat.global.token.TokenClaim
+import com.playground.chat.global.token.TokenProvider
 import com.playground.chat.user.service.UserFinder
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -43,7 +43,7 @@ class HttpAuthenticationFilter(
         val token = request.getHeader("Authorization")
 
         if (token != null && tokenProvider.validate(token)) {
-            val userId = UUID.fromString(tokenProvider.parse(token, TokenKey.ID).toString())
+            val userId = UUID.fromString(tokenProvider.parse(token, TokenClaim.ID).toString())
             val user = userFinder.findUser(userId)
 
             val principal = CustomPrincipal(user.id!!, user.role)

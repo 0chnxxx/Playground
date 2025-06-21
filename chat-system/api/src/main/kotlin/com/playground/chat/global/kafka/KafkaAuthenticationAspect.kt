@@ -3,8 +3,8 @@ package com.playground.chat.global.kafka
 import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.auth.PrincipalContext
 import com.playground.chat.global.auth.PrincipalRole
-import com.playground.chat.global.jwt.TokenKey
-import com.playground.chat.global.jwt.TokenProvider
+import com.playground.chat.global.token.TokenClaim
+import com.playground.chat.global.token.TokenProvider
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
@@ -34,7 +34,7 @@ class KafkaAuthenticationAspect(
             ?.lastHeader(passportHeader)?.value()?.let { String(it) }
 
         val principal = passport
-            ?.let { UUID.fromString(tokenProvider.parse(it, TokenKey.ID).toString()) }
+            ?.let { UUID.fromString(tokenProvider.parse(it, TokenClaim.ID).toString()) }
             ?.let { CustomPrincipal(it, PrincipalRole.USER, passport) }
 
         if (principal != null) {

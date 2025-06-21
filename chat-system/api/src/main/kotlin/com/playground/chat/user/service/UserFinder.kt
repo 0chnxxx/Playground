@@ -1,6 +1,6 @@
 package com.playground.chat.user.service
 
-import com.playground.chat.user.entity.UserEntity
+import com.playground.chat.user.domain.User
 import com.playground.chat.user.repository.UserRepository
 import org.springframework.stereotype.Component
 import java.util.*
@@ -9,13 +9,13 @@ import java.util.*
 class UserFinder(
     private val userRepository: UserRepository
 ) {
-    fun findUser(userId: UUID): UserEntity {
-        return userRepository.findUserById(userId)
+    fun findUser(userId: UUID): User {
+        return userRepository.findUserById(userId)?.toUser()
             ?: throw Exception("User Not Found")
     }
 
-    fun findUser(email: String): UserEntity {
-        return userRepository.findUserByEmail(email)
+    fun findUser(email: String): User {
+        return userRepository.findUserByEmail(email)?.toUser()
             ?: throw Exception("User Not Found")
     }
 

@@ -5,7 +5,7 @@ import com.playground.chat.user.entity.UserEntity
 import com.querydsl.jpa.impl.JPAQueryFactory
 import jakarta.persistence.EntityManager
 import org.springframework.stereotype.Repository
-import java.util.UUID
+import java.util.*
 
 @Repository
 class UserRepository(

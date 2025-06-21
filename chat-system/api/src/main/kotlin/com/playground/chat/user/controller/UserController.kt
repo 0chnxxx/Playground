@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController
 class UserController(
     private val userService: UserService
 ) {
+    /**
+     * 유저 회원가입 API
+     */
     @PostMapping("/users/register")
     fun register(
         @RequestBody
@@ -30,6 +33,9 @@ class UserController(
         return ResponseEntity(response, HttpStatus.OK)
     }
 
+    /**
+     * 유저 로그인 API
+     */
     @PostMapping("/users/login")
     fun login(
         @RequestBody
@@ -41,6 +47,9 @@ class UserController(
         return ResponseEntity(response, HttpStatus.OK)
     }
 
+    /**
+     * 유저 토큰 재발급 API
+     */
     @PostMapping("/users/refresh")
     fun refresh(
         @AuthenticatedPrincipal
@@ -52,6 +61,9 @@ class UserController(
         return ResponseEntity(response, HttpStatus.OK)
     }
 
+    /**
+     * 내 정보 조회 API
+     */
     @GetMapping("/users/me")
     fun findMe(
         @AuthenticatedPrincipal

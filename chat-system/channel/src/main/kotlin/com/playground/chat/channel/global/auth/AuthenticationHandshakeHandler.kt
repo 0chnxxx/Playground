@@ -2,9 +2,9 @@ package com.playground.chat.channel.global.auth
 
 import com.playground.chat.global.auth.CustomPrincipal
 import com.playground.chat.global.auth.PrincipalRole
-import com.playground.chat.global.jwt.TokenKey
-import com.playground.chat.global.jwt.TokenProvider
-import com.playground.chat.global.jwt.TokenType
+import com.playground.chat.global.token.TokenClaim
+import com.playground.chat.global.token.TokenProvider
+import com.playground.chat.global.token.TokenType
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.WebSocketHandler
@@ -31,7 +31,7 @@ class AuthenticationHandshakeHandler(
         val token = attributes[tokenAttribute] as String?
 
         if (token != null && tokenProvider.validate(token)) {
-            val userId = UUID.fromString(tokenProvider.parse(token, TokenKey.ID).toString())
+            val userId = UUID.fromString(tokenProvider.parse(token, TokenClaim.ID).toString())
             val passport = tokenProvider.generate(TokenType.PASSPORT, userId)
 
             return CustomPrincipal(

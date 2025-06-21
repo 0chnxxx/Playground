@@ -1,8 +1,8 @@
 package com.playground.chat.user.service
 
 import com.playground.chat.global.auth.CustomPrincipal
-import com.playground.chat.global.jwt.TokenProvider
-import com.playground.chat.global.jwt.TokenType
+import com.playground.chat.global.token.TokenProvider
+import com.playground.chat.global.token.TokenType
 import com.playground.chat.global.util.PasswordUtil
 import com.playground.chat.user.data.request.LoginUserRequest
 import com.playground.chat.user.data.request.RegisterUserRequest
@@ -23,7 +23,7 @@ class UserService(
             throw Exception("User Email Duplicate")
         }
 
-        val user = userOperator.createUser(request)
+        val user = userOperator.createUser(request.toUser())
 
         val accessToken = tokenProvider.generate(TokenType.ACESS, user.id!!)
         val refreshToken = tokenProvider.generate(TokenType.REFRESH, user.id!!)

@@ -9,7 +9,7 @@ import com.playground.chat.chat.data.response.ChatRoomDto
 import com.playground.chat.chat.data.response.ChatUserDto
 import com.playground.chat.chat.data.response.MyChatRoomDto
 import com.playground.chat.global.auth.CustomPrincipal
-import com.playground.chat.global.data.Pagination
+import com.playground.chat.global.data.Page
 import com.playground.chat.user.service.UserFinder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -23,17 +23,17 @@ class ChatService(
     private val chatPublisher: ChatPublisher
 ) {
     @Transactional(readOnly = true)
-    fun findChatRooms(principal: CustomPrincipal, request: FindChatRoomsRequest): Pagination<List<ChatRoomDto>> {
+    fun findChatRooms(principal: CustomPrincipal, request: FindChatRoomsRequest): Page<List<ChatRoomDto>> {
         val user = userFinder.findUser(principal.id)
 
-        return chatFinder.findChatRooms(user, request)
+        return chatFinder.findChatRooms(user.id!!, request)
     }
 
     @Transactional(readOnly = true)
     fun findMyChatRooms(principal: CustomPrincipal): List<MyChatRoomDto> {
         val user = userFinder.findUser(principal.id)
 
-        return chatFinder.findMyChatRooms(user)
+        return chatFinder.findMyChatRooms(user.id!!)
     }
 
     @Transactional
@@ -95,7 +95,7 @@ class ChatService(
         val user = userFinder.findUser(principal.id)
         val room = chatFinder.findChatRoom(roomId)
 
-        if (!user.isOwner(room)) {
+        if (!room.isOwner(user.id!!)) {
             throw Exception("This User is Not Owner")
         }
 
@@ -117,11 +117,11 @@ class ChatService(
         principal: CustomPrincipal,
         roomId: UUID,
         request: FindChatMessagesRequest
-    ): Pagination<List<ChatMessageDto>> {
+    ): Page<List<ChatMessageDto>> {
         val user = userFinder.findUser(principal.id)
         val room = chatFinder.findChatRoom(roomId)
 
-        return chatFinder.findChatMessagesByRoom(user, room, request)
+        return chatFinder.findChatMessagesByRoom(user.id!!, room.id!!, request)
     }
 
     @Transactional(readOnly = true)
@@ -129,6 +129,6 @@ class ChatService(
         val user = userFinder.findUser(principal.id)
         val room = chatFinder.findChatRoom(roomId)
 
-        return chatFinder.findChatUsers(user, room)
+        return chatFinder.findChatUsers(user.id!!, room.id!!)
     }
 }

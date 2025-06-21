@@ -1,5 +1,6 @@
 package com.playground.chat.chat.entity
 
+import com.playground.chat.chat.domain.ChatRoom
 import com.playground.chat.global.entity.AuditEntity
 import com.playground.chat.global.entity.IdGenerator
 import com.playground.chat.user.entity.UserEntity
@@ -39,4 +40,24 @@ class ChatRoomEntity(
 
     @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = [CascadeType.ALL])
     var messages: MutableList<ChatMessageEntity> = mutableListOf(),
-): AuditEntity()
+): AuditEntity() {
+    companion object {
+        fun fromRoom(room: ChatRoom): ChatRoomEntity {
+            return ChatRoomEntity(
+                id = room.id,
+                owner = UserEntity.fromUser(room.owner),
+                image = room.image,
+                name = room.name
+            )
+        }
+    }
+
+    fun toRoom(): ChatRoom {
+        return ChatRoom(
+            id = id,
+            owner = owner.toUser(),
+            image = image,
+            name = name,
+        )
+    }
+}

@@ -1,5 +1,6 @@
 package com.playground.chat.chat.entity
 
+import com.playground.chat.chat.domain.Chat
 import com.playground.chat.global.entity.AuditEntity
 import com.playground.chat.user.entity.UserEntity
 import jakarta.persistence.*
@@ -51,8 +52,13 @@ class ChatEntity(
         }
     }
 
-    fun read(messageId: UUID) {
-        this.lastMessageId = messageId
-        this.lastReadAt = Instant.now()
+    fun toChat(): Chat {
+        return Chat(
+            user = user.toUser(),
+            room = room.toRoom(),
+            lastMessageId = lastMessageId,
+            lastReadAt = lastReadAt,
+            joinedAt = joinedAt
+        )
     }
 }
