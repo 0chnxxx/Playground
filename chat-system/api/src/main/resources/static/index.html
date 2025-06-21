@@ -1203,11 +1203,12 @@
             const res = await api.get(endpoint);
             const roomsList = type === 'my' ? document.getElementById('rooms-list') : document.getElementById('all-rooms-list');
             const cache = type === 'my' ? roomsCache : allRoomsCache;
+            const data = type === 'my' ? (res.data.data || []) : (res.data.data.content || [])
             if (!append) {
                 cache.length = 0;
                 roomsList.innerHTML = '';
             }
-            const rooms = (res.data.data || []).map(room => ({
+            const rooms = data.map(room => ({
                 ...room,
                 lastMessageTime: room.lastSentAt ? new Date(room.lastSentAt).toISOString() : null,
                 unreadCount: room.unreadCount || 0,
@@ -1255,7 +1256,7 @@
                 messageUnreadUsersMap.clear();
             }
 
-            const messages = Array.isArray(res.data.data) ? res.data.data.map(msg => {
+            const messages = Array.isArray(res.data.data.content) ? res.data.data.content.map(msg => {
                 const id = String(msg.messageId || msg.id || '');
                 if (!id) {
                     console.warn('Message missing id:', msg);
